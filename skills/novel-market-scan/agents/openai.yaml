@@ -1,0 +1,4 @@
+interface:
+  display_name: "Novel Market Scan"
+  short_description: "Scan trends, charts, and platform demand"
+  default_prompt: "Use $novel-market-scan to research current fiction market trends and reader appetite."

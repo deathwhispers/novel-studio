@@ -1,0 +1,4 @@
+interface:
+  display_name: "Novel Drafting"
+  short_description: "Draft scenes and chapters with continuity control"
+  default_prompt: "Use $novel-drafting to write the next chapter from my outline and continuity notes."

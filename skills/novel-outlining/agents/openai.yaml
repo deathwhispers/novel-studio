@@ -1,0 +1,4 @@
+interface:
+  display_name: "Novel Outlining"
+  short_description: "Design arcs, volumes, beats, and promises"
+  default_prompt: "Use $novel-outlining to expand my novel into acts, volumes, and chapter beats."

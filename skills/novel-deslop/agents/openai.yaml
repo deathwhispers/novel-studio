@@ -1,0 +1,4 @@
+interface:
+  display_name: "Novel Deslop"
+  short_description: "Remove AI texture from fiction prose"
+  default_prompt: "Use $novel-deslop to rewrite this fiction passage with less AI texture and more human rhythm."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Novel Revision"
+  short_description: "Revise structure, style, and anti-AI texture"
+  default_prompt: "Use $novel-revision to revise this chapter for continuity, voice, and publishable polish."

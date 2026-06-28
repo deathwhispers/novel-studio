@@ -1,0 +1,20 @@
+{
+  "name": "novel-local",
+  "interface": {
+    "displayName": "Novel Skills Local"
+  },
+  "plugins": [
+    {
+      "name": "novel-skills",
+      "source": {
+        "source": "local",
+        "path": "./plugins/novel-skills"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Creativity"
+    }
+  ]
+}

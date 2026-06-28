@@ -1,0 +1,4 @@
+interface:
+  display_name: "Novel Bootstrap"
+  short_description: "Initialize or import a novel workspace"
+  default_prompt: "Use $novel-bootstrap to create or upgrade a novel project workspace."

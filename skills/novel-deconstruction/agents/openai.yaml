@@ -1,0 +1,4 @@
+interface:
+  display_name: "Novel Deconstruction"
+  short_description: "Break down benchmark stories and chapters"
+  default_prompt: "Use $novel-deconstruction to analyze a benchmark story and extract reusable writing patterns."

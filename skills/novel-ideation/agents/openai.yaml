@@ -1,0 +1,4 @@
+interface:
+  display_name: "Novel Ideation"
+  short_description: "Shape premise, audience, and story promise"
+  default_prompt: "Use $novel-ideation to turn my rough novel idea into a clear creative brief."

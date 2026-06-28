@@ -1,0 +1,40 @@
+{
+  "name": "novel-skills",
+  "version": "0.1.0",
+  "description": "Codex plugin for structured Chinese fiction writing workflows.",
+  "author": {
+    "name": "whisper",
+    "url": "https://github.com/wh1sp3rrr"
+  },
+  "homepage": "https://github.com/wh1sp3rrr/novel-skills",
+  "repository": "https://github.com/wh1sp3rrr/novel-skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "novel",
+    "writing",
+    "fiction",
+    "codex",
+    "skills",
+    "chinese"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Novel Skills",
+    "shortDescription": "Structured fiction-writing skills for Codex",
+    "longDescription": "A Codex plugin focused on Chinese fiction workflows: market scan, deconstruction, outlining, drafting, revision, commercial writing, and anti-AI polish.",
+    "developerName": "whisper",
+    "category": "Creativity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/wh1sp3rrr/novel-skills",
+    "privacyPolicyURL": "https://github.com/wh1sp3rrr/novel-skills/blob/main/README.md",
+    "termsOfServiceURL": "https://github.com/wh1sp3rrr/novel-skills/blob/main/LICENSE",
+    "defaultPrompt": [
+      "Use novel-studio to route my current fiction task.",
+      "Help me open a new novel project and plan the first volume.",
+      "Revise this chapter for logic, detail, and payoff discipline."
+    ]
+  }
+}

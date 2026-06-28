@@ -1,0 +1,4 @@
+interface:
+  display_name: "Novel Commercial Writing"
+  short_description: "Shape hooks, retention, and market fit"
+  default_prompt: "Use $novel-commercial-writing to make this fiction project more commercially readable and marketable."

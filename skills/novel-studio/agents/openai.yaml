@@ -1,0 +1,4 @@
+interface:
+  display_name: "Novel Studio"
+  short_description: "Router for end-to-end novel workflows"
+  default_prompt: "Use $novel-studio to route my current fiction-writing task."
