@@ -9,11 +9,22 @@
 - 同时兼顾长篇、短篇与不同平台/题材的适配差异。
 - 让 skill 本身可维护、可验证、可扩展，而不是只在某一次演示里有效。
 
+## 设计原则
+
+1. 单一职责，但流程按中文写作习惯组织。每个 skill 只承担一个阶段性的核心任务，novel-studio 只做路由，不抢子 skill 的工作。
+
+2. 先有工作台，再有对话。小说创作不是一次性回答，而是持续累积的工程，因此优先设计稳定的项目文件结构，再让 skill 围绕这些文件工作。
+
+3. 最小上下文包。长篇写作最容易失控的不是不会写，而是读太多上下文仍然抓不住关键。正文写作和项目初始化都遵循这个原则——先把能开写的必要文件搭起来，而不是第一天就把整套世界圣经写满。
+
+4. 硬资料、正文、体检、运行记录分离。10-设定/、30-正文/、40-修订/、90-运行/ 各司其职，降低正文、设定、工作记录混写的混乱度。
+
+5. 先体检，再重修。写完先查前后照应、漏线、人物状态、章尾发动机和卷节奏，再进 novel-revision 做针对性修订。
+
 ## 仓库结构
 
 ```text
 novel-skills/
-├── 架构说明.md
 ├── README.md
 ├── scripts/
 │   └── validate_skills.py
@@ -64,6 +75,28 @@ novel-skills/
 - `novel-market-scan` 和 `novel-deconstruction` 现在都带标准输出模板与完成态样例，降低实际使用门槛。
 - `novel-revision` 现在按逻辑修复、细节修复、伏笔回收修复三类模板组织，更适合做有针对性的成稿修订。
 
+## 从参考项目中吸收什么
+
+### awesome-novel-skill
+
+吸收：明确的角色分工，设定、记忆、模板的全面性。
+改进：把多 agent + 多知识文件进一步收敛成 skill 套件，用统一项目模板替代大量风格各异的项目落地方式。
+
+### novel-creator-skill
+
+吸收：长篇一致性意识，长期记忆与测试意识。
+改进：将脚本化流水线与 Codex skill 可触发性分开，不强依赖复杂自动流水线，先把基础 artifact 结构打稳。
+
+### chinese-novelist-skill
+
+吸收：清晰的阶段式流程，章节质量校验思路。
+改进：把流程拆成多个 skill，从阶段问答升级为「阶段 + 文件产物」双驱动。
+
+### oh-story-claudecode
+
+吸收：主入口路由器思路，专项 skill 化。
+改进：让 skill 与小说项目模板深度绑定，更强调长篇项目的持续维护。
+
 ## 推荐工作流
 
 更贴近中文作者习惯的顺序是：
@@ -71,6 +104,32 @@ novel-skills/
 `开书建档 -> 立项定核 -> 设定总表 -> 铺线列纲 -> 写章起稿 -> 小说体检 -> 重修统稿 -> 去 AI 味 / 商业化改稿`
 
 如果题材、平台和卖点还没想清，可以把 `扫榜看盘 -> 拆书拆章` 放在前面，先做选题判断和对标吸收。
+
+## 项目工作台结构
+
+初始化后的项目遵循以下目录分层：
+
+```
+my-novel/
+├── 00-书核/          # 核心目标与承诺：这本书卖什么、为什么值得读
+├── 05-市场/          # 市场与对标研究：什么值得写、哪些作品值得学
+├── 10-设定/          # hard canon 和高频检索：世界观、角色、规则
+├── 20-大纲/          # 结构承诺：故事如何推进，哪些线何时碰、何时收
+├── 30-正文/          # 正文资产：每章每场到底写了什么
+├── 40-修订/          # 体检痕迹和修稿报告：哪里有病、怎么修、剩什么风险
+├── 50-归档/          # 已完成的分卷和旧版大纲
+└── 90-运行/          # 运行态信息：当前进度、连载驾驶舱、决策记录
+```
+
+这套分层的核心逻辑：
+
+- **00-书核**：回答「这本书到底卖什么、为什么值得读」
+- **05-市场**：回答「什么值得写、哪些作品值得学、学什么而不是抄什么」
+- **10-设定**：回答「这本书的世界是什么样、谁在里面行动」
+- **20-大纲**：回答「故事准备如何推进，哪些线什么时候要碰、要收」
+- **30-正文**：回答「这一章或这一场到底写了什么」，也承接写前卡、连载快启和场景草稿
+- **40-修订**：回答「这一章哪里有病、怎么修、修完还剩什么风险」
+- **90-运行**：回答「下次继续时先看哪里、卡在哪里、做过哪些关键决定」
 
 ## 快速开始
 
@@ -345,6 +404,32 @@ python3 scripts/uninstall_codex_plugin.py --remove-marketplace
 - [serial-dashboard.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-bootstrap/assets/novel-project-template/90-运行/连载驾驶舱.md)
 - [serial-chapter-quickstart.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-bootstrap/assets/novel-project-template/30-正文/写前/serial-chapter-quickstart.md)
 
+## Skill 与文件的对应关系
+
+| Skill | 主要读写区域 |
+| --- | --- |
+| novel-market-scan | 05-市场/ |
+| novel-deconstruction | 05-市场/拆解/, 05-市场/对标书单.md |
+| novel-bootstrap | 全项目，尤其是模板初始化和导入 |
+| novel-commercial-writing | 00-书核/, 05-市场/, 20-大纲/, 30-正文/ |
+| novel-deslop | 30-正文/, 40-修订/ |
+| novel-ideation | 00-书核/ |
+| novel-worldbuilding | 10-设定/, 90-运行/决策记录.md |
+| novel-outlining | 20-大纲/ |
+| novel-checkup | 20-大纲/, 30-正文/, 40-修订/体检报告/, 90-运行/ |
+| novel-drafting | 20-大纲/, 30-正文/, 90-运行/ |
+| novel-revision | 30-正文/, 40-修订/, 90-运行/决策记录.md |
+
+## 迭代建议
+
+下一步最值得继续补强的部分：
+
+1. 为 novel-bootstrap 增加导入旧稿到自动映射模板的半自动脚本。
+2. 为 novel-market-scan 增加半自动榜单采样模板。
+3. 为 novel-drafting 增加根据 chapter beat 自动组装上下文包的辅助脚本。
+4. 为 novel-checkup 增加更细的 forward-test，验证卷体检、漏线扫描和追读排查的稳定性。
+5. 增加真实 forward-test 样例，验证 skill 在扫榜、拆文、开书、续写、体检、改稿几种场景下的表现。
+
 ## 参考来源
 
 这个仓库吸收了以下项目的优点，并在结构化、可维护性和项目模板层面继续前推：
@@ -353,5 +438,3 @@ python3 scripts/uninstall_codex_plugin.py --remove-marketplace
 - [leenbj/novel-creator-skill](https://github.com/leenbj/novel-creator-skill)
 - [PenglongHuang/chinese-novelist-skill](https://github.com/PenglongHuang/chinese-novelist-skill)
 - [worldwonderer/oh-story-claudecode](https://github.com/worldwonderer/oh-story-claudecode)
-
-更细的设计 rationale 见 `架构说明.md`。
