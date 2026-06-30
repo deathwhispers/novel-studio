@@ -1,4 +1,4 @@
-# Sample Deconstruction Slot
+# 拆文样例占位
 
 这里是拆文产物的默认落点示例。
 

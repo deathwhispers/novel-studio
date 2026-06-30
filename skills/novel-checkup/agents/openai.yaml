@@ -1,0 +1,4 @@
+interface:
+  display_name: "小说体检"
+  short_description: "检查章节、卷节奏、漏线与追读弱点"
+  default_prompt: "用 $novel-checkup 帮我检查这一章或这一卷的前后照应、长线漏线、人物状态和追读弱点。"

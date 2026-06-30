@@ -1,4 +1,4 @@
-# Prewrite
+# 写前卡
 
 写章节或关键场景前，先复制 `chapter-prewrite-checklist.md`，按章节或场景改名后填写。
 

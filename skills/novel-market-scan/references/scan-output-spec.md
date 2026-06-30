@@ -1,66 +1,66 @@
-# Scan Output Spec
+# 扫榜输出规范
 
 当执行扫榜、平台比较、选题验证时，优先输出成以下结构。
 
 ## A. `trend-notes.md`
 
 ```md
-# Trend Notes
+# 扫榜记录
 
-## Scope
+## 本次看什么
 
-- Platform:
-- Time window:
-- Query goal:
+- 平台：
+- 时间窗口：
+- 想验证的问题：
 
-## Repeating Signals
+## 重复出现的信号
 
-- Signal 1:
-- Signal 2:
-- Signal 3:
+- 信号 1：
+- 信号 2：
+- 信号 3：
 
-## Opportunity Directions
+## 值得切入的方向
 
-### Direction 1
-- Best for:
-- Core promise:
-- Why now:
-- Risks:
-- Better as: 长篇 / 短篇
+### 方向 1
+- 更适合：
+- 核心承诺：
+- 为什么现在能做：
+- 风险：
+- 更适合写成：长篇 / 短篇
 
-### Direction 2
+### 方向 2
 ...
 
-## What To Avoid
+## 不建议碰的坑
 
-- Overheated pattern 1:
-- Overheated pattern 2:
+- 过热套路 1：
+- 过热套路 2：
 
-## Next Move
+## 下一步建议
 
-- Hand off to:
-- Why:
+- 转给哪个 skill：
+- 为什么：
 ```
 
 ## B. `benchmark-list.md`
 
 ```md
-# Benchmark List
+# 对标书单
 
-## Primary Benchmarks
+## 核心对标
 
-| Work | Platform | Why it matters | Learn from |
-|------|----------|----------------|------------|
+| 作品 | 平台 | 为什么值得看 | 重点学什么 |
+|------|------|----------------|------------|
 | A | 起点 | | |
 | B | 番茄 | | |
 
-## Watchlist
+## 备用观察名单
 
-- TBD
+- 待补
 ```
 
 ## 使用规则
 
-- 如果是“全榜概览”，重点写 `Repeating Signals` 和 `Opportunity Directions`
+- 如果是“全榜概览”，重点写“重复信号”和“值得切入的方向”
 - 如果是“验证一个选题”，重点写该方向是否成立、成立在哪个平台、应做哪些改造
 - 如果是“平台对比”，要显式对比书名、简介、钩子、节奏和长短篇适配

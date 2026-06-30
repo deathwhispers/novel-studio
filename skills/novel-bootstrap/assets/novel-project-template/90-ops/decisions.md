@@ -1,5 +1,5 @@
-# Decisions
+# 关键决策记录
 
-## Log
+## 决策日志
 
-- {{DATE}}: initialized project from template
+- {{DATE}}：从模板初始化项目

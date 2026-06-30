@@ -1,4 +1,4 @@
 interface:
-  display_name: "Novel Deconstruction"
-  short_description: "Break down benchmark stories and chapters"
-  default_prompt: "Use $novel-deconstruction to analyze a benchmark story and extract reusable writing patterns."
+  display_name: "拆书拆章"
+  short_description: "拆对标作品并提炼写法"
+  default_prompt: "用 $novel-deconstruction 帮我拆一本对标作品，提炼能迁移到我项目里的写法。"

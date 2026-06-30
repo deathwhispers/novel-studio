@@ -1,5 +1,5 @@
-# Continuity Queries
+# 连续性待查
 
-## Open Questions
+## 还没对上的问题
 
-- TBD
+- 把时间、物件、关系、设定、人物状态里还没对上的地方都记在这里

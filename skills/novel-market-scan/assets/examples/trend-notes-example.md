@@ -1,39 +1,37 @@
-# Trend Notes
+# 扫榜记录示例
 
-## Scope
+## 本次看什么
 
-- Platform: 番茄男频
-- Time window: recent sample
-- Query goal: 都市悬疑是否值得做成长篇
+- 平台：番茄男频
+- 时间窗口：近期样本
+- 想验证的问题：都市悬疑是否值得做成长篇
 
-## Repeating Signals
+## 重复出现的信号
 
 - 标题更偏“职业身份 + 危机事件”
 - 简介前两句直接交代异常现场、主角职业和倒计时压力
 - 开篇更快进入案件或异状，不等读者慢热
 
-## Opportunity Directions
+## 值得切入的方向
 
-### Direction 1
-- Best for: 都市悬疑长篇
-- Core promise: 每卷一个大谜面，每章一个局部推进
-- Why now: 读者既要连续追读，也要高密度信息反馈
-- Risks: 设定膨胀、谜面空转
-- Better as: 长篇
+### 方向一
+- 更适合：都市悬疑长篇
+- 核心承诺：每卷一个大谜面，每章一个局部推进
+- 为什么现在能做：读者既要连续追读，也要高密度信息反馈
+- 风险：设定膨胀、谜面空转
 
-### Direction 2
-- Best for: 高概念短篇悬疑
-- Core promise: 单一异常事件引爆人物困境
-- Why now: 易传播，适合测试题眼
-- Risks: 结尾力量不足会塌
-- Better as: 短篇
+### 方向二
+- 更适合：高概念短篇悬疑
+- 核心承诺：单一异常事件引爆人物困境
+- 为什么现在能做：易传播，适合测试题眼
+- 风险：结尾力量不足会塌
 
-## What To Avoid
+## 不建议碰的坑
 
 - 开篇三页都还没出现异常事件
 - 只堆设定，不给读者即时危机
 
-## Next Move
+## 下一步建议
 
-- Hand off to: `novel-commercial-writing`
-- Why: 需要先把书名、简介和开篇钩子做商业化改造
+- 转给哪个 skill：`novel-commercial-writing`
+- 为什么：需要先把书名、简介和开篇钩子做商业化改造

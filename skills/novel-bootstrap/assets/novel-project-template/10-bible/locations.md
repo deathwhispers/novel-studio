@@ -1,5 +1,8 @@
-# Locations
+# 场景地点表
 
-## Repeating Locations
+## 高频地点
 
-- TBD
+- 地点：
+  - 作用：
+  - 常见出场人物：
+  - 会逼出什么戏：

@@ -1,8 +1,8 @@
-# Deconstructions
+# 拆文沉淀区
 
-把拆文产物放在这里，便于后续在 ideation、commercial-writing 和 drafting 阶段重复利用。
+把拆文产物放在这里，方便后续在立项、商业化改稿、铺线和起稿阶段反复调用。
 
-优先保存：
+优先保存这些文件：
 
 - `{作品名}-analysis.md`
 - `{作品名}-golden-hook.md`

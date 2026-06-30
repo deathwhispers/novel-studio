@@ -1,4 +1,4 @@
 interface:
-  display_name: "Novel Revision"
-  short_description: "Revise structure, style, and anti-AI texture"
-  default_prompt: "Use $novel-revision to revise this chapter for continuity, voice, and publishable polish."
+  display_name: "重修统稿"
+  short_description: "修逻辑、修细节、修回收"
+  default_prompt: "用 $novel-revision 帮我重修这一章的逻辑、细节和回收问题。"

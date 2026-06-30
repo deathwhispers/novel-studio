@@ -3,9 +3,9 @@ name: novel-worldbuilding
 description: "中文小说设定圣经 skill。用于构建或修订人物档案、世界规则、地点、势力、时间线、母题系统和 hard canon，尤其适合长篇连载需要稳定连续性的场景。适用于“帮我补世界观”“整理角色关系”“建立设定圣经”“修复设定冲突”“给这本书做人物档案”等请求。"
 ---
 
-# Novel Worldbuilding
+# 设定总表
 
-## Overview
+## 功能定位
 
 把创意变成可以长期复用的设定资产。所有设定都应服务剧情与角色，而不是为了炫耀百科知识。
 
@@ -20,11 +20,11 @@ description: "中文小说设定圣经 skill。用于构建或修订人物档案
 
 - `10-bible/canon.md`
 - `10-bible/world-rules.md`
-- `10-bible/locations.md`
-- `10-bible/factions.md`
-- `10-bible/timeline.md`
-- `10-bible/motifs.md`
-- `10-bible/characters/*.md`
+- `10-bible/地点.md`
+- `10-bible/势力.md`
+- `10-bible/时间线.md`
+- `10-bible/母题.md`
+- `10-bible/角色/*.md`
 
 ## 人物文件最低要求
 

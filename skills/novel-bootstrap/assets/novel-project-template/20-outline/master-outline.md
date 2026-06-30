@@ -1,17 +1,23 @@
-# Master Outline
+# 整本书总纲
 
-## Opening State
+## 开局是什么局
 
-TBD
+写故事一开始主角被困在什么局里
 
-## Central Conflict
+## 主线真正打什么
 
-TBD
+写主线最核心的胜负、追求或冲突
 
-## Midpoint Shift
+## 中段最大的翻面点
 
-TBD
+写中段最关键的一次局面翻转
 
-## Ending Direction
+## 最后准备收成什么样
 
-TBD
+写结尾想兑现的最终状态或最终情绪
+
+## 主角线 / 感情线 / 悬念线怎么并行
+
+- 主角线：
+- 感情线：
+- 悬念线：

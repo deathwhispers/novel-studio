@@ -3,11 +3,11 @@ name: novel-revision
 description: "中文小说修订 skill。用于对已有正文做结构修复、场景重写、文风校准、连续性修补、节奏调整和去 AI 味处理，适用于“这章太平”“帮我重写这一段”“检查设定冲突”“把文字修得更像成书”“降低 AI 痕迹”等场景。"
 ---
 
-# Novel Revision
+# 重修统稿
 
-## Overview
+## 功能定位
 
-先判断需要哪一层修订，再动笔。这个 skill 优先修问题，不优先扩篇幅；如果问题主要是 AI 质感，则应优先转交 `novel-deslop`。
+先判断需要哪一层修订，再动笔。这个 skill 优先修问题，不优先扩篇幅；如果问题主要是 AI 质感，则应优先转交 `novel-deslop`。如果问题还没诊断清楚，先让 `novel-checkup` 做体检，再决定怎么修。
 
 ## 先选主问题模板
 
@@ -44,7 +44,7 @@ description: "中文小说修订 skill。用于对已有正文做结构修复、
 - 修订后的正文
 - `40-revision/chapter-reports/` 下对应的修订报告
 - 如涉及 canon 改动，在 `90-ops/decisions.md` 记录
-- 如涉及跨章因果或伏笔联动，同步更新 `20-outline/causality/scene-causality-map.md` 或 `20-outline/payoff-tracking/payoff-ledger.md`
+- 如涉及跨章因果或伏笔联动，同步更新 `20-outline/因果/scene-causality-map.md` 或 `20-outline/payoff-tracking/payoff-ledger.md`
 
 ## 去 AI 味规则
 
@@ -59,5 +59,6 @@ description: "中文小说修订 skill。用于对已有正文做结构修复、
 - 如果问题根源在设定冲突，联动 `novel-worldbuilding`
 - 如果只是继续写下一段，不转入修订循环
 - 如果核心诉求是“像平台文一点”“更有人味”，可联动 `novel-commercial-writing` 或 `novel-deslop`
+- 如果核心诉求是“先查有没有前后打架、有没有漏线”，先转 `novel-checkup`
 
 需要更细的检查顺序时，读取 `references/revision-ladder.md`；需要具体修订模板时，按问题类型读取对应的 `logic-repair-template.md`、`detail-repair-template.md` 或 `payoff-repair-template.md`。

@@ -1,6 +1,6 @@
-# Revision Ladder
+# 修稿顺序表
 
-## Step 1: Diagnose
+## 第一步：先判断大问题在哪
 
 先判断问题属于：
 
@@ -10,13 +10,13 @@
 - 语言问题
 - 设定冲突
 
-## Step 2: Pick One Main Template
+## 第二步：先定主修模板
 
 - 因果断裂、动机悬浮、转折站不住 -> `logic-repair-template.md`
 - 细节空、情绪浮、全在总结 -> `detail-repair-template.md`
 - 伏笔散、回收硬、章节尾弱 -> `payoff-repair-template.md`
 
-## Step 3: Fix The Highest Layer First
+## 第三步：先修高层问题
 
 如果逻辑错了，不要先磨句子。默认顺序是：
 
@@ -25,11 +25,11 @@
 - 细节
 - 句子和去味
 
-## Step 4: Preserve Intent
+## 第四步：别把这一章原本要做的戏修没了
 
 修订应尽量保留该章原本想完成的戏剧功能，除非用户明确要求重做。
 
-## Step 5: Report
+## 第五步：留一份修稿结论
 
 修完后用 3-6 行说明：
 

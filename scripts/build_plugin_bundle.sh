@@ -34,7 +34,7 @@ cat > "${OUT_DIR}/.agents/plugins/marketplace.json" <<JSON
 {
   "name": "novel-local",
   "interface": {
-    "displayName": "Novel Skills Local"
+    "displayName": "中文小说工作台本地库"
   },
   "plugins": [
     {
@@ -58,34 +58,40 @@ cp "${REPO_ROOT}/scripts/uninstall_codex_plugin.py" "${OUT_DIR}/uninstall_codex_
 chmod +x "${OUT_DIR}/install_codex_plugin.py" "${OUT_DIR}/uninstall_codex_plugin.py"
 
 cat > "${OUT_DIR}/README.md" <<MD
-# Novel Skills Local Plugin Bundle
+# 中文小说工作台本地插件包
 
-Build timestamp: ${timestamp}
-Source commit: ${git_sha}
+构建时间：${timestamp}
+来源提交：${git_sha}
 
-## Install
+## 安装方法
 
-1. Unzip this bundle.
-2. Run \`python3 install_codex_plugin.py\`.
-3. Restart Codex if it is already open.
-4. Start a new thread before testing.
+1. 解压这个插件包。
+2. 运行 \`python3 install_codex_plugin.py\`。
+3. 如果 Codex 已经打开，先重启。
+4. 新开一个 thread 再测试。
 
-## What The Installer Does
+## 安装脚本会做什么
 
-- Registers this directory as a local Codex marketplace with \`codex plugin marketplace add\`.
-- Copies the plugin into \`~/.codex/plugins/cache/novel-local/novel-skills/<version>\`.
-- Ensures \`[features] plugins = true\` is set in \`~/.codex/config.toml\`.
-- Enables \`novel-skills@novel-local\` in \`~/.codex/config.toml\`.
+- 用 \`codex plugin marketplace add\` 把这个目录注册为本地 marketplace。
+- 把插件复制到 \`~/.codex/plugins/cache/novel-local/novel-skills/<version>\`。
+- 确保 \`~/.codex/config.toml\` 里启用了 \`[features] plugins = true\`。
+- 在 \`~/.codex/config.toml\` 里启用 \`novel-skills@novel-local\`。
 
-## Test Prompt
+## 测试提示词
 
 \`\`\`text
-Use novel-studio to route my current fiction-writing task.
+用 novel-studio 帮我判断当前这一步该走哪个小说技能。
 \`\`\`
 
-## Uninstall
+## 卸载
 
-Run \`python3 uninstall_codex_plugin.py\`.
+运行 \`python3 uninstall_codex_plugin.py\`。
+
+如果你明确想把整个本地 marketplace 入口也移除，再运行：
+
+\`\`\`bash
+python3 uninstall_codex_plugin.py --remove-marketplace
+\`\`\`
 MD
 
 (

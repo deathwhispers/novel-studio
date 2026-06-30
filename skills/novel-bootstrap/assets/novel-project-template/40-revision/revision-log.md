@@ -1,5 +1,5 @@
-# Revision Log
+# 修稿日志
 
-| Date | Chapter | Repair Type | Key Change | Linked Report |
-|------|---------|-------------|------------|---------------|
-| {{DATE}} | setup | init | project initialized | - |
+| 日期 | 章节 / 卷 | 动作类型 | 改了什么 | 对应报告 |
+|------|-----------|----------|----------|----------|
+| {{DATE}} | setup | 初始化 | 项目建立 | - |

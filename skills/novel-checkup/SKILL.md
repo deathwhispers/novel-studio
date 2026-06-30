@@ -1,0 +1,117 @@
+---
+name: novel-checkup
+description: "中文小说体检 skill。用于在正文完成后检查单章质量、前后照应、人物状态、设定连续性、伏笔回收、信息债、章节尾推进力，以及长篇网文中的卷级节奏、长线漏线和追读弱点。适用于“帮我检查这章顺不顺”“看有没有前后打架”“查漏伏笔和人物状态”“做章节体检”“这卷写完了帮我统查”“帮我看看为什么最近追读弱了” 等场景。"
+---
+
+# 小说体检
+
+## 功能定位
+
+这是正文完成后的体检环节，不直接大改文风，而是先查出“哪里断了、哪里漏了、哪里没接住前文、哪里章尾没有发动机、哪里卷级节奏塌了、哪里追读被削弱了”。先诊断，再决定是回到 `novel-revision`、`novel-outlining` 还是 `novel-worldbuilding`。
+
+## 体检顺序
+
+默认按这六层检查：
+
+1. 本章自己是否成立
+2. 和上一章、上一场是否接得上
+3. 人物状态、关系状态、已知信息是否延续
+4. 伏笔、信息债、物件债、关系债有没有丢
+5. 章尾是否有效推动下一章
+6. 如果是长篇：卷级节奏、长线推进和追读压力是否还在
+
+## 默认输入
+
+至少读取：
+
+1. 当前章节正文
+2. 当前章节节拍卡
+3. 上一章正文或上一场摘要
+4. `90-ops/current-state.md`
+
+按需追加：
+
+- 相关角色卡
+- `10-bible/canon.md`
+- `20-outline/因果/scene-causality-map.md`
+- `20-outline/payoff-tracking/payoff-ledger.md`
+- `20-outline/volumes/`
+- `20-outline/arc-tracker.md`
+- `90-ops/serial-dashboard.md`
+
+如果做卷体检，再优先读取：
+
+- 该卷关键章节正文
+- 该卷卷纲
+- `references/volume-checkup-template.md`
+
+如果做长线漏线扫描，再优先读取：
+
+- `references/longline-scan-template.md`
+- `20-outline/payoff-tracking/payoff-ledger.md`
+- `20-outline/arc-tracker.md`
+
+如果做追读弱点排查，再优先读取：
+
+- `references/retention-diagnostics.md`
+- 最近 3 到 10 章正文
+- `90-ops/serial-dashboard.md`
+
+## 产物
+
+优先输出：
+
+- `40-revision/checkup-reports/{chapter}-checkup.md`
+- 如果是卷体检：`40-revision/checkup-reports/{volume}-full-checkup.md`
+- 如果是长线扫描：`40-revision/checkup-reports/{range}-longline-scan.md`
+- 如果是追读排查：`40-revision/checkup-reports/{range}-retention-diagnostics.md`
+- 一份按严重度排序的问题清单
+- 建议转向哪个 skill 处理：
+  - 结构错位 -> `novel-outlining`
+  - 设定冲突 -> `novel-worldbuilding`
+  - 正文修复 -> `novel-revision`
+
+## 三类高优先级体检
+
+### 1. 卷体检
+
+重点回答：
+
+- 这一卷开卷承诺有没有立住
+- 中段有没有塌成重复推进或平移推进
+- 卷末有没有给到阶段性满足，而不是只留坑不兑现
+- 主线、关系线、悬念线在这一卷里分别推进了多少
+
+### 2. 长线漏线扫描
+
+重点回答：
+
+- 哪些旧线已经超过合理间隔没有被碰到
+- 哪些人物状态、关系状态、物件状态在后文失联
+- 哪些信息债已经埋下，但后文没有提醒、变形或回收准备
+
+### 3. 追读弱点排查
+
+重点回答：
+
+- 最近几章的章尾发动机是不是变弱了
+- 章节是不是连续在做“说明”而不是“推进”
+- 爽点、痛点、悬念点有没有延迟过久
+- 读者为什么会觉得“可以先放一放再看”
+
+## 不要做的事
+
+- 不在这里直接大段重写正文
+- 不把“体检”做成泛泛夸奖
+- 不只看句子顺不顺，要优先看线有没有接住
+- 不把“最近不好看了”只归咎于文风，先查是不是节奏、追读和长线出了问题
+
+## 资源
+
+- 章节体检表：`references/chapter-checkup-template.md`
+- 前后照应检查：`references/callback-checklist.md`
+- 连续性检查：`references/continuity-checklist.md`
+- 卷体检表：`references/volume-checkup-template.md`
+- 长线漏线扫描：`references/longline-scan-template.md`
+- 追读弱点排查：`references/retention-diagnostics.md`
+- 真实样例：`assets/examples/chapter-checkup-example.md`、`assets/examples/volume-checkup-example.md`、`assets/examples/longline-scan-example.md`、`assets/examples/retention-diagnostics-example.md`

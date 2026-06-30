@@ -1,8 +1,15 @@
-# Project Meta
+# 作品总表
 
-- Title: {{NOVEL_TITLE}}
-- Slug: {{PROJECT_SLUG}}
-- Author: {{AUTHOR}}
-- Genre: {{GENRE}}
-- Created: {{DATE}}
-- Status: setup
+- 书名：{{NOVEL_TITLE}}
+- 项目标识：{{PROJECT_SLUG}}
+- 作者：{{AUTHOR}}
+- 题材：{{GENRE}}
+- 开书日期：{{DATE}}
+- 当前状态：筹备中
+- 目标形态：长篇连载 / 短篇 / 中篇
+- 目标平台：起点 / 番茄 / 晋江 / 其他
+- 当前写作阶段：立项 / 补设定 / 铺第一卷 / 写前三章 / 连载中 / 修稿
+- 当前目标字数：
+- 首卷预计字数：
+- 日更目标：
+- 首轮重点：先开局 / 先稳追读 / 先补世界观 / 先修稿

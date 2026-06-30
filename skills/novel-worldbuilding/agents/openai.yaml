@@ -1,4 +1,4 @@
 interface:
-  display_name: "Novel Worldbuilding"
-  short_description: "Build cast, world rules, and continuity"
-  default_prompt: "Use $novel-worldbuilding to build the world bible and character systems for my novel."
+  display_name: "设定总表"
+  short_description: "整理人物、世界规则和连续性"
+  default_prompt: "用 $novel-worldbuilding 帮我整理人物、世界规则和关键设定。"

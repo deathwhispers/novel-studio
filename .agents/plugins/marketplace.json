@@ -1,7 +1,7 @@
 {
   "name": "novel-local",
   "interface": {
-    "displayName": "Novel Skills Local"
+    "displayName": "中文小说工作台本地库"
   },
   "plugins": [
     {

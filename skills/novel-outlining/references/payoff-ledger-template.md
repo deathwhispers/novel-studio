@@ -1,17 +1,17 @@
-# Payoff Ledger Template
+# 埋线回收账模板
 
 ```md
-# Payoff Ledger
+# 埋线回收账
 
-| Thread | Type | First Plant | Escalation | Payoff Target | Status | Notes |
-|--------|------|-------------|------------|---------------|--------|-------|
-| Example | clue / relationship / object / promise | Ch 1 | Ch 3 | Ch 8 | planted | |
+| 线头 | 类型 | 第一次埋下 | 再次加压 | 预计回收点 | 当前状态 | 备注 |
+|------|------|------------|----------|------------|----------|------|
+| 示例 | 线索 / 关系 / 物件 / 承诺 / 情绪 | 第一章 | 第三章 | 第八章 | 已埋 | |
 ```
 
 使用规则：
 
-- `Type` 建议用：`clue`, `relationship`, `object`, `promise`, `emotion`
-- `First Plant` 写第一次埋下的位置
-- `Escalation` 写它被再次提醒、变形或加压的位置
-- `Payoff Target` 写预计回收点
-- `Status` 只用：`planted`, `active`, `paid`, `dropped`
+- “类型”建议只用：线索、关系、物件、承诺、情绪
+- “第一次埋下”写第一次出现的位置
+- “再次加压”写它被再次提醒、变形或升级的位置
+- “预计回收点”写计划兑现的位置
+- “当前状态”建议只用：已埋、推进中、已回收、弃用

@@ -1,4 +1,4 @@
 interface:
-  display_name: "Novel Deslop"
-  short_description: "Remove AI texture from fiction prose"
-  default_prompt: "Use $novel-deslop to rewrite this fiction passage with less AI texture and more human rhythm."
+  display_name: "去 AI 味"
+  short_description: "去掉模板感和解释腔"
+  default_prompt: "用 $novel-deslop 帮我把这段正文改得更像人写的，不要这么工整。"

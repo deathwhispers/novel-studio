@@ -52,6 +52,11 @@ def parse_args() -> argparse.Namespace:
         default=str(Path.home() / ".codex"),
         help="Codex home directory, defaults to ~/.codex",
     )
+    parser.add_argument(
+        "--remove-marketplace",
+        action="store_true",
+        help="Also remove the whole local marketplace entry. Leave this off if other plugins share the same marketplace.",
+    )
     return parser.parse_args()
 
 
@@ -65,10 +70,12 @@ def main() -> int:
     remove_plugin_block(codex_home / "config.toml")
 
     codex_bin = find_codex_bin()
-    if codex_bin:
+    if codex_bin and args.remove_marketplace:
         run_optional([codex_bin, "plugin", "marketplace", "remove", MARKETPLACE_NAME])
 
     print(f"Removed {PLUGIN_NAME} local plugin cache.")
+    print("Left the local marketplace entry intact by default.")
+    print("Use --remove-marketplace if you also want to remove the whole marketplace entry.")
     print("Restart Codex if it is open.")
     return 0
 

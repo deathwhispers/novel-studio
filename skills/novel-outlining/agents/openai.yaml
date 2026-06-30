@@ -1,4 +1,4 @@
 interface:
-  display_name: "Novel Outlining"
-  short_description: "Design arcs, volumes, beats, and promises"
-  default_prompt: "Use $novel-outlining to expand my novel into acts, volumes, and chapter beats."
+  display_name: "铺线列纲"
+  short_description: "搭主线、卷纲、章节节拍和回收表"
+  default_prompt: "用 $novel-outlining 帮我把这本书铺成分卷和章节节拍卡。"

@@ -1,4 +1,4 @@
 interface:
-  display_name: "Novel Bootstrap"
-  short_description: "Initialize or import a novel workspace"
-  default_prompt: "Use $novel-bootstrap to create or upgrade a novel project workspace."
+  display_name: "开书建档"
+  short_description: "初始化工作台并整理旧稿"
+  default_prompt: "用 $novel-bootstrap 帮我把这本书建档，或把旧稿整理进标准工作台。"

@@ -1,19 +1,29 @@
-# Trend Notes
+# 扫榜记录
 
 参考输出结构：`skills/novel-market-scan/references/scan-output-spec.md`
 
-## Platform
+## 本次看什么
 
-TBD
+- 平台：
+- 时间窗口：
+- 想验证的问题：
 
-## Signals
+## 重复出现的信号
 
-- TBD
+- 例如：某个题材组合近期反复上榜
+- 例如：读者更偏爱更快进入主戏的开篇
+- 例如：某类关系张力明显更容易被点击
 
-## Opportunities
+## 值得切入的方向
 
-- TBD
+- 方向一：
+- 方向二：
 
-## Risks
+## 已经过热或容易翻车的点
 
-- TBD
+- 例如：题材表层新，但内里仍是老套路
+
+## 下一步该怎么用
+
+- 转给哪个 skill：
+- 为什么：

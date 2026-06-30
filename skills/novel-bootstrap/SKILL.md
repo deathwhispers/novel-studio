@@ -3,11 +3,11 @@ name: novel-bootstrap
 description: "中文小说项目初始化与导入 skill。用于从零创建小说工作区、把旧小说资料迁移到统一模板、导入散落的大纲/设定/正文文件，或检查当前目录是否已经是规范小说工程时。适用于用户说“开一本书”“初始化小说目录”“导入我现有的稿子”“把旧项目整理成长期可维护结构”等场景。"
 ---
 
-# Novel Bootstrap
+# 开书建档
 
-## Overview
+## 功能定位
 
-先把小说工程落地，再进入创作。这个 skill 负责统一目录、模板和导入策略，不负责代替后续 skill 完成全部内容。
+先把小说工作台搭起来，再进入创作。这个 skill 负责统一目录、模板和旧稿整理方式，让一个中文小说项目能长期写、长期改、长期接续。
 
 ## 初始化流程
 
@@ -15,6 +15,7 @@ description: "中文小说项目初始化与导入 skill。用于从零创建小
 2. 如果不存在，优先初始化模板工作区
 3. 如果存在，但结构不完整，先补目录，再整理已有资料
 4. 如果用户带来了旧稿、角色卡、世界观文档或零散正文，先按导入清单映射，再进入后续创作阶段
+5. 导入后优先补“书核、设定总表、主线卷纲、当前进度”，不要一上来就急着续写正文
 
 ## 新建项目
 
@@ -35,11 +36,12 @@ python3 scripts/init_novel_project.py \
 导入时遵守以下顺序：
 
 1. 不重写原始资料，先分类
-2. 设定资料 -> `10-bible/`
-3. 大纲资料 -> `20-outline/`
-4. 正文资料 -> `30-draft/imported/` 或 `30-draft/chapters/`
-5. 关键导入决策写进 `90-ops/decisions.md`
-6. 导入后更新 `90-ops/current-state.md`
+2. 能直接当“书核”的资料，优先归到 `00-story-core/`
+3. 设定资料 -> `10-bible/`
+4. 大纲资料 -> `20-outline/`
+5. 正文资料 -> `30-draft/imported/` 或 `30-draft/chapters/`
+6. 关键导入决策写进 `90-ops/decisions.md`
+7. 导入后更新 `90-ops/current-state.md`
 
 不要在导入阶段顺手大改文稿内容。先让项目可读、可找、可继续，再进入 `novel-ideation`、`novel-worldbuilding` 或 `novel-outlining`。
 
@@ -48,8 +50,21 @@ python3 scripts/init_novel_project.py \
 - `00-story-core/project-meta.md` 存在
 - `00-story-core/creative-brief.md` 至少有初稿
 - `10-bible/`、`20-outline/`、`30-draft/`、`90-ops/` 目录已就位
-- `90-ops/current-state.md` 记录当前阶段和下一步
-- 若是导入项目，`30-draft/imported/source-index.md` 已记录来源
+- `90-ops/current-state.md` 记录当前阶段、正在写到哪、卡在哪里、下一步先做什么
+- 若是导入项目，`30-draft/导入/源文件索引.md` 已记录来源
+
+如果目标是尽快启动长篇网文连载，初始化后优先补这些文件，而不是全量慢慢填：
+
+- `00-story-core/project-meta.md`
+- `00-story-core/creative-brief.md`
+- `20-outline/volumes/volume-01.md`
+- `20-outline/chapter-beats/chapter-001.md`
+- `20-outline/chapter-beats/chapter-002.md`
+- `20-outline/chapter-beats/chapter-003.md`
+- `90-ops/current-state.md`
+- `90-ops/serial-dashboard.md`
+
+先把“书核、第一卷卖点、前三章钩子、当前连载状态”搭起来，再去细补设定圣经和全书总纲。
 
 ## 资源
 
@@ -58,4 +73,4 @@ python3 scripts/init_novel_project.py \
 - 初始化模板：`assets/novel-project-template/`
 - 初始化脚本：`scripts/init_novel_project.py`
 
-先初始化，再创作。
+先把旧材料归位，再重建中文小说的实际工作流。

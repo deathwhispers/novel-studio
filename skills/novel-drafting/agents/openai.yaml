@@ -1,4 +1,4 @@
 interface:
-  display_name: "Novel Drafting"
-  short_description: "Draft scenes and chapters with continuity control"
-  default_prompt: "Use $novel-drafting to write the next chapter from my outline and continuity notes."
+  display_name: "写章起稿"
+  short_description: "按节拍卡稳定写章并守住质量线"
+  default_prompt: "用 $novel-drafting 根据现有大纲、人物状态和连载进度写下一章正文，并优先保证逻辑、细节和章尾推动力。"
