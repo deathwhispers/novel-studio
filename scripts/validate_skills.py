@@ -162,9 +162,14 @@ def check_template_completeness(errors: list[str]) -> None:
         "40-修订/修稿报告/细节修补模板.md",
         "40-修订/修稿报告/逻辑修补模板.md",
         "40-修订/修稿报告/回收修补模板.md",
-        "50-归档/README.md",
+        "50-归档/说明.md",
         "90-运行/当前进度.md", "90-运行/连载驾驶舱.md",
         "90-运行/会话交接.md",
+        "90-运行/人物状态变迁日志.md",
+        "40-修订/完本检查清单.md",
+        "40-修订/体检报告/中期审视报告.md",
+        "20-大纲/分卷/卷间衔接检查.md",
+        "30-正文/章节成品检查表.md",
     ]
     for t in required:
         if not (td / t).exists():
@@ -176,7 +181,7 @@ def check_template_tokens(errors: list[str]) -> None:
     if not td.exists():
         return
     for tf in sorted(td.rglob("*.md")):
-        if "README" in tf.name:
+        if "README" in tf.name or "说明" in tf.name:
             continue
         text = tf.read_text(encoding="utf-8")
         for m in TOKEN_RE.finditer(text):

@@ -13,7 +13,7 @@
 
 ```text
 novel-skills/
-├── ARCHITECTURE.md
+├── 架构说明.md
 ├── README.md
 ├── scripts/
 │   └── validate_skills.py
@@ -354,4 +354,4 @@ python3 scripts/uninstall_codex_plugin.py --remove-marketplace
 - [PenglongHuang/chinese-novelist-skill](https://github.com/PenglongHuang/chinese-novelist-skill)
 - [worldwonderer/oh-story-claudecode](https://github.com/worldwonderer/oh-story-claudecode)
 
-更细的设计 rationale 见 `ARCHITECTURE.md`。
+更细的设计 rationale 见 `架构说明.md`。
