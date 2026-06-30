@@ -15,8 +15,8 @@ description: "中文小说正文起草 skill。用于根据现有设定和章节
 
 默认只加载：
 
-1. `00-story-core/project-meta.md`
-2. `00-story-core/creative-brief.md`
+1. `00-书核/作品总表.md`
+2. `00-书核/立项单.md`
 3. 当前章节 beat
 4. 当前卷文件
 
@@ -25,31 +25,31 @@ description: "中文小说正文起草 skill。用于根据现有设定和章节
 - 相关角色文件
 - 相关 canon 条目
 - 上一章正文
-- `90-ops/current-state.md`
+- `90-运行/当前进度.md`
 - 相关拆文分析中的“因果怎么闭合”
 - 相关拆文分析中的“细节抓手”
 - 相关拆文分析中的“迁移到我项目里的注意点”
 
 如果是短篇，再优先读：
 
-- `05-market/trend-notes.md`
+- `05-市场/趋势笔记.md`
 - 目标短篇对标的拆文结果
 
 如果是长篇，再优先读：
 
-- `20-outline/因果/scene-causality-map.md`
-- `20-outline/payoff-tracking/payoff-ledger.md`
-- `90-ops/serial-dashboard.md`
+- `20-大纲/因果/scene-causality-map.md`
+- `20-大纲/回收/payoff-ledger.md`
+- `90-运行/连载驾驶舱.md`
 
-在上下文包选完后，最后读取 `references/prewrite-checklist.md`，把空项补到“可以下笔”的程度再起草。
+在上下文包选完后，最后读取 `references/写前检查表.md`，把空项补到“可以下笔”的程度再起草。
 
 如果是连续日更、周更或长篇续写，再补读：
 
-- `references/serial-continuation-card.md`
+- `references/连载续写卡.md`
 
 如果这次重点是提高正文成书感，再补读：
 
-- `references/chapter-quality-bar.md`
+- `references/章节质量标准.md`
 
 ## 写前锁定
 
@@ -118,8 +118,8 @@ description: "中文小说正文起草 skill。用于根据现有设定和章节
 
 正文初稿完成后，先不要急着润色，先用下面顺序自检：
 
-1. 读 `references/post-draft-self-check.md`
-2. 看本章是否已经达到 `references/chapter-quality-bar.md` 的最低标准
+1. 读 `references/写后自检卡.md`
+2. 看本章是否已经达到 `references/章节质量标准.md` 的最低标准
 3. 如果主要问题是前后打架、漏线、状态没续上，转 `novel-checkup`
 4. 如果主要问题是段落空、转折站不住、章尾没力，转 `novel-revision`
 
@@ -127,10 +127,10 @@ description: "中文小说正文起草 skill。用于根据现有设定和章节
 
 写完正文后至少更新：
 
-- `30-draft/chapters/` 中对应章节
-- `90-ops/current-state.md` 中的当前进度、未决问题、下一步
-- 如出现新 hard canon，补到 `10-bible/canon.md` 或记入 `90-ops/decisions.md`
-- 如本章推进了伏笔、人物状态、因果债或关系债，联动更新 `20-outline/因果/scene-causality-map.md` 或 `20-outline/payoff-tracking/payoff-ledger.md`
+- `30-正文/章节/` 中对应章节
+- `90-运行/当前进度.md` 中的当前进度、未决问题、下一步
+- 如出现新 hard canon，补到 `10-设定/硬设定.md` 或记入 `90-运行/决策记录.md`
+- 如本章推进了伏笔、人物状态、因果债或关系债，联动更新 `20-大纲/因果/scene-causality-map.md` 或 `20-大纲/回收/payoff-ledger.md`
 
 ## 不在这里完成的事
 
@@ -141,4 +141,4 @@ description: "中文小说正文起草 skill。用于根据现有设定和章节
 - 如果只是去 AI 味，不在这里硬修，转到 `novel-deslop`
 - 如果核心诉求是“先检查这一章前后顺不顺、有没有漏线”，先转到 `novel-checkup`
 
-需要更细的加载规则时，读取 `references/context-pack.md`；需要具体写前检查项时，读取 `references/prewrite-checklist.md`；需要提高章节质量时，读取 `references/chapter-quality-bar.md`；需要做长篇续写防漂时，读取 `references/serial-continuation-card.md`；需要写后自检时，读取 `references/post-draft-self-check.md`。
+需要更细的加载规则时，读取 `references/上下文包.md`；需要具体写前检查项时，读取 `references/写前检查表.md`；需要提高章节质量时，读取 `references/章节质量标准.md`；需要做长篇续写防漂时，读取 `references/连载续写卡.md`；需要写后自检时，读取 `references/写后自检卡.md`。

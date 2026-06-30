@@ -13,9 +13,9 @@ description: "中文小说修订 skill。用于对已有正文做结构修复、
 
 修订前先选一个主问题模板，不要什么都一起改：
 
-- 因果断裂、动机悬浮、转折像作者硬推 -> `references/logic-repair-template.md`
-- 细节稀薄、情绪不落地、正文大量停在总结层 -> `references/detail-repair-template.md`
-- 伏笔散、回收硬、章节尾没有追读推动力 -> `references/payoff-repair-template.md`
+- 因果断裂、动机悬浮、转折像作者硬推 -> `references/逻辑修补模板.md`
+- 细节稀薄、情绪不落地、正文大量停在总结层 -> `references/细节修补模板.md`
+- 伏笔散、回收硬、章节尾没有追读推动力 -> `references/回收修补模板.md`
 
 如果三类问题同时存在，默认顺序是：逻辑 -> 回收 -> 细节 -> 句子去味。
 
@@ -42,9 +42,9 @@ description: "中文小说修订 skill。用于对已有正文做结构修复、
 修订时尽量同时输出：
 
 - 修订后的正文
-- `40-revision/chapter-reports/` 下对应的修订报告
-- 如涉及 canon 改动，在 `90-ops/decisions.md` 记录
-- 如涉及跨章因果或伏笔联动，同步更新 `20-outline/因果/scene-causality-map.md` 或 `20-outline/payoff-tracking/payoff-ledger.md`
+- `40-修订/修稿报告/` 下对应的修订报告
+- 如涉及 canon 改动，在 `90-运行/决策记录.md` 记录
+- 如涉及跨章因果或伏笔联动，同步更新 `20-大纲/因果/scene-causality-map.md` 或 `20-大纲/回收/payoff-ledger.md`
 
 ## 去 AI 味规则
 
@@ -61,7 +61,7 @@ description: "中文小说修订 skill。用于对已有正文做结构修复、
 - 如果核心诉求是“像平台文一点”“更有人味”，可联动 `novel-commercial-writing` 或 `novel-deslop`
 - 如果核心诉求是“先查有没有前后打架、有没有漏线”，先转 `novel-checkup`
 
-需要更细的检查顺序时，读取 `references/revision-ladder.md`；需要具体修订模板时，按问题类型读取对应的 `logic-repair-template.md`、`detail-repair-template.md` 或 `payoff-repair-template.md`。
+需要更细的检查顺序时，读取 `references/修订阶梯.md`；需要具体修订模板时，按问题类型读取对应的 `逻辑修补模板.md`、`细节修补模板.md` 或 `回收修补模板.md`。
 
 ## 完本流程
 
@@ -69,14 +69,14 @@ description: "中文小说修订 skill。用于对已有正文做结构修复、
 
 ### 第一步：线头收束
 
-1. 逐条拉出 `20-outline/payoff-tracking/payoff-ledger.md` 检查每条埋线的回收状态
-2. 检查 `20-outline/relationship-arc-tracker.md` 中每段关系的最终状态
-3. 对照 `references/completion-checklist.md` 逐项完成检查
+1. 逐条拉出 `20-大纲/回收/payoff-ledger.md` 检查每条埋线的回收状态
+2. 检查 `20-大纲/感情线追踪.md` 中每段关系的最终状态
+3. 对照 `references/完本检查清单.md` 逐项完成检查
 
 ### 第二步：硬伤排查
 
-1. 对照 `10-bible/canon.md` 检查全书的设定一致性
-2. 检查 `20-outline/因果/scene-causality-map.md` 的因果链是否闭合
+1. 对照 `10-设定/硬设定.md` 检查全书的设定一致性
+2. 检查 `20-大纲/因果/scene-causality-map.md` 的因果链是否闭合
 3. 检查角色名称、地名、能力名、时间线在全书中是否统一
 
 ### 第三步：终校
@@ -84,7 +84,7 @@ description: "中文小说修订 skill。用于对已有正文做结构修复、
 1. 全本通读，修正错别字和语病
 2. 补全正文中留空的标记，删掉不再需要的 TODO
 3. 将完成分卷正文移入 `50-archive/`
-4. 更新 `00-story-core/project-meta.md` 状态为「已完本」
+4. 更新 `00-书核/作品总表.md` 状态为「已完本」
 
 ### 第四步：续集规划（可选）
 
@@ -92,4 +92,4 @@ description: "中文小说修订 skill。用于对已有正文做结构修复、
 - 续集需要的设定变化是否已记录
 
 ## 资源
-- 完本检查清单：`references/completion-checklist.md`
+- 完本检查清单：`references/完本检查清单.md`

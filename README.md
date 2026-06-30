@@ -86,12 +86,12 @@ python3 skills/novel-bootstrap/scripts/init_novel_project.py \
 
 如果目标是快速启动长篇网文，不要一上来把全书所有设定写满。初始化后优先补这些文件：
 
-- `00-story-core/creative-brief.md`
-- `00-story-core/series-promise.md`
-- `20-outline/first-arc-launchpad.md`
-- `20-outline/volumes/volume-01.md`
-- `20-outline/chapter-beats/chapter-001.md`
-- `90-ops/serial-dashboard.md`
+- `00-书核/立项单.md`
+- `00-书核/长线承诺.md`
+- `20-大纲/首卷发射台.md`
+- `20-大纲/分卷/volume-01.md`
+- `20-大纲/节拍卡/chapter-001.md`
+- `90-运行/连载驾驶舱.md`
 
 这套组合的目标是先把第一卷卖点、前三章钩子和连载驾驶舱搭起来，尽快进入可持续写稿状态。
 
@@ -141,26 +141,26 @@ python3 skills/novel-bootstrap/scripts/init_novel_project.py \
 
 初始化后，先只看这几个文件：
 
-- `00-story-core/project-meta.md`
-- `00-story-core/creative-brief.md`
-- `20-outline/first-arc-launchpad.md`
-- `20-outline/volumes/volume-01.md`
-- `20-outline/chapter-beats/chapter-001.md`
-- `20-outline/chapter-beats/chapter-002.md`
-- `20-outline/chapter-beats/chapter-003.md`
-- `90-ops/serial-dashboard.md`
+- `00-书核/作品总表.md`
+- `00-书核/立项单.md`
+- `20-大纲/首卷发射台.md`
+- `20-大纲/分卷/volume-01.md`
+- `20-大纲/节拍卡/chapter-001.md`
+- `20-大纲/节拍卡/chapter-002.md`
+- `20-大纲/节拍卡/chapter-003.md`
+- `90-运行/连载驾驶舱.md`
 
 ### 第二步：先把书核和前三章锁住
 
 建议按这个顺序填：
 
-1. `00-story-core/creative-brief.md`
-2. `00-story-core/series-promise.md`
-3. `20-outline/first-arc-launchpad.md`
-4. `20-outline/volumes/volume-01.md`
-5. `20-outline/chapter-beats/chapter-001.md`
-6. `20-outline/chapter-beats/chapter-002.md`
-7. `20-outline/chapter-beats/chapter-003.md`
+1. `00-书核/立项单.md`
+2. `00-书核/长线承诺.md`
+3. `20-大纲/首卷发射台.md`
+4. `20-大纲/分卷/volume-01.md`
+5. `20-大纲/节拍卡/chapter-001.md`
+6. `20-大纲/节拍卡/chapter-002.md`
+7. `20-大纲/节拍卡/chapter-003.md`
 
 这一步的目标不是想完整本书，而是先回答：
 
@@ -187,10 +187,10 @@ python3 skills/novel-bootstrap/scripts/init_novel_project.py \
 
 先确保这些文件已经至少有初稿：
 
-- `00-story-core/creative-brief.md`
-- `20-outline/volumes/volume-01.md`
-- `20-outline/chapter-beats/chapter-001.md`
-- `90-ops/current-state.md`
+- `00-书核/立项单.md`
+- `20-大纲/分卷/volume-01.md`
+- `20-大纲/节拍卡/chapter-001.md`
+- `90-运行/当前进度.md`
 
 然后在 Codex 里用：
 
@@ -230,19 +230,19 @@ python3 skills/novel-bootstrap/scripts/init_novel_project.py \
 
 至少更新这些文件：
 
-- `30-draft/chapters/` 对应章节
-- `90-ops/current-state.md`
-- `90-ops/serial-dashboard.md`
-- 如有新伏笔或回收变化，再更新 `20-outline/payoff-tracking/payoff-ledger.md`
-- 如有新因果推进，再更新 `20-outline/因果/scene-causality-map.md`
+- `30-正文/章节/` 对应章节
+- `90-运行/当前进度.md`
+- `90-运行/连载驾驶舱.md`
+- 如有新伏笔或回收变化，再更新 `20-大纲/回收/payoff-ledger.md`
+- 如有新因果推进，再更新 `20-大纲/因果/scene-causality-map.md`
 
 ### 一个最小可行用法
 
 如果你现在只想尽快把第一章写出来，可以直接照这个最小顺序：
 
 1. 初始化项目
-2. 填 `creative-brief.md`
-3. 填 `first-arc-launchpad.md`
+2. 填 `立项单.md`
+3. 填 `首卷发射台.md`
 4. 填 `chapter-001.md`
 5. 用 `$novel-drafting` 写第一章
 6. 用 `$novel-checkup` 查问题
@@ -294,56 +294,56 @@ python3 scripts/uninstall_codex_plugin.py --remove-marketplace
 
 现在这两个环节已经有统一模板，不需要用户自己想格式：
 
-- 扫榜优先落到 `05-market/trend-notes.md` 和 `05-market/benchmark-list.md`
-- 拆文优先落到 `05-market/deconstructions/{对标名}-analysis.md`
+- 扫榜优先落到 `05-市场/趋势笔记.md` 和 `05-市场/对标书单.md`
+- 拆文优先落到 `05-市场/拆解/{对标名}-analysis.md`
 
 可直接参考的样例：
 
-- [trend-notes-example.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-market-scan/assets/examples/trend-notes-example.md)
-- [platform-comparison-example.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-market-scan/assets/examples/platform-comparison-example.md)
-- [benchmark-analysis-example.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-deconstruction/assets/examples/benchmark-analysis-example.md)
-- [golden-hook-example.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-deconstruction/assets/examples/golden-hook-example.md)
-- [retention-analysis-example.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-deconstruction/assets/examples/long-form/retention-analysis-example.md)
-- [compression-analysis-example.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-deconstruction/assets/examples/short-form/compression-analysis-example.md)
+- [趋势笔记样例.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-market-scan/assets/examples/趋势笔记样例.md)
+- [平台对比样例.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-market-scan/assets/examples/平台对比样例.md)
+- [对标分析样例.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-deconstruction/assets/examples/对标分析样例.md)
+- [黄金钩样例.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-deconstruction/assets/examples/黄金钩样例.md)
+- [留存分析样例.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-deconstruction/assets/examples/long-form/留存分析样例.md)
+- [压缩分析样例.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-deconstruction/assets/examples/short-form/压缩分析样例.md)
 
 ## 拆文如何反哺写作
 
 现在拆文结果不再只是分析层，而是会直接服务写作质量：
 
 - `novel-drafting` 会优先继承拆文里的“因果怎么闭合”“细节抓手”“迁移到我项目里的注意点”
-- `novel-outlining` 会同步维护 `20-outline/因果/scene-causality-map.md`
-- `novel-outlining` 会同步维护 `20-outline/payoff-tracking/payoff-ledger.md`
+- `novel-outlining` 会同步维护 `20-大纲/因果/scene-causality-map.md`
+- `novel-outlining` 会同步维护 `20-大纲/回收/payoff-ledger.md`
 
 这两张表的模板参考：
 
-- [causality-map-template.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-outlining/references/causality-map-template.md)
-- [payoff-ledger-template.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-outlining/references/payoff-ledger-template.md)
+- [因果图模板.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-outlining/references/因果图模板.md)
+- [回收总账模板.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-outlining/references/回收总账模板.md)
 
 ## 质量强化工作流
 
 现在写作和修订的质量控制也有固定落点：
 
-- 起草前先用 [prewrite-checklist.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-drafting/references/prewrite-checklist.md) 锁定章节目标、阻力、因果、细节载体和结尾推进器。
-- 起稿时可用 [chapter-quality-bar.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-drafting/references/chapter-quality-bar.md) 守住章节最低质量线，避免只把字数铺出来。
-- 长篇续写前可用 [serial-continuation-card.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-drafting/references/serial-continuation-card.md) 先防漂，再下笔。
-- 正文初稿写完后，先用 [post-draft-self-check.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-drafting/references/post-draft-self-check.md) 判断是继续写、先体检还是先修订。
-- 做章节或卷体检时，可用 [chapter-checkup-template.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/references/chapter-checkup-template.md)、[volume-checkup-template.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/references/volume-checkup-template.md)、[longline-scan-template.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/references/longline-scan-template.md) 和 [retention-diagnostics.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/references/retention-diagnostics.md) 直接落报告。
-- 初始化项目后，可直接在 [chapter-prewrite-checklist.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-bootstrap/assets/novel-project-template/30-draft/prewrite/chapter-prewrite-checklist.md) 基础上复制填写。
-- 修订时按问题类型进入 [logic-repair-template.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-revision/references/logic-repair-template.md)、[detail-repair-template.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-revision/references/detail-repair-template.md) 或 [payoff-repair-template.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-revision/references/payoff-repair-template.md)。
+- 起草前先用 [写前检查表.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-drafting/references/写前检查表.md) 锁定章节目标、阻力、因果、细节载体和结尾推进器。
+- 起稿时可用 [章节质量标准.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-drafting/references/章节质量标准.md) 守住章节最低质量线，避免只把字数铺出来。
+- 长篇续写前可用 [连载续写卡.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-drafting/references/连载续写卡.md) 先防漂，再下笔。
+- 正文初稿写完后，先用 [写后自检卡.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-drafting/references/写后自检卡.md) 判断是继续写、先体检还是先修订。
+- 做章节或卷体检时，可用 [章节体检模板.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/references/章节体检模板.md)、[卷体检模板.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/references/卷体检模板.md)、[长线扫描模板.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/references/长线扫描模板.md) 和 [追读排查.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/references/追读排查.md) 直接落报告。
+- 初始化项目后，可直接在 [chapter-写前检查表.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-bootstrap/assets/novel-project-template/30-正文/写前/chapter-写前检查表.md) 基础上复制填写。
+- 修订时按问题类型进入 [逻辑修补模板.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-revision/references/逻辑修补模板.md)、[细节修补模板.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-revision/references/细节修补模板.md) 或 [回收修补模板.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-revision/references/回收修补模板.md)。
 - 小说工程模板里也同步放好了三份 chapter report 模板，便于长期追踪每章修过什么、还剩什么风险。
 
 `novel-checkup` 现在也有真实样例报告，可以直接照着看判断方式和落报告方式：
 
-- [chapter-checkup-example.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/assets/examples/chapter-checkup-example.md)
-- [volume-checkup-example.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/assets/examples/volume-checkup-example.md)
-- [longline-scan-example.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/assets/examples/longline-scan-example.md)
-- [retention-diagnostics-example.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/assets/examples/retention-diagnostics-example.md)
+- [章节体检样例.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/assets/examples/章节体检样例.md)
+- [卷体检样例.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/assets/examples/卷体检样例.md)
+- [长线扫描样例.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/assets/examples/长线扫描样例.md)
+- [追读排查样例.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-checkup/assets/examples/追读排查样例.md)
 
 如果正在日更或周更，可额外配合这些快启文件：
 
-- [first-arc-launchpad.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-bootstrap/assets/novel-project-template/20-outline/first-arc-launchpad.md)
-- [serial-dashboard.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-bootstrap/assets/novel-project-template/90-ops/serial-dashboard.md)
-- [serial-chapter-quickstart.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-bootstrap/assets/novel-project-template/30-draft/prewrite/serial-chapter-quickstart.md)
+- [first-arc-launchpad.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-bootstrap/assets/novel-project-template/20-大纲/首卷发射台.md)
+- [serial-dashboard.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-bootstrap/assets/novel-project-template/90-运行/连载驾驶舱.md)
+- [serial-chapter-quickstart.md](/Users/whisper/IdeaProjects/github/novel-skills/skills/novel-bootstrap/assets/novel-project-template/30-正文/写前/serial-chapter-quickstart.md)
 
 ## 参考来源
 

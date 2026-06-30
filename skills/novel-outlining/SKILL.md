@@ -28,14 +28,14 @@ description: "中文小说结构规划 skill。用于把 premise 和设定扩展
 
 ## 主要产物
 
-- `20-outline/master-outline.md`
-- `20-outline/arc-tracker.md`
-- `20-outline/relationship-arc-tracker.md`
-- `20-outline/volumes/*.md`
-- `20-outline/chapter-beats/*.md`
-- `20-outline/因果/scene-causality-map.md`
-- `20-outline/payoff-tracking/payoff-ledger.md`
-- `20-outline/ending-blueprint.md`
+- `20-大纲/全书总纲.md`
+- `20-大纲/弧线追踪.md`
+- `20-大纲/感情线追踪.md`
+- `20-大纲/分卷/*.md`
+- `20-大纲/节拍卡/*.md`
+- `20-大纲/因果/scene-causality-map.md`
+- `20-大纲/回收/payoff-ledger.md`
+- `20-大纲/结局蓝图.md`
 
 ## 章节 beat 最低要求
 
@@ -65,6 +65,6 @@ description: "中文小说结构规划 skill。用于把 premise 和设定扩展
 
 ## 资源
 
-需要模板与分层方式时，读取 `references/outline-ladder.md`。
+需要模板与分层方式时，读取 `references/大纲阶梯.md`。
 
 大纲必须能直接拿去写章，不只是看起来完整。

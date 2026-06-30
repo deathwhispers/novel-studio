@@ -27,44 +27,44 @@ description: "中文小说体检 skill。用于在正文完成后检查单章质
 1. 当前章节正文
 2. 当前章节节拍卡
 3. 上一章正文或上一场摘要
-4. `90-ops/current-state.md`
+4. `90-运行/当前进度.md`
 
 按需追加：
 
 - 相关角色卡
-- `10-bible/canon.md`
-- `20-outline/因果/scene-causality-map.md`
-- `20-outline/payoff-tracking/payoff-ledger.md`
-- `20-outline/volumes/`
-- `20-outline/arc-tracker.md`
-- `90-ops/serial-dashboard.md`
+- `10-设定/硬设定.md`
+- `20-大纲/因果/scene-causality-map.md`
+- `20-大纲/回收/payoff-ledger.md`
+- `20-大纲/分卷/`
+- `20-大纲/弧线追踪.md`
+- `90-运行/连载驾驶舱.md`
 
 如果做卷体检，再优先读取：
 
 - 该卷关键章节正文
 - 该卷卷纲
-- `references/volume-checkup-template.md`
+- `references/卷体检模板.md`
 
 如果做长线漏线扫描，再优先读取：
 
-- `references/longline-scan-template.md`
-- `20-outline/payoff-tracking/payoff-ledger.md`
-- `20-outline/arc-tracker.md`
+- `references/长线扫描模板.md`
+- `20-大纲/回收/payoff-ledger.md`
+- `20-大纲/弧线追踪.md`
 
 如果做追读弱点排查，再优先读取：
 
-- `references/retention-diagnostics.md`
+- `references/追读排查.md`
 - 最近 3 到 10 章正文
-- `90-ops/serial-dashboard.md`
+- `90-运行/连载驾驶舱.md`
 
 ## 产物
 
 优先输出：
 
-- `40-revision/checkup-reports/{chapter}-checkup.md`
-- 如果是卷体检：`40-revision/checkup-reports/{volume}-full-checkup.md`
-- 如果是长线扫描：`40-revision/checkup-reports/{range}-longline-scan.md`
-- 如果是追读排查：`40-revision/checkup-reports/{range}-retention-diagnostics.md`
+- `40-修订/体检报告/{chapter}-checkup.md`
+- 如果是卷体检：`40-修订/体检报告/{volume}-full-checkup.md`
+- 如果是长线扫描：`40-修订/体检报告/{range}-longline-scan.md`
+- 如果是追读排查：`40-修订/体检报告/{range}-追读排查.md`
 - 一份按严重度排序的问题清单
 - 建议转向哪个 skill 处理：
   - 结构错位 -> `novel-outlining`
@@ -89,7 +89,7 @@ description: "中文小说体检 skill。用于在正文完成后检查单章质
 
 #### 审视产出
 
-- `40-revision/checkup-reports/mid-series-review.md`
+- `40-修订/体检报告/mid-series-review.md`
 - 一份按风险排序的问题清单（主线漂移 / 关系冷却 / 节奏塌陷 / 信息债过期）
 - 建议转向哪个 skill：`novel-outlining` / `novel-worldbuilding` / `novel-revision`
 
@@ -128,11 +128,11 @@ description: "中文小说体检 skill。用于在正文完成后检查单章质
 
 ## 资源
 
-- 章节体检表：`references/chapter-checkup-template.md`
-- 前后照应检查：`references/callback-checklist.md`
-- 连续性检查：`references/continuity-checklist.md`
-- 卷体检表：`references/volume-checkup-template.md`
-- 长线漏线扫描：`references/longline-scan-template.md`
-- 追读弱点排查：`references/retention-diagnostics.md`
-- 真实样例：`assets/examples/chapter-checkup-example.md`、`assets/examples/volume-checkup-example.md`、`assets/examples/longline-scan-example.md`、`assets/examples/retention-diagnostics-example.md`
-- 中期审视：`references/mid-series-review-template.md`
+- 章节体检表：`references/章节体检模板.md`
+- 前后照应检查：`references/前后照应检查清单.md`
+- 连续性检查：`references/连续性检查清单.md`
+- 卷体检表：`references/卷体检模板.md`
+- 长线漏线扫描：`references/长线扫描模板.md`
+- 追读弱点排查：`references/追读排查.md`
+- 真实样例：`assets/examples/章节体检样例.md`、`assets/examples/卷体检样例.md`、`assets/examples/长线扫描样例.md`、`assets/examples/追读排查样例.md`
+- 中期审视：`references/中期审视模板.md`

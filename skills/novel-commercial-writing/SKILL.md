@@ -44,6 +44,6 @@ description: "中文小说商业化写作 skill。用于把创意、大纲或正
 
 ## 资源
 
-- 商业化指标：`references/commercial-checklist.md`
-- 平台适配：`references/platform-fit.md`
-- 开篇与留存：`references/retention-loops.md`
+- 商业化指标：`references/商业化检查清单.md`
+- 平台适配：`references/平台适配.md`
+- 开篇与留存：`references/留存循环.md`

@@ -41,15 +41,15 @@ description: "中文小说市场扫榜与趋势研究 skill。用于分析起点
 - 更适合长篇还是短篇
 - 推荐转交给 `novel-ideation` 或 `novel-commercial-writing` 的下一步
 
-优先按 `references/scan-output-spec.md` 的结构落盘。若当前是小说项目工作区，默认写入：
+优先按 `references/扫描输出规范.md` 的结构落盘。若当前是小说项目工作区，默认写入：
 
-- `05-market/trend-notes.md`
-- `05-market/benchmark-list.md`
+- `05-市场/趋势笔记.md`
+- `05-市场/对标书单.md`
 
 如需参照完成态，读取：
 
-- `assets/examples/trend-notes-example.md`
-- `assets/examples/platform-comparison-example.md`
+- `assets/examples/趋势笔记样例.md`
+- `assets/examples/平台对比样例.md`
 
 ## 边界
 
@@ -59,7 +59,7 @@ description: "中文小说市场扫榜与趋势研究 skill。用于分析起点
 
 ## 资源
 
-- 平台差异：`references/platforms.md`
-- 长短篇差异：`references/form-matrix.md`
-- 题材分析维度：`references/genre-lenses.md`
-- 输出模板：`references/scan-output-spec.md`
+- 平台差异：`references/平台.md`
+- 长短篇差异：`references/形式矩阵.md`
+- 题材分析维度：`references/题材透镜.md`
+- 输出模板：`references/扫描输出规范.md`

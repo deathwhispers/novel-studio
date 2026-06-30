@@ -40,16 +40,16 @@ description: "中文小说拆文 skill。用于拆解样章、黄金三章、爆
 - 它如何保证逻辑不断裂
 - 它靠什么细节让场景成立
 
-优先按 `references/deconstruction-output-spec.md` 的结构落盘。若当前是小说项目工作区，默认写入：
+优先按 `references/拆文输出规范.md` 的结构落盘。若当前是小说项目工作区，默认写入：
 
-- `05-market/deconstructions/{对标名}-analysis.md`
+- `05-市场/拆解/{对标名}-analysis.md`
 
 如需参照完成态，读取：
 
-- `assets/examples/benchmark-analysis-example.md`
-- `assets/examples/golden-hook-example.md`
-- `assets/examples/long-form/retention-analysis-example.md`
-- `assets/examples/short-form/compression-analysis-example.md`
+- `assets/examples/对标分析样例.md`
+- `assets/examples/黄金钩样例.md`
+- `assets/examples/long-form/留存分析样例.md`
+- `assets/examples/short-form/压缩分析样例.md`
 
 ## 长短篇差异
 
@@ -68,7 +68,7 @@ description: "中文小说拆文 skill。用于拆解样章、黄金三章、爆
 
 ## 资源
 
-- 长短篇拆文重点：`references/deconstruction-modes.md`
-- 可迁移技法清单：`references/pattern-catalog.md`
-- 输出模板：`references/deconstruction-output-spec.md`
-- 逻辑与细节检查：`references/quality-lenses.md`
+- 长短篇拆文重点：`references/拆文模式.md`
+- 可迁移技法清单：`references/模式目录.md`
+- 输出模板：`references/拆文输出规范.md`
+- 逻辑与细节检查：`references/质量透镜.md`

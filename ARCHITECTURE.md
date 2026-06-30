@@ -36,12 +36,12 @@
 
 4. 硬资料、正文、体检、运行记录分离
 
-- `05-market/` 放平台研究、对标和拆文沉淀
-- `10-bible/` 放硬设定与可追溯 canon
-- `20-outline/` 放结构和剧情承诺
-- `30-draft/` 放正文和场景
-- `40-revision/` 放体检报告和修订报告
-- `90-ops/` 放当前状态、交接和决策日志
+- `05-市场/` 放平台研究、对标和拆文沉淀
+- `10-设定/` 放硬设定与可追溯 canon
+- `20-大纲/` 放结构和剧情承诺
+- `30-正文/` 放正文和场景
+- `40-修订/` 放体检报告和修订报告
+- `90-运行/` 放当前状态、交接和决策日志
 
 这样可以降低“正文、设定、工作记录混写”的混乱度。
 
@@ -103,15 +103,15 @@
 
 ```text
 my-novel/
-├── 00-story-core/
+├── 00-书核/
 │   ├── project-meta.md
 │   ├── creative-brief.md
 │   └── series-promise.md
-├── 05-market/
+├── 05-市场/
 │   ├── trend-notes.md
 │   ├── benchmark-list.md
 │   └── deconstructions/
-├── 10-bible/
+├── 10-设定/
 │   ├── canon.md
 │   ├── world-rules.md
 │   ├── locations.md
@@ -119,21 +119,21 @@ my-novel/
 │   ├── timeline.md
 │   ├── motifs.md
 │   └── characters/
-├── 20-outline/
+├── 20-大纲/
 │   ├── master-outline.md
 │   ├── arc-tracker.md
 │   ├── first-arc-launchpad.md
 │   ├── volumes/
 │   └── chapter-beats/
-├── 30-draft/
+├── 30-正文/
 │   ├── chapters/
 │   ├── scenes/
 │   └── imported/
-├── 40-revision/
+├── 40-修订/
 │   ├── revision-log.md
 │   ├── checkup-reports/
 │   └── chapter-reports/
-└── 90-ops/
+└── 90-运行/
     ├── current-state.md
     ├── serial-dashboard.md
     ├── decisions.md
@@ -143,41 +143,41 @@ my-novel/
 
 ## 目录为何这样分层
 
-### `00-story-core`
+### `00-书核`
 
 放作品最核心的目标与承诺。这里回答“这本书到底卖什么、为什么值得读”。
 
-### `05-market`
+### `05-市场`
 
 放市场与对标研究。这里回答“什么值得写、哪些作品值得学、学什么而不是抄什么”。
 
-### `10-bible`
+### `10-设定`
 
 放 hard canon 和高频检索资料。这里回答“这本书的世界是什么样、谁在里面行动”。
 
-### `20-outline`
+### `20-大纲`
 
 放结构承诺。这里回答“故事准备如何推进，哪些线什么时候要碰、要收”。
 
-如果是长篇网文快启，`20-outline/first-arc-launchpad.md` 用来先锁第一卷和前三章，不要求立即想完整本书。
+如果是长篇网文快启，`20-大纲/首卷发射台.md` 用来先锁第一卷和前三章，不要求立即想完整本书。
 
-### `30-draft`
+### `30-正文`
 
 放真正的正文资产。这里回答“这一章或这一场到底写了什么”。
 
 这里不只存正文，也承接“如何更稳地把正文写出来”的工作文件，包括写前卡、连载快启卡和场景拆写草稿。
 
-### `40-revision`
+### `40-修订`
 
 放体检痕迹和修订报告。这里回答“这一章哪里有病、怎么修、修完还剩什么风险”。
 
 这里不仅放章节体检，也放卷体检、长线漏线扫描和追读弱点排查。
 
-### `90-ops`
+### `90-运行`
 
 放运行态信息。这里回答“下次继续时先看哪里、卡在哪里、做过哪些关键决定”。
 
-如果已经进入连载，`90-ops/serial-dashboard.md` 应作为高频回看的驾驶舱，而不是把这些运行信息散落在多个文档里。
+如果已经进入连载，`90-运行/连载驾驶舱.md` 应作为高频回看的驾驶舱，而不是把这些运行信息散落在多个文档里。
 
 ## 推荐流程链
 
@@ -195,17 +195,17 @@ my-novel/
 
 | Skill | 主要读写区域 |
 | --- | --- |
-| `novel-market-scan` | `05-market/` |
-| `novel-deconstruction` | `05-market/deconstructions/`, `05-market/benchmark-list.md` |
+| `novel-market-scan` | `05-市场/` |
+| `novel-deconstruction` | `05-市场/拆解/`, `05-市场/对标书单.md` |
 | `novel-bootstrap` | 全项目，尤其是模板初始化和导入 |
-| `novel-commercial-writing` | `00-story-core/`, `05-market/`, `20-outline/`, `30-draft/` |
-| `novel-deslop` | `30-draft/`, `40-revision/` |
-| `novel-ideation` | `00-story-core/` |
-| `novel-worldbuilding` | `10-bible/`, `90-ops/decisions.md` |
-| `novel-outlining` | `20-outline/` |
-| `novel-checkup` | `20-outline/`, `30-draft/`, `40-revision/checkup-reports/`, `90-ops/current-state.md`, `90-ops/serial-dashboard.md` |
-| `novel-drafting` | `20-outline/`, `30-draft/`, `90-ops/current-state.md`, `90-ops/serial-dashboard.md` |
-| `novel-revision` | `30-draft/`, `40-revision/`, `90-ops/decisions.md` |
+| `novel-commercial-writing` | `00-书核/`, `05-市场/`, `20-大纲/`, `30-正文/` |
+| `novel-deslop` | `30-正文/`, `40-修订/` |
+| `novel-ideation` | `00-书核/` |
+| `novel-worldbuilding` | `10-设定/`, `90-运行/决策记录.md` |
+| `novel-outlining` | `20-大纲/` |
+| `novel-checkup` | `20-大纲/`, `30-正文/`, `40-修订/体检报告/`, `90-运行/当前进度.md`, `90-运行/连载驾驶舱.md` |
+| `novel-drafting` | `20-大纲/`, `30-正文/`, `90-运行/当前进度.md`, `90-运行/连载驾驶舱.md` |
+| `novel-revision` | `30-正文/`, `40-修订/`, `90-运行/决策记录.md` |
 
 ## 迭代建议
 

@@ -18,14 +18,14 @@ description: "中文小说设定圣经 skill。用于构建或修订人物档案
 
 ## 主要产物
 
-- `10-bible/canon.md`
-- `10-bible/world-rules.md`
-- `10-bible/power-system.md`
-- `10-bible/地点.md`
-- `10-bible/势力.md`
-- `10-bible/时间线.md`
-- `10-bible/母题.md`
-- `10-bible/角色/*.md`（主角、配角、反派角色卡模板）
+- `10-设定/硬设定.md`
+- `10-设定/世界规则.md`
+- `10-设定/力量体系.md`
+- `10-设定/地点.md`
+- `10-设定/势力.md`
+- `10-设定/时间线.md`
+- `10-设定/母题.md`
+- `10-设定/角色/*.md`（主角、配角、反派角色卡模板）
 
 ## 人物文件最低要求
 
@@ -43,10 +43,10 @@ description: "中文小说设定圣经 skill。用于构建或修订人物档案
 
 ## 变更规则
 
-- 如果修订了 hard canon，同步在 `90-ops/decisions.md` 记录原因。
+- 如果修订了 hard canon，同步在 `90-运行/决策记录.md` 记录原因。
 - 如果只是补充 flavor text，不要伪装成 hard canon。
 - 如果用户要求“随便补一点设定”，优先补会影响当前大纲或下一章的设定。
 
 ## 资源
 
-需要更细的字段或边界时，读取 `references/story-bible-map.md`。
+需要更细的字段或边界时，读取 `references/设定圣经映射.md`。

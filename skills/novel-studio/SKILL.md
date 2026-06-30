@@ -1,6 +1,6 @@
 ---
 name: novel-studio
-description: "中文小说工作台路由 skill。用于用户想写小说但任务还不够明确，或需要在开书、导入旧稿、补设定、列大纲、写章节、重写润色之间自动分流时。检查当前工作区是否已有 `00-story-core/`, `10-bible/`, `20-outline/`, `30-draft/` 等小说工程文件，再把任务路由到 `novel-bootstrap`、`novel-ideation`、`novel-worldbuilding`、`novel-outlining`、`novel-drafting` 或 `novel-revision`。"
+description: "中文小说工作台路由 skill。用于用户想写小说但任务还不够明确，或需要在开书、导入旧稿、补设定、列大纲、写章节、重写润色之间自动分流时。检查当前工作区是否已有 `00-书核/`, `10-设定/`, `20-大纲/`, `30-正文/` 等小说工程文件，再把任务路由到 `novel-bootstrap`、`novel-ideation`、`novel-worldbuilding`、`novel-outlining`、`novel-drafting` 或 `novel-revision`。"
 ---
 
 # 小说工作台
@@ -21,7 +21,7 @@ description: "中文小说工作台路由 skill。用于用户想写小说但任
    - 路由到 `novel-commercial-writing`
 4. 用户重点是去 AI 味、改自然、改人味节奏
    - 路由到 `novel-deslop`
-5. 工作区里不存在 `00-story-core/project-meta.md`
+5. 工作区里不存在 `00-书核/作品总表.md`
    - 路由到 `novel-bootstrap`
 6. 用户只有点子、题材、角色火花，尚未形成清晰故事核、读者承诺和题材定位
    - 路由到 `novel-ideation`
@@ -50,20 +50,20 @@ description: "中文小说工作台路由 skill。用于用户想写小说但任
 
 优先检查以下文件信号：
 
-- `00-story-core/project-meta.md`
-- `00-story-core/creative-brief.md`
-- `05-market/trend-notes.md`
-- `05-market/benchmark-list.md`
-- `05-market/deconstructions/`
-- `10-bible/canon.md`
-- `20-outline/master-outline.md`
-- `20-outline/chapter-beats/`
-- `30-draft/chapters/`
-- `40-revision/checkup-reports/`
-- `40-revision/chapter-reports/`
-- `90-ops/current-state.md`
+- `00-书核/作品总表.md`
+- `00-书核/立项单.md`
+- `05-市场/趋势笔记.md`
+- `05-市场/对标书单.md`
+- `05-市场/拆解/`
+- `10-设定/硬设定.md`
+- `20-大纲/全书总纲.md`
+- `20-大纲/节拍卡/`
+- `30-正文/章节/`
+- `40-修订/体检报告/`
+- `40-修订/修稿报告/`
+- `90-运行/当前进度.md`
 
-如果需要更细的路由例子，读取 `references/routing-map.md`。
+如果需要更细的路由例子，读取 `references/路由地图.md`。
 
 ## 输出要求
 

@@ -11,7 +11,7 @@ description: "中文小说项目初始化与导入 skill。用于从零创建小
 
 ## 初始化流程
 
-1. 检查当前目录是否已存在 `00-story-core/project-meta.md`
+1. 检查当前目录是否已存在 `00-书核/作品总表.md`
 2. 如果不存在，优先初始化模板工作区
 3. 如果存在，但结构不完整，先补目录，再整理已有资料
 4. 如果用户带来了旧稿、角色卡、世界观文档或零散正文，先按导入清单映射，再进入后续创作阶段
@@ -36,40 +36,40 @@ python3 scripts/init_novel_project.py \
 导入时遵守以下顺序：
 
 1. 不重写原始资料，先分类
-2. 能直接当“书核”的资料，优先归到 `00-story-core/`
-3. 设定资料 -> `10-bible/`
-4. 大纲资料 -> `20-outline/`
-5. 正文资料 -> `30-draft/imported/` 或 `30-draft/chapters/`
-6. 关键导入决策写进 `90-ops/decisions.md`
-7. 导入后更新 `90-ops/current-state.md`
+2. 能直接当“书核”的资料，优先归到 `00-书核/`
+3. 设定资料 -> `10-设定/`
+4. 大纲资料 -> `20-大纲/`
+5. 正文资料 -> `30-正文/导入/` 或 `30-正文/章节/`
+6. 关键导入决策写进 `90-运行/决策记录.md`
+7. 导入后更新 `90-运行/当前进度.md`
 
 不要在导入阶段顺手大改文稿内容。先让项目可读、可找、可继续，再进入 `novel-ideation`、`novel-worldbuilding` 或 `novel-outlining`。
 
 ## 工作区完成标准
 
-- `00-story-core/project-meta.md` 存在
-- `00-story-core/creative-brief.md` 至少有初稿
-- `10-bible/`、`20-outline/`、`30-draft/`、`90-ops/` 目录已就位
-- `90-ops/current-state.md` 记录当前阶段、正在写到哪、卡在哪里、下一步先做什么
-- 若是导入项目，`30-draft/导入/源文件索引.md` 已记录来源
+- `00-书核/作品总表.md` 存在
+- `00-书核/立项单.md` 至少有初稿
+- `10-设定/`、`20-大纲/`、`30-正文/`、`90-运行/` 目录已就位
+- `90-运行/当前进度.md` 记录当前阶段、正在写到哪、卡在哪里、下一步先做什么
+- 若是导入项目，`30-正文/导入/源文件索引.md` 已记录来源
 
 如果目标是尽快启动长篇网文连载，初始化后优先补这些文件，而不是全量慢慢填：
 
-- `00-story-core/project-meta.md`
-- `00-story-core/creative-brief.md`
-- `20-outline/volumes/volume-01.md`
-- `20-outline/chapter-beats/chapter-001.md`
-- `20-outline/chapter-beats/chapter-002.md`
-- `20-outline/chapter-beats/chapter-003.md`
-- `90-ops/current-state.md`
-- `90-ops/serial-dashboard.md`
+- `00-书核/作品总表.md`
+- `00-书核/立项单.md`
+- `20-大纲/分卷/volume-01.md`
+- `20-大纲/节拍卡/chapter-001.md`
+- `20-大纲/节拍卡/chapter-002.md`
+- `20-大纲/节拍卡/chapter-003.md`
+- `90-运行/当前进度.md`
+- `90-运行/连载驾驶舱.md`
 
 先把“书核、第一卷卖点、前三章钩子、当前连载状态”搭起来，再去细补设定圣经和全书总纲。
 
 ## 资源
 
-- 工作区结构说明：`references/workspace-spec.md`
-- 导入映射清单：`references/import-checklist.md`
+- 工作区结构说明：`references/工作区规范.md`
+- 导入映射清单：`references/导入检查清单.md`
 - 初始化模板：`assets/novel-project-template/`
 - 初始化脚本：`scripts/init_novel_project.py`
 

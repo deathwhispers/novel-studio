@@ -104,10 +104,10 @@ def validate_skill(skill_dir: Path) -> list[str]:
 
 def check_routing_coverage(errors: list[str]) -> None:
     studio_file = SKILLS_DIR / "novel-studio" / "SKILL.md"
-    routing_file = SKILLS_DIR / "novel-studio" / "references" / "routing-map.md"
+    routing_file = SKILLS_DIR / "novel-studio" / "references" / "路由地图.md"
     skill_dirs = sorted(d.name for d in SKILLS_DIR.iterdir() if d.is_dir())
 
-    for label, f in [("novel-studio/SKILL.md", studio_file), ("routing-map.md", routing_file)]:
+    for label, f in [("novel-studio/SKILL.md", studio_file), ("路由地图.md", routing_file)]:
         if not f.exists():
             errors.append(f"studio routing: {label} not found")
             continue
@@ -143,28 +143,28 @@ def check_template_completeness(errors: list[str]) -> None:
         errors.append("template directory not found")
         return
     required = [
-        "00-story-core/project-meta.md", "00-story-core/creative-brief.md",
-        "00-story-core/series-promise.md",
-        "10-bible/canon.md", "10-bible/world-rules.md", "10-bible/power-system.md",
-        "10-bible/characters/protagonist.md", "10-bible/characters/supporting-character.md",
-        "10-bible/characters/antagonist.md",
-        "20-outline/master-outline.md", "20-outline/arc-tracker.md",
-        "20-outline/relationship-arc-tracker.md", "20-outline/ending-blueprint.md",
-        "20-outline/first-arc-launchpad.md",
-        "20-outline/volumes/volume-01.md", "20-outline/volumes/volume-nn.md",
-        "20-outline/chapter-beats/chapter-001.md", "20-outline/chapter-beats/chapter-beat-template.md",
-        "20-outline/causality/scene-causality-map.md",
-        "20-outline/payoff-tracking/payoff-ledger.md",
-        "30-draft/chapters/chapter-001.md", "30-draft/chapters/chapter-draft-template.md",
-        "30-draft/prewrite/chapter-prewrite-checklist.md",
-        "30-draft/imported/source-index.md",
-        "40-revision/revision-log.md",
-        "40-revision/chapter-reports/detail-repair-template.md",
-        "40-revision/chapter-reports/logic-repair-template.md",
-        "40-revision/chapter-reports/payoff-repair-template.md",
-        "50-archive/README.md",
-        "90-ops/current-state.md", "90-ops/serial-dashboard.md",
-        "90-ops/session-handoff.md",
+        "00-书核/作品总表.md", "00-书核/立项单.md",
+        "00-书核/长线承诺.md",
+        "10-设定/硬设定.md", "10-设定/世界规则.md", "10-设定/力量体系.md",
+        "10-设定/角色/主角.md", "10-设定/角色/配角.md",
+        "10-设定/角色/反派.md",
+        "20-大纲/全书总纲.md", "20-大纲/弧线追踪.md",
+        "20-大纲/感情线追踪.md", "20-大纲/结局蓝图.md",
+        "20-大纲/首卷发射台.md",
+        "20-大纲/分卷/第一卷.md", "20-大纲/分卷/卷通用模板.md",
+        "20-大纲/节拍卡/第一章节拍卡.md", "20-大纲/节拍卡/节拍卡通用模板.md",
+        "20-大纲/因果/场景因果图.md",
+        "20-大纲/回收/回收总账.md",
+        "30-正文/章节/第一章.md", "30-正文/章节/章节通用模板.md",
+        "30-正文/写前/章节写前检查表.md",
+        "30-正文/导入/源文件索引.md",
+        "40-修订/修订日志.md",
+        "40-修订/修稿报告/细节修补模板.md",
+        "40-修订/修稿报告/逻辑修补模板.md",
+        "40-修订/修稿报告/回收修补模板.md",
+        "50-归档/README.md",
+        "90-运行/当前进度.md", "90-运行/连载驾驶舱.md",
+        "90-运行/会话交接.md",
     ]
     for t in required:
         if not (td / t).exists():
