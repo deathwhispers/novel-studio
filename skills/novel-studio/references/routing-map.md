@@ -25,3 +25,10 @@
 - “我这一章写完了，先帮我查问题再修”
   - 先 `novel-checkup`
   - 再转 `novel-revision`
+
+## 更详细的路由
+
+- 平台趋势研究、题材判断 `-> novel-market-scan`
+- 拆解爆款/样章/对标作品 `-> novel-deconstruction`
+- 做书名/简介/钩子/商业化包装 `-> novel-commercial-writing`
+- 去 AI 味、修正模板感 `-> novel-deslop`

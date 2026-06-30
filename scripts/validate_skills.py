@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import re
 import sys
+from json import loads as json_loads
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
 SKILLS_DIR = ROOT / "skills"
+PLUGIN_JSON = ROOT / ".codex-plugin" / "plugin.json"
 NAME_RE = re.compile(r"^[a-z0-9-]{1,64}$")
+TOKEN_RE = re.compile(r"\{\{[A-Z_]+\}\}")
+VALID_TOKENS = {"{{NOVEL_TITLE}}", "{{GENRE}}", "{{PREMISE}}", "{{AUTHOR}}", "{{DATE}}", "{{PROJECT_SLUG}}"}
 
 
 def parse_frontmatter(skill_file: Path) -> dict[str, str]:
@@ -23,25 +27,45 @@ def parse_frontmatter(skill_file: Path) -> dict[str, str]:
         if lines[index].strip() == "---":
             end_index = index
             break
-
     if end_index is None:
         raise ValueError("missing closing frontmatter delimiter")
 
     data: dict[str, str] = {}
     for line in lines[1:end_index]:
-        if not line.strip():
+        if not line.strip() or ":" not in line:
             continue
-        if ":" not in line:
-            raise ValueError(f"invalid frontmatter line: {line}")
         key, value = line.split(":", 1)
         data[key.strip()] = value.strip().strip('"')
     return data
+
+
+def get_reference_paths(text: str, skill_dir: Path) -> list[Path]:
+    """Extract file paths referenced in backticks from SKILL.md."""
+    refs: set[Path] = set()
+    for m in re.finditer(r"`([^`]+)`", text):
+        path_str = m.group(1).strip()
+        if path_str.startswith("http") or path_str.startswith("git") or path_str.startswith("$"):
+            continue
+        if not any(path_str.endswith(s) for s in (".md", ".yaml", ".json", ".py")):
+            continue
+        if "*" in path_str or "{" in path_str:
+            continue
+        clean_path = str(Path(path_str))
+        p = (skill_dir / clean_path).resolve()
+        if p.exists():
+            refs.add(p)
+            continue
+        p = (ROOT / clean_path).resolve()
+        if p.exists():
+            refs.add(p)
+    return list(refs)
 
 
 def validate_skill(skill_dir: Path) -> list[str]:
     errors: list[str] = []
     skill_file = skill_dir / "SKILL.md"
     agent_file = skill_dir / "agents" / "openai.yaml"
+    ref_dir = skill_dir / "references"
 
     if not skill_file.exists():
         return [f"{skill_dir.name}: missing SKILL.md"]
@@ -53,17 +77,111 @@ def validate_skill(skill_dir: Path) -> list[str]:
 
     name = frontmatter.get("name", "")
     description = frontmatter.get("description", "")
-
     if not NAME_RE.match(name):
         errors.append(f"{skill_dir.name}: invalid skill name '{name}'")
     if name != skill_dir.name:
-        errors.append(f"{skill_dir.name}: frontmatter name does not match directory")
+        errors.append(f"{skill_dir.name}: frontmatter name '{name}' != directory")
     if not description or description.startswith("[TODO"):
-        errors.append(f"{skill_dir.name}: description is missing or still TODO")
+        errors.append(f"{skill_dir.name}: description missing or TODO")
+
     if not agent_file.exists():
         errors.append(f"{skill_dir.name}: missing agents/openai.yaml")
+    else:
+        agent_text = agent_file.read_text(encoding="utf-8").strip()
+        if not agent_text:
+            errors.append(f"{skill_dir.name}: agents/openai.yaml is empty")
+
+    if not ref_dir.exists():
+        errors.append(f"{skill_dir.name}: missing references/ directory")
+
+    text = skill_file.read_text(encoding="utf-8")
+    for ref in get_reference_paths(text, skill_dir):
+        if not ref.exists():
+            errors.append(f"{skill_dir.name}: referenced file '{ref.name}' not found")
 
     return errors
+
+
+def check_routing_coverage(errors: list[str]) -> None:
+    studio_file = SKILLS_DIR / "novel-studio" / "SKILL.md"
+    routing_file = SKILLS_DIR / "novel-studio" / "references" / "routing-map.md"
+    skill_dirs = sorted(d.name for d in SKILLS_DIR.iterdir() if d.is_dir())
+
+    for label, f in [("novel-studio/SKILL.md", studio_file), ("routing-map.md", routing_file)]:
+        if not f.exists():
+            errors.append(f"studio routing: {label} not found")
+            continue
+        text = f.read_text(encoding="utf-8")
+        for s in skill_dirs:
+            if s == "novel-studio":
+                continue
+            if s not in text:
+                errors.append(f"studio routing: '{s}' not in {label}")
+
+
+def check_plugin_listing(errors: list[str]) -> None:
+    if not PLUGIN_JSON.exists():
+        errors.append("plugin.json not found")
+        return
+    try:
+        data = json_loads(PLUGIN_JSON.read_text(encoding="utf-8"))
+    except Exception as exc:
+        errors.append(f"plugin.json: {exc}")
+        return
+    skills_val = data.get("skills", "")
+    if not isinstance(skills_val, str):
+        errors.append(f"plugin.json: 'skills' should be a path string, got {type(skills_val).__name__}")
+        return
+    actual_skills = {d.name for d in SKILLS_DIR.iterdir() if d.is_dir()}
+    if len(actual_skills) < 12:
+        errors.append(f"plugin.json: project skills/ has {len(actual_skills)} dirs, expected 12+")
+
+
+def check_template_completeness(errors: list[str]) -> None:
+    td = SKILLS_DIR / "novel-bootstrap" / "assets" / "novel-project-template"
+    if not td.exists():
+        errors.append("template directory not found")
+        return
+    required = [
+        "00-story-core/project-meta.md", "00-story-core/creative-brief.md",
+        "00-story-core/series-promise.md",
+        "10-bible/canon.md", "10-bible/world-rules.md", "10-bible/power-system.md",
+        "10-bible/characters/protagonist.md", "10-bible/characters/supporting-character.md",
+        "10-bible/characters/antagonist.md",
+        "20-outline/master-outline.md", "20-outline/arc-tracker.md",
+        "20-outline/relationship-arc-tracker.md", "20-outline/ending-blueprint.md",
+        "20-outline/first-arc-launchpad.md",
+        "20-outline/volumes/volume-01.md", "20-outline/volumes/volume-nn.md",
+        "20-outline/chapter-beats/chapter-001.md", "20-outline/chapter-beats/chapter-beat-template.md",
+        "20-outline/causality/scene-causality-map.md",
+        "20-outline/payoff-tracking/payoff-ledger.md",
+        "30-draft/chapters/chapter-001.md", "30-draft/chapters/chapter-draft-template.md",
+        "30-draft/prewrite/chapter-prewrite-checklist.md",
+        "30-draft/imported/source-index.md",
+        "40-revision/revision-log.md",
+        "40-revision/chapter-reports/detail-repair-template.md",
+        "40-revision/chapter-reports/logic-repair-template.md",
+        "40-revision/chapter-reports/payoff-repair-template.md",
+        "50-archive/README.md",
+        "90-ops/current-state.md", "90-ops/serial-dashboard.md",
+        "90-ops/session-handoff.md",
+    ]
+    for t in required:
+        if not (td / t).exists():
+            errors.append(f"template: missing '{t}'")
+
+
+def check_template_tokens(errors: list[str]) -> None:
+    td = SKILLS_DIR / "novel-bootstrap" / "assets" / "novel-project-template"
+    if not td.exists():
+        return
+    for tf in sorted(td.rglob("*.md")):
+        if "README" in tf.name:
+            continue
+        text = tf.read_text(encoding="utf-8")
+        for m in TOKEN_RE.finditer(text):
+            if m.group(0) not in VALID_TOKENS:
+                errors.append(f"template: {tf.relative_to(td)} has unknown token {m.group(0)}")
 
 
 def main() -> int:
@@ -71,19 +189,67 @@ def main() -> int:
         print("skills directory not found", file=sys.stderr)
         return 1
 
-    skill_dirs = sorted(path for path in SKILLS_DIR.iterdir() if path.is_dir())
+    skill_dirs = sorted(d for d in SKILLS_DIR.iterdir() if d.is_dir())
     all_errors: list[str] = []
 
-    for skill_dir in skill_dirs:
-        all_errors.extend(validate_skill(skill_dir))
+    print(f"检查 {len(skill_dirs)} 个 skills 结构...")
+    for sd in skill_dirs:
+        errs = validate_skill(sd)
+        status = "PASS" if not errs else "FAIL"
+        all_errors.extend(errs)
+        for e in errs:
+            short = e.split(": ", 1)[-1] if ": " in e else e
+            print(f"  [{status}] {sd.name}: {short}")
+        if not errs:
+            print(f"  [{status}] {sd.name}")
+
+    print("\n检查路由覆盖...")
+    routing_errs: list[str] = []
+    check_routing_coverage(routing_errs)
+    all_errors.extend(routing_errs)
+    if routing_errs:
+        for e in routing_errs:
+            print(f"  [FAIL] {e}")
+    else:
+        print("  [PASS] 路由覆盖全部 skill")
+
+    print("\n检查 plugin.json...")
+    plugin_errs: list[str] = []
+    check_plugin_listing(plugin_errs)
+    all_errors.extend(plugin_errs)
+    if plugin_errs:
+        for e in plugin_errs:
+            print(f"  [FAIL] {e}")
+    else:
+        print("  [PASS] plugin.json 与 skills 一致")
+
+    print("\n检查模板文件完整性...")
+    tmpl_errs: list[str] = []
+    check_template_completeness(tmpl_errs)
+    all_errors.extend(tmpl_errs)
+    if tmpl_errs:
+        for e in tmpl_errs:
+            print(f"  [FAIL] {e}")
+    else:
+        print("  [PASS] 模板文件完整")
+
+    print("\n检查模板 token...")
+    token_errs: list[str] = []
+    check_template_tokens(token_errs)
+    all_errors.extend(token_errs)
+    if token_errs:
+        for e in token_errs:
+            print(f"  [WARN] {e}")
+    else:
+        print("  [PASS] 模板 token 全部合法")
 
     if all_errors:
-        print("skill validation failed:")
-        for error in all_errors:
-            print(f"- {error}")
+        print(f"\n❌ 发现问题 {len(all_errors)} 个:")
+        for e in all_errors:
+            print(f"  - {e}")
         return 1
 
-    print(f"validated {len(skill_dirs)} skills successfully")
+    print(f"\n✅ {len(skill_dirs)} 个 skills 全部通过")
     return 0
 
 

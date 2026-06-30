@@ -20,11 +20,12 @@ description: "中文小说设定圣经 skill。用于构建或修订人物档案
 
 - `10-bible/canon.md`
 - `10-bible/world-rules.md`
+- `10-bible/power-system.md`
 - `10-bible/地点.md`
 - `10-bible/势力.md`
 - `10-bible/时间线.md`
 - `10-bible/母题.md`
-- `10-bible/角色/*.md`
+- `10-bible/角色/*.md`（主角、配角、反派角色卡模板）
 
 ## 人物文件最低要求
 

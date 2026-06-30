@@ -30,10 +30,12 @@ description: "中文小说结构规划 skill。用于把 premise 和设定扩展
 
 - `20-outline/master-outline.md`
 - `20-outline/arc-tracker.md`
+- `20-outline/relationship-arc-tracker.md`
 - `20-outline/volumes/*.md`
 - `20-outline/chapter-beats/*.md`
 - `20-outline/因果/scene-causality-map.md`
 - `20-outline/payoff-tracking/payoff-ledger.md`
+- `20-outline/ending-blueprint.md`
 
 ## 章节 beat 最低要求
 

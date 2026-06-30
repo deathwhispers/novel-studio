@@ -73,6 +73,26 @@ description: "中文小说体检 skill。用于在正文完成后检查单章质
 
 ## 三类高优先级体检
 
+### 第四类体检：中期审视
+
+适用于连载超过 50 章 / 字数突破 15 万 / 连续 5 章以上写不顺时的站高回顾。不限于单章或单卷，而是审视整个项目的健康度。
+
+#### 审视触发条件
+
+如果以下任意两项为「是」，建议立即做一次完整中期审视：
+
+1. 最近 5 章是否有 3 章以上是靠平推写出来的
+2. 是否已经超过 10 章没有新的关系推进或局面翻面
+3. 是否最近写之前越来越不想翻看前文和节拍卡
+4. 追读是否出现连续下滑
+5. 写到一半是否频繁发现前文设定需要回修
+
+#### 审视产出
+
+- `40-revision/checkup-reports/mid-series-review.md`
+- 一份按风险排序的问题清单（主线漂移 / 关系冷却 / 节奏塌陷 / 信息债过期）
+- 建议转向哪个 skill：`novel-outlining` / `novel-worldbuilding` / `novel-revision`
+
 ### 1. 卷体检
 
 重点回答：
@@ -115,3 +135,4 @@ description: "中文小说体检 skill。用于在正文完成后检查单章质
 - 长线漏线扫描：`references/longline-scan-template.md`
 - 追读弱点排查：`references/retention-diagnostics.md`
 - 真实样例：`assets/examples/chapter-checkup-example.md`、`assets/examples/volume-checkup-example.md`、`assets/examples/longline-scan-example.md`、`assets/examples/retention-diagnostics-example.md`
+- 中期审视：`references/mid-series-review-template.md`
