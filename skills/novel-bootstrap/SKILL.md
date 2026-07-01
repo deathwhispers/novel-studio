@@ -70,6 +70,7 @@ python3 scripts/init_novel_project.py \
 
 - 工作区结构说明：`references/工作区规范.md`
 - 导入映射清单：`references/导入检查清单.md`
+- 迁移旧稿指南：`references/迁移旧稿指南.md`
 - 初始化模板：`assets/novel-project-template/`
 - 初始化脚本：`scripts/init_novel_project.py`
 

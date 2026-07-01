@@ -107,3 +107,4 @@ AI 生成的角色对话往往没有风格差异。
 
 - 常见 AI 腔对照表：`references/AI味目录.md`
 - 去味动作库：`references/去味手法.md`
+- 常见AI味模式示例：`references/常见AI味示例.md`
