@@ -33,8 +33,8 @@ description: "中文小说结构规划 skill。用于把 premise 和设定扩展
 - `20-大纲/感情线追踪.md`
 - `20-大纲/分卷/*.md`
 - `20-大纲/节拍卡/*.md`
-- `20-大纲/因果/scene-causality-map.md`
-- `20-大纲/回收/payoff-ledger.md`
+- `20-大纲/因果/场景因果图.md`
+- `20-大纲/回收/回收总账.md`
 - `20-大纲/结局蓝图.md`
 
 ## 章节 beat 最低要求
@@ -52,8 +52,8 @@ description: "中文小说结构规划 skill。用于把 premise 和设定扩展
 
 如果目标是提高写作质量，还要把这些信息同步进两张表：
 
-- `scene-causality-map.md`
-- `payoff-ledger.md`
+- `场景因果图.md`
+- `回收总账.md`
 
 ## 改纲原则
 

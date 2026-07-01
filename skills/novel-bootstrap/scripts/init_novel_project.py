@@ -73,12 +73,12 @@ def main() -> int:
 
     output_dir.mkdir(parents=True, exist_ok=True)
     tokens = {
-        "{{NOVEL_TITLE}}": args.title,
-        "{{GENRE}}": args.genre,
-        "{{PREMISE}}": args.premise,
-        "{{AUTHOR}}": args.author,
-        "{{DATE}}": date.today().isoformat(),
-        "{{PROJECT_SLUG}}": slugify(args.title),
+        "{{书名}}": args.title,
+        "{{题材}}": args.genre,
+        "{{前提}}": args.premise,
+        "{{作者}}": args.author,
+        "{{日期}}": date.today().isoformat(),
+        "{{项目标识}}": slugify(args.title),
     }
     copy_template(output_dir, tokens)
     print(f"initialized novel project at {output_dir}")

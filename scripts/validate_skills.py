@@ -13,7 +13,7 @@ SKILLS_DIR = ROOT / "skills"
 PLUGIN_JSON = ROOT / ".codex-plugin" / "plugin.json"
 NAME_RE = re.compile(r"^[a-z0-9-]{1,64}$")
 TOKEN_RE = re.compile(r"\{\{[A-Z_]+\}\}")
-VALID_TOKENS = {"{{NOVEL_TITLE}}", "{{GENRE}}", "{{PREMISE}}", "{{AUTHOR}}", "{{DATE}}", "{{PROJECT_SLUG}}"}
+VALID_TOKENS = {"{{书名}}", "{{题材}}", "{{前提}}", "{{作者}}", "{{日期}}", "{{项目标识}}"}
 
 
 def parse_frontmatter(skill_file: Path) -> dict[str, str]:
