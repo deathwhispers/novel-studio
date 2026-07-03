@@ -1,0 +1,4 @@
+interface:
+  display_name: "卷纲工坊"
+  short_description: "分卷卷纲逐卷建设和迭代"
+  default_prompt: "用 $novel-volumning 帮我逐卷建立卷纲。"

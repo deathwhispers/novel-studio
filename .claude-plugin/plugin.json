@@ -1,0 +1,21 @@
+{
+  "name": "novel-skills",
+  "version": "0.1.0",
+  "description": "面向中文小说创作流程的 Claude Code 插件，覆盖开书、扫榜、拆文、铺线、写章、体检与重修。",
+  "author": {
+    "name": "whisper",
+    "url": "https://github.com/wh1sp3rrr"
+  },
+  "homepage": "https://github.com/wh1sp3rrr/novel-skills",
+  "repository": "https://github.com/wh1sp3rrr/novel-skills",
+  "license": "Apache-2.0",
+  "keywords": [
+    "novel",
+    "writing",
+    "fiction",
+    "claude",
+    "claude-code",
+    "skills",
+    "chinese"
+  ]
+}

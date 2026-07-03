@@ -1,6 +1,16 @@
 # novel-skills
 
-面向中文小说创作的 Codex skill 套件。它不是一个巨大的单体提示词，而是一组能协同工作的专项 skill，加上一套可直接落地的小说工作台模板，覆盖扫榜、拆书、立项、设定、铺线、写章、体检、重修、商业化改稿和去 AI 味。
+面向中文小说创作的 **多 AI 工具兼容 skill 套件**。它不是一个巨大的单体提示词，而是一组能协同工作的专项 skill，加上一套可直接落地的小说工作台模板，覆盖扫榜、拆书、立项、设定、铺线、写章、体检、重修、商业化改稿和去 AI 味。
+
+## 支持的工具
+
+本项目支持 3 种主流 AI 编程工具的便捷部署：
+
+- **Codex CLI**（OpenAI）
+- **Claude Code**（Anthropic）
+- **OpenCode**（开源）
+
+统一的 `python3 scripts/install.py` 会自动检测已安装的工具并安装。详细见 [DEPLOYMENT.md](DEPLOYMENT.md)。
 
 ## 目标
 
@@ -25,10 +35,32 @@
 
 ```text
 novel-skills/
-├── README.md
+├── README.md                # 本文件
+├── DEPLOYMENT.md            # 多工具部署指南
 ├── scripts/
-│   └── validate_skills.py
-└── skills/
+│   ├── install.py           # 统一安装脚本（Codex/Claude/OpenCode）
+│   ├── uninstall.py         # 统一卸载脚本
+│   ├── install_codex_plugin.py  # 旧版 Codex 安装脚本（保留兼容）
+│   ├── validate_skills.py   # skill 校验
+│   ├── validate_novel_project.py  # 项目结构校验
+│   ├── extract_index.py     # 前文索引抽取
+│   ├── create_chapter.py    # 创建章节文件
+│   ├── evaluate_chapter.py  # 章节评估
+│   ├── export_novel.py      # 导出
+│   └── build_plugin_bundle.sh  # 构建插件包
+├── .codex-plugin/           # Codex 专用配置
+│   └── plugin.json
+├── .claude-plugin/          # Claude Code 专用配置
+│   ├── plugin.json
+│   ├── marketplace.json
+│   └── commands/            # 斜杠命令
+├── .opencode/               # OpenCode 专用配置
+│   ├── commands/
+│   └── agents/
+├── opencode.json            # OpenCode 插件清单
+├── .agents/                 # Codex marketplace 配置
+│   └── plugins/marketplace.json
+└── skills/                  # 14 个 skill 套件
     ├── novel-studio/
     ├── novel-market-scan/
     ├── novel-deconstruction/
@@ -40,13 +72,15 @@ novel-skills/
     ├── novel-outlining/
     ├── novel-checkup/
     ├── novel-drafting/
-    └── novel-revision/
+    ├── novel-revision/
+    ├── novel-volumning/
+    └── novel-ai-writing/
 ```
 
 ## 中文技能名
 
 | 目录名 | 对外名称 | 职责 |
-| --- | --- |
+| --- | --- | --- |
 | `novel-studio` | 小说工作台 | 总控路由，根据用户意图和工作区状态分流 |
 | `novel-market-scan` | 扫榜看盘 | 扫榜、看平台差异、判断题材和长短篇机会 |
 | `novel-deconstruction` | 拆书拆章 | 拆解爆款、样章和对标作品，提炼可迁移技法 |
@@ -59,6 +93,8 @@ novel-skills/
 | `novel-checkup` | 小说体检 | 检查单章、卷节奏、长线漏线、伏笔回收、连续性和追读弱点 |
 | `novel-drafting` | 写章起稿 | 按最小上下文包写场景或章节，并回写状态 |
 | `novel-revision` | 重修统稿 | 做结构修订、连贯性修复、文风校准和去 AI 味 |
+| `novel-volumning` | 卷纲工坊 | 分卷卷纲逐卷建设和迭代 |
+| `novel-ai-writing` | AI 协作写作 | 把所有写作能力转译成 AI prompt 模板（写前/写中/写后+特殊场景） |
 
 ## 为什么比参考项目更进一步
 
@@ -181,6 +217,8 @@ python3 scripts/install_codex_plugin.py
 - 已有纲和设定，准备写正文：`$novel-drafting`
 - 想专门去 AI 味：`$novel-deslop`
 - 想做重写或结构修订：`$novel-revision`
+- 想逐卷细化卷纲：`$novel-volumning`
+- 想让 AI 帮我写一节对话/战斗/感情戏/批量生成：`$novel-ai-writing`
 
 ## 新手使用手册
 
@@ -307,46 +345,71 @@ python3 skills/novel-bootstrap/scripts/init_novel_project.py \
 6. 用 `$novel-checkup` 查问题
 7. 用 `$novel-revision` 修第一章
 
-## 安装为 Codex Plugin
+## 安装到 AI 工具
 
-这个仓库现在已经补齐了 Codex plugin 的基础结构：
-
-- 插件 manifest：[`/.codex-plugin/plugin.json`](/Users/whisper/IdeaProjects/github/novel-skills/.codex-plugin/plugin.json)
-- 本地 marketplace：[`/.agents/plugins/marketplace.json`](/Users/whisper/IdeaProjects/github/novel-skills/.agents/plugins/marketplace.json)
-- 一键安装脚本：[`scripts/install_codex_plugin.py`](/Users/whisper/IdeaProjects/github/novel-skills/scripts/install_codex_plugin.py)
-- 卸载脚本：[`scripts/uninstall_codex_plugin.py`](/Users/whisper/IdeaProjects/github/novel-skills/scripts/uninstall_codex_plugin.py)
-- 打包脚本：[`scripts/build_plugin_bundle.sh`](/Users/whisper/IdeaProjects/github/novel-skills/scripts/build_plugin_bundle.sh)
-
-本地开发安装：
+本项目支持 3 种主流 AI 工具的便捷部署。**统一安装脚本会自动检测已安装的工具**：
 
 ```bash
+python3 scripts/install.py
+```
+
+支持的工具：
+
+| 工具 | 配置文件 | 安装路径 | 调用方式 |
+|------|---------|---------|---------|
+| **Codex CLI** (OpenAI) | `~/.codex/config.toml` | `~/.codex/plugins/cache/...` | `$novel-studio` |
+| **Claude Code** (Anthropic) | `~/.claude/settings.json` | `~/.claude/plugins/novel-skills/` | `/novel` |
+| **OpenCode** (开源) | `~/.config/opencode/config.json` | `~/.config/opencode/skills/...` | `/novel` |
+
+### 快速安装
+
+```bash
+# 自动检测 + 提示选择
+python3 scripts/install.py
+
+# 指定工具
+python3 scripts/install.py --target codex
+python3 scripts/install.py --target claude
+python3 scripts/install.py --target opencode
+
+# 安装到所有已检测到的工具
+python3 scripts/install.py --target all
+
+# 仅复制 skills/ 目录（不安装为插件）
+python3 scripts/install.py --skills-only --target-dir /path/to/project
+```
+
+### 卸载
+
+```bash
+python3 scripts/install.py --uninstall
+# 或
+python3 scripts/uninstall.py
+```
+
+详细部署文档（每种工具的细节、配置文件路径、故障排除）：[DEPLOYMENT.md](DEPLOYMENT.md)
+
+### 兼容性
+
+| 操作 | Codex | Claude Code | OpenCode |
+|------|-------|-------------|----------|
+| 安装到全局 | ✅ | ✅ | ✅ |
+| 在项目内打开 | ❌ | ❌ | ✅ |
+| 斜杠命令 | `$skill-name` | `/skill-name` | `/skill-name` |
+| 角色扮演（agent） | ✅ | ✅ | ✅ |
+| 卸载 | ✅ | ✅ | ✅ |
+
+### 旧版 Codex 脚本（保留兼容）
+
+```bash
+# 旧版 Codex 安装脚本（仍可用）
 python3 scripts/install_codex_plugin.py
-```
 
-如果只想重新刷新 marketplace，而不重复注册：
-
-```bash
-python3 scripts/install_codex_plugin.py --skip-marketplace-add
-```
-
-如果你想生成一个可分发的本地 bundle：
-
-```bash
-bash scripts/build_plugin_bundle.sh
-```
-
-它会输出一个 zip 包，解压后执行其中的 `python3 install_codex_plugin.py` 即可安装。
-
-卸载时默认只移除 `novel-skills` 本身的缓存和启用配置，不会顺手删掉整个 `novel-local` marketplace。
-
-```bash
+# 旧版 Codex 卸载脚本（仍可用）
 python3 scripts/uninstall_codex_plugin.py
-```
 
-只有在你明确知道这个 marketplace 里没有别的本地插件时，才建议额外执行：
-
-```bash
-python3 scripts/uninstall_codex_plugin.py --remove-marketplace
+# 打包成可分发的 bundle
+bash scripts/build_plugin_bundle.sh
 ```
 
 ## 扫榜与拆文落盘
