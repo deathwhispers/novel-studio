@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="novel-skills-plugin-bundle-smoke">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/dist/novel-skills-plugin-bundle-smoke.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
