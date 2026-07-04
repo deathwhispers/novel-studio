@@ -1,4 +1,0 @@
-interface:
-  display_name: "扫榜看盘"
-  short_description: "扫题材趋势和平台读者口味"
-  default_prompt: "用 $novel-market-scan 帮我看现在什么题材有机会、适合哪个平台。"

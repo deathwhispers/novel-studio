@@ -1,4 +1,0 @@
-interface:
-  display_name: "章节质量门禁"
-  short_description: "强制执行完整的章节写作流程，确保每个章节都达到高质量标准"
-  default_prompt: "用 $novel-chapter-workflow 强制执行完整的章节写作流程，包括草稿、检查、修正、去AI味等步骤，确保每个章节都达到高质量标准。"

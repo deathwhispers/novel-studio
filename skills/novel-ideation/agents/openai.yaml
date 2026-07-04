@@ -1,4 +1,0 @@
-interface:
-  display_name: "立项定核"
-  short_description: "把脑洞收束成可写的书核"
-  default_prompt: "用 $novel-ideation 帮我把这个脑洞整理成一本能开写的小说。"

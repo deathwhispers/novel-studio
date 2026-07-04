@@ -1,4 +1,0 @@
-interface:
-  display_name: "铺线列纲"
-  short_description: "搭主线、卷纲、章节节拍和回收表"
-  default_prompt: "用 $novel-outlining 帮我把这本书铺成分卷和章节节拍卡。"

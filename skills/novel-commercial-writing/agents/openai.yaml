@@ -1,4 +1,0 @@
-interface:
-  display_name: "商业化改稿"
-  short_description: "强化钩子、追读和平台适配"
-  default_prompt: "用 $novel-commercial-writing 帮我把这本书改得更有追读感、更适合平台。"

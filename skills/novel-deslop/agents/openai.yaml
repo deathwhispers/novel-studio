@@ -1,4 +1,0 @@
-interface:
-  display_name: "去 AI 味"
-  short_description: "去掉模板感和解释腔"
-  default_prompt: "用 $novel-deslop 帮我把这段正文改得更像人写的，不要这么工整。"

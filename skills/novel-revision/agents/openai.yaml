@@ -1,4 +1,0 @@
-interface:
-  display_name: "重修统稿"
-  short_description: "修逻辑、修细节、修回收"
-  default_prompt: "用 $novel-revision 帮我重修这一章的逻辑、细节和回收问题。"
