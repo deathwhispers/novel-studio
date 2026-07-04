@@ -5,8 +5,12 @@
 ## 核心价值
 
 - **质量优先**：每章 2000-2500 字，确保戏成立、逻辑闭合、细节落地
-- **结构清晰**：14 个专项 skill，各司其职，协同工作
+- **结构清晰**：15 个专项 skill，各司其职，协同工作
 - **中文适配**：按中文写作习惯组织，适合长篇连载
+
+## 快速开始
+
+👉 [查看快速开始指南](QUICKSTART.md)
 
 ## 支持的技能
 
@@ -19,6 +23,7 @@
 | novel-ideation | 从模糊点子收敛为创作简报 |
 | novel-worldbuilding | 构建人物、世界规则、设定圣经 |
 | novel-outlining | 生成主线、分卷、章节节拍卡 |
+| novel-chapter-workflow | 章节质量门禁，强制执行完整的写作流程 |
 | novel-drafting | 按最小上下文包写场景或章节 |
 | novel-checkup | 检查单章质量、前后照应、伏笔回收 |
 | novel-revision | 结构修复、场景重写、文风校准 |
@@ -26,55 +31,6 @@
 | novel-deslop | 专做去 AI 味，修正模板感 |
 | novel-commercial-writing | 书名、简介、钩子、留存优化 |
 | novel-ai-writing | AI 协作写作 prompt 模板库 |
-
-## 快速开始
-
-### 1. 安装
-
-```bash
-# 复制 skills 目录到你的项目
-python3 scripts/install.py --target-dir /path/to/your/project
-```
-
-### 2. 初始化项目
-
-```bash
-python3 skills/novel-bootstrap/scripts/init_novel_project.py \
-  --output /path/to/my-novel \
-  --title "书名" \
-  --genre "题材" \
-  --premise "一句话故事前提"
-```
-
-### 3. 开始写作
-
-按以下顺序使用技能：
-
-1. `novel-bootstrap` - 初始化项目
-2. `novel-ideation` - 立项定核
-3. `novel-worldbuilding` - 设定总表
-4. `novel-outlining` - 铺线列纲
-5. `novel-drafting` - 写章起稿
-6. `novel-checkup` - 体检
-7. `novel-revision` - 重修统稿
-8. `novel-deslop` - 去 AI 味
-9. `novel-commercial-writing` - 商业化改稿
-
-## 项目结构
-
-初始化后的项目遵循以下目录分层：
-
-```
-my-novel/
-├── 00-书核/          # 核心目标与承诺
-├── 05-市场/          # 市场与对标研究
-├── 10-设定/          # 世界观、角色、规则
-├── 20-大纲/          # 故事结构与推进
-├── 30-正文/          # 正文资产
-├── 40-修订/          # 体检和修稿报告
-├── 50-归档/          # 已完成的内容
-└── 90-运行/          # 当前进度、决策记录
-```
 
 ## 章节写作标准
 
@@ -99,6 +55,8 @@ my-novel/
 3. **写后自检**：检查质量标准，决定下一步
 4. **状态回写**：更新进度、伏笔、因果关系
 
+**注意**：现在推荐使用 `novel-chapter-workflow` 来强制执行完整的章节写作流程，它会自动管理草稿、检查、修正、去AI味等步骤，确保每个章节都达到高质量标准。
+
 ## 体检机制
 
 写完章节后，先体检再修订：
@@ -115,16 +73,7 @@ my-novel/
 - 检查追读压力
 - 输出修订建议
 
-## 迭代建议
-
-1. 为 novel-bootstrap 增加导入旧稿的半自动脚本
-2. 为 novel-market-scan 增加半自动榜单采样模板
-3. 为 novel-drafting 增加根据节拍卡自动组装上下文包的辅助脚本
-4. 为 novel-checkup 增加更细的 forward-test
-
 ## 参考来源
-
-这个仓库吸收了以下项目的优点：
 
 - [modoojunko/awesome-novel-skill](https://github.com/modoojunko/awesome-novel-skill)
 - [leenbj/novel-creator-skill](https://github.com/leenbj/novel-creator-skill)
