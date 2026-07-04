@@ -1,7 +1,7 @@
 # 写中阶段 AI Prompt 模板库
 
 > **使用说明**：写正文时的具体技法——对话、战斗、感情、章尾、描写等。
-> 每个 prompt 都对应 novel-drafting 的具体技法模板。
+> 每个 prompt 都对应 novel-writing 的具体技法模板。
 
 ---
 
@@ -25,7 +25,7 @@
 - 段 3 收尾落点（1 轮）：留下钩子
 
 【对话写作技法】
-（请 AI 查阅 novel-drafting/references/对话写作技法.md）
+（请 AI 查阅 novel-writing/references/对话写作技法.md）
 
 【角色设定】
 - 角色 A：{{粘贴角色卡}}
@@ -108,7 +108,7 @@
 - 段 5 收尾（15-20%）：战斗结束 + 后果落实
 
 【战斗场景写作技法】
-（请 AI 查阅 novel-drafting/references/战斗场景写作技法.md）
+（请 AI 查阅 novel-writing/references/战斗场景写作技法.md）
 
 【实力可视化要求】
 - 写清"谁强谁弱"（境界/反应/环境破坏/过程对照）
@@ -166,7 +166,7 @@
 5. 真表白前：最后推动
 
 【感情线发展阶段】
-（请 AI 查阅 novel-drafting/references/感情线发展阶段模板.md）
+（请 AI 查阅 novel-writing/references/感情线发展阶段模板.md）
 
 请输出：完整暧昧场景（重点：让读者"猜测和期待"）
 ```
@@ -379,7 +379,7 @@
 4. 爽点之后必须"接活"
 
 【15 种爽点模式】
-（请 AI 查阅 novel-drafting/references/爽点设计模式库.md）
+（请 AI 查阅 novel-writing/references/爽点设计模式库.md）
 
 请输出：完整爽点章节（2000-2500 字）。
 ```
@@ -406,7 +406,7 @@
 4. 虐之后必须"补偿"
 
 【10 种虐点模式】
-（请 AI 查阅 novel-drafting/references/虐点设计模式库.md）
+（请 AI 查阅 novel-writing/references/虐点设计模式库.md）
 
 【关键】避免"凭空虐"——必须有"深厚关系"的具体描写。
 
@@ -434,7 +434,7 @@
 - 段 4 余震（10-15%）：300-500 字
 
 【章内节奏设计】
-（请 AI 查阅 novel-drafting/references/章节内节奏设计.md）
+（请 AI 查阅 novel-writing/references/章节内节奏设计.md）
 
 【情绪代码】
 S=爽 T=紧张 E=虐 R=浪漫 A=惊讶 C=平静 B=悲伤 N=怀旧 M=神秘 D=决心

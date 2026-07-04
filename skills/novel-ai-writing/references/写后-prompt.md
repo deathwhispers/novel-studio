@@ -1,7 +1,7 @@
 # 写后阶段 AI Prompt 模板库
 
 > **使用说明**：写完正文后的检查、修缮、去 AI 味等。
-> 每个 prompt 都对应 novel-checkup / novel-revision / novel-deslop 的核心能力。
+> 每个 prompt 都对应 novel-quality / novel-quality / novel-quality 的核心能力。
 
 ---
 
@@ -21,7 +21,7 @@
 - 角色状态：{{}}
 
 【检查项】
-【novel-checkup/references/章节体检模板.md 的 7 项】
+【novel-quality/references/章节体检模板.md 的 7 项】
 1. 本章是否站得住
 2. 前后衔接是否顺
 3. 埋线与回收
@@ -239,7 +239,7 @@
 {{}}
 
 【逻辑修补模板】
-（请 AI 查阅 novel-revision/references/逻辑修补模板.md）
+（请 AI 查阅 novel-quality/references/逻辑修补模板.md）
 
 【修补方向】
 - 因果断裂（前后不接）
@@ -267,7 +267,7 @@
 - 正文大量停在总结层
 
 【细节修补模板】
-（请 AI 查阅 novel-revision/references/细节修补模板.md）
+（请 AI 查阅 novel-quality/references/细节修补模板.md）
 
 【修补方向】
 - 用具体细节代替抽象情绪
@@ -293,7 +293,7 @@
 - 章尾没有追读推动力
 
 【回收修补模板】
-（请 AI 查阅 novel-revision/references/回收修补模板.md）
+（请 AI 查阅 novel-quality/references/回收修补模板.md）
 
 【修补方向】
 - 强化本章对前文伏笔的呼应
@@ -318,7 +318,7 @@
 【本卷章节范围】第 {{X}} - {{Y}} 章
 
 【卷体检模板】
-（请 AI 查阅 novel-checkup/references/卷体检模板.md）
+（请 AI 查阅 novel-quality/references/卷体检模板.md）
 
 【7 大项】
 1. 开卷承诺有没有立住
@@ -401,7 +401,7 @@
 {{90-运行/当前进度.md}}
 
 【连载续写卡的要求】
-（请 AI 查阅 novel-drafting/references/连载续写卡.md）
+（请 AI 查阅 novel-writing/references/连载续写卡.md）
 
 【关键】
 - 上一章的章尾必须接住
@@ -432,7 +432,7 @@
 5. 所有角色共享同一套修辞
 
 【去 AI 味规则】
-（请 AI 查阅 novel-deslop 的核心规则）
+（请 AI 查阅 novel-quality 的核心规则）
 
 【扫描输出】
 1. 每类 AI 味的具体例子
@@ -570,7 +570,7 @@
 5. 章尾有钩子
 
 【章节质量标准】
-（请 AI 查阅 novel-drafting/references/章节质量标准.md）
+（请 AI 查阅 novel-writing/references/章节质量标准.md）
 
 【红线】（任一触发都需重写）
 - 整章没有真正的局面变化

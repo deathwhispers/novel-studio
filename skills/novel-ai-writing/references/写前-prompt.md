@@ -359,7 +359,7 @@
 - 期望读者群：{{}}
 
 【8 种剧情结构】
-（请 AI 查阅 novel-volumning/references/剧情结构骨架库.md）
+（请 AI 查阅 novel-outline/references/剧情结构骨架库.md）
 
 请输出：
 1. 推荐的结构型（1-2 个）
@@ -419,7 +419,7 @@
 - 计划章节数：{{}}
 
 【卷纲的 12 个必备字段】
-（请 AI 查阅 novel-volumning/SKILL.md 的"分卷卷纲最低要求"）
+（请 AI 查阅 novel-outline/SKILL.md 的"分卷卷纲最低要求"）
 
 请输出：完整卷纲
 ```
