@@ -5,7 +5,7 @@
 ## 核心价值
 
 - **质量优先**：每章 2000-2500 字，确保戏成立、逻辑闭合、细节落地
-- **结构清晰**：15 个专项 skill，各司其职，协同工作
+- **结构清晰**：8 个专项 skill，各司其职，协同工作
 - **中文适配**：按中文写作习惯组织，适合长篇连载
 - **互动规划**：与用户互动确认小说篇幅、分卷数量、更新频率等关键信息
 
@@ -18,20 +18,28 @@
 | 技能 | 职责 |
 |------|------|
 | novel-studio | 工作台路由，根据意图分流到具体技能 |
-| novel-market-scan | 扫榜、看平台差异、判断题材机会 |
-| novel-deconstruction | 拆解爆款、样章，提炼可迁移技法 |
-| novel-bootstrap | 初始化小说项目、导入旧稿 |
-| novel-ideation | 从模糊点子收敛为创作简报 |
+| novel-market | 市场研究、拆解爆款、商业化包装 |
+| novel-project | 项目初始化、立项定核、篇幅规划 |
 | novel-worldbuilding | 构建人物、世界规则、设定圣经 |
-| novel-outlining | 生成主线、分卷、章节节拍卡 |
-| novel-chapter-workflow | 章节质量门禁，强制执行完整的写作流程 |
-| novel-drafting | 按最小上下文包写场景或章节 |
-| novel-checkup | 检查单章质量、前后照应、伏笔回收 |
-| novel-revision | 结构修复、场景重写、文风校准 |
-| novel-volumning | 分卷卷纲逐卷建设和迭代 |
-| novel-deslop | 专做去 AI 味，修正模板感 |
-| novel-commercial-writing | 书名、简介、钩子、留存优化 |
+| novel-outline | 大纲规划、卷纲建设、章节节拍卡 |
+| novel-writing | 写作流程、质量门禁、状态回写 |
+| novel-quality | 体检、修订、去AI味 |
 | novel-ai-writing | AI 协作写作 prompt 模板库 |
+
+## 技能合并说明
+
+为了简化使用流程，我们将原有的 15 个技能合并为 8 个：
+
+| 原技能 | 合并后 | 职责 |
+|--------|--------|------|
+| novel-market-scan + novel-deconstruction + novel-commercial-writing | **novel-market** | 市场研究、拆解爆款、商业化包装 |
+| novel-bootstrap + novel-ideation | **novel-project** | 项目初始化、立项定核、篇幅规划 |
+| novel-worldbuilding | **novel-worldbuilding** | 设定构建（保持独立） |
+| novel-outlining + novel-volumning | **novel-outline** | 大纲规划、卷纲建设 |
+| novel-drafting + novel-chapter-workflow | **novel-writing** | 写作流程、质量门禁 |
+| novel-checkup + novel-revision + novel-deslop | **novel-quality** | 体检、修订、去AI味 |
+| novel-ai-writing | **novel-ai-writing** | AI协作prompt（保持独立） |
+| novel-studio | **novel-studio** | 工作台路由（保持独立） |
 
 ## 项目结构
 
@@ -97,7 +105,7 @@ my-novel/
 3. **写后自检**：检查质量标准，决定下一步
 4. **状态回写**：更新进度、伏笔、因果关系
 
-**注意**：现在推荐使用 `novel-chapter-workflow` 来强制执行完整的章节写作流程，它会自动管理草稿、检查、修正、去AI味等步骤，确保每个章节都达到高质量标准。
+**注意**：现在推荐使用 `novel-writing` 来强制执行完整的章节写作流程，它会自动管理草稿、检查、修正、去AI味等步骤，确保每个章节都达到高质量标准。
 
 ## 体检机制
 

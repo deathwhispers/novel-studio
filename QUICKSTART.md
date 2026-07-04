@@ -10,7 +10,7 @@ python3 scripts/install.py --target-dir /path/to/your/project
 ## 2. 初始化项目
 
 ```bash
-python3 skills/novel-bootstrap/scripts/init_novel_project.py \
+python3 skills/novel-project/scripts/init_novel_project.py \
   --output /path/to/my-novel \
   --title "书名" \
   --genre "题材" \
@@ -21,12 +21,11 @@ python3 skills/novel-bootstrap/scripts/init_novel_project.py \
 
 按以下顺序使用技能：
 
-1. `novel-bootstrap` - 初始化项目
-2. `novel-ideation` - 立项定核
-3. `novel-worldbuilding` - 设定总表
-4. `novel-outlining` - 铺线列纲
-5. `novel-chapter-workflow` - 章节质量门禁（强制执行完整流程）
-6. `novel-commercial-writing` - 商业化改稿
+1. `novel-project` - 初始化项目、立项定核、篇幅规划
+2. `novel-worldbuilding` - 设定总表
+3. `novel-outline` - 铺线列纲
+4. `novel-writing` - 写章起稿（强制执行完整流程）
+5. `novel-quality` - 体检、修订、去AI味
 
 ## 项目结构
 
@@ -51,3 +50,18 @@ my-novel/
 ├── 50-归档/          # 已完成的内容
 └── 90-运行/          # 当前进度、决策记录
 ```
+
+## 技能体系
+
+本项目包含 8 个核心技能：
+
+| 技能 | 职责 |
+|------|------|
+| novel-studio | 工作台路由，根据意图分流到具体技能 |
+| novel-market | 市场研究、拆解爆款、商业化包装 |
+| novel-project | 项目初始化、立项定核、篇幅规划 |
+| novel-worldbuilding | 构建人物、世界规则、设定圣经 |
+| novel-outline | 大纲规划、卷纲建设、章节节拍卡 |
+| novel-writing | 写作流程、质量门禁、状态回写 |
+| novel-quality | 体检、修订、去AI味 |
+| novel-ai-writing | AI 协作写作 prompt 模板库 |
