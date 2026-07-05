@@ -31,16 +31,17 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     project = Path(args.project_dir).expanduser().resolve()
-    chapter_dir = project / "30-正文" / "章节"
+    text_dir = project / "30-正文"
     volume_dir = project / "20-大纲" / "分卷"
     meta_file = project / "00-书核" / "作品总表.md"
 
-    if not chapter_dir.exists():
-        print(f"错误：未找到章节目录 -> {chapter_dir}", file=sys.stderr)
+    if not text_dir.exists():
+        print(f"错误：未找到 30-正文/ 目录 -> {text_dir}", file=sys.stderr)
         return 1
 
-    # 收集章节文件（按文件名自然排序）
-    chapters = sorted(f for f in chapter_dir.glob("*.md") if f.name != "章节通用模板.md")
+    # 收集章节文件（按卷目录排序）
+    md_files = sorted(text_dir.rglob("*.md"))
+    chapters = sorted(f for f in md_files if re.search(r'第\d+章', f.name))
     if not chapters:
         print("错误：未找到章节文件", file=sys.stderr)
         return 1

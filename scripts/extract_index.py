@@ -78,10 +78,10 @@ def extract_characters_from_roles(project_dir: Path) -> list[str]:
 
 
 def extract_index(project_dir: Path, update: bool = False) -> str:
-    """抽取前文索引"""
-    chapter_dir = project_dir / "30-正文" / "章节"
-    if not chapter_dir.exists():
-        return "未找到 30-正文/章节/ 目录"
+    """从所有卷目录中抽取前文索引"""
+    text_dir = project_dir / "30-正文"
+    if not text_dir.exists():
+        return "未找到 30-正文/ 目录"
 
     characters = extract_characters_from_roles(project_dir)
     canon = project_dir / "10-设定" / "硬设定.md"
@@ -94,8 +94,9 @@ def extract_index(project_dir: Path, update: bool = False) -> str:
     character_first_seen = {}
     item_first_seen = {}
 
-    for f in sorted(chapter_dir.glob("*.md")):
-        if f.name in ("章节通用模板.md",):
+    md_files = sorted(text_dir.rglob("*.md"))
+    for f in md_files:
+        if not re.search(r'第\d+章', f.name):
             continue
         text = f.read_text(encoding="utf-8")
         wc = len(re.findall(r'[\u4e00-\u9fff]', text))

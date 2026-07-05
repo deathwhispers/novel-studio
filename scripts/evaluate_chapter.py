@@ -70,11 +70,16 @@ def main() -> int:
     args = parser.parse_args()
 
     project = Path(args.project_dir).expanduser().resolve()
-    chapter_file = project / "30-正文" / "章节" / f"{args.chapter}.md"
-
-    if not chapter_file.exists():
-        print(f"错误：未找到章节文件 -> {chapter_file}", file=sys.stderr)
+    text_dir = project / "30-正文"
+    # 在所有卷目录中搜索匹配的章节文件
+    chapter_files = sorted(text_dir.rglob(f"{args.chapter}.md"))
+    if not chapter_files:
+        # 也支持全局通配搜索
+        chapter_files = sorted(text_dir.rglob(f"*{args.chapter}*.md"))
+    if not chapter_files:
+        print(f"错误：未找到章节文件 -> 30-正文/.../{args.chapter}*", file=sys.stderr)
         return 1
+    chapter_file = chapter_files[0]
 
     text = chapter_file.read_text(encoding="utf-8")
     wc = count_chinese(text)

@@ -31,14 +31,14 @@ from pathlib import Path
 REQUIRED_DIRS = [
     "00-书核", "05-市场", "05-市场/拆解", "10-设定", "10-设定/角色",
     "20-大纲", "20-大纲/分卷", "20-大纲/节拍卡", "20-大纲/因果", "20-大纲/回收",
-    "30-正文", "30-正文/章节", "30-正文/写前", "30-正文/场景", "30-正文/导入",
+    "30-正文",
     "40-修订", "40-修订/体检报告", "40-修订/修稿报告",
     "50-归档", "90-运行",
 ]
 
 CORE_FILES = [
     "00-书核/作品总表.md", "00-书核/立项单.md", "00-书核/长线承诺.md",
-    "20-大纲/全书总纲.md", "20-大纲/首卷发射台.md",
+    "20-大纲/全书总纲.md",
     "90-运行/当前进度.md", "90-运行/连载驾驶舱.md",
     "90-运行/会话交接.md", "90-运行/决策记录.md",
 ]
@@ -62,7 +62,6 @@ OPTIONAL_FILES = [
     "20-大纲/回收/伏笔强化策略库.md", "20-大纲/回收/伏笔类型库.md",
     "20-大纲/多主角分工表.md", "20-大纲/视角信息盲区表.md",
     "20-大纲/结局设计模式库.md",
-    "30-正文/章节成品检查表.md",
     "40-修订/修订日志.md", "40-修订/完本检查清单.md",
     "90-运行/全角色卷末快照.md", "90-运行/角色去留追踪表.md",
     "90-运行/角色立场漂移记录.md", "90-运行/前文索引.md",
@@ -82,19 +81,25 @@ def format_wc(n: int) -> str:
 
 
 def scan_chapters(project_dir: Path) -> list[dict]:
-    """扫描章节文件并统计字数"""
+    """从所有卷目录中扫描章节文件并统计字数"""
     chapters = []
-    chapter_dir = project_dir / "30-正文" / "章节"
-    if not chapter_dir.exists():
+    text_dir = project_dir / "30-正文"
+    if not text_dir.exists():
         return chapters
-    for f in sorted(chapter_dir.glob("*.md")):
-        if f.name in ("章节通用模板.md",):
+    # 递归扫描所有卷目录下的 .md 文件
+    md_files = sorted(text_dir.rglob("*.md"))
+    for f in md_files:
+        # 跳过非章节文件（如检查表等）
+        if not re.search(r'第\d+章', f.name):
             continue
         text = f.read_text(encoding="utf-8")
         wc = count_chinese_chars(text)
         has_content = wc > 200
+        # 使用相对路径标识章节位置
+        rel_path = f.relative_to(text_dir)
         chapters.append({
-            "file": f.name,
+            "file": str(rel_path),
+            "filename": f.name,
             "words": wc,
             "has_content": has_content,
             "text": text,
@@ -360,11 +365,11 @@ def check_world_setting_files(project_dir: Path) -> list[str]:
     这些不是 required（不会报错），但百万级长篇到了第 2 卷后强烈建议建立。
     """
     warnings = []
-    chapter_dir = project_dir / "30-正文" / "章节"
-    if not chapter_dir.exists():
+    text_dir = project_dir / "30-正文"
+    if not text_dir.exists():
         return warnings
-    chapter_files = list(chapter_dir.glob("*.md"))
-    chapter_count = len([f for f in chapter_files if f.name != "章节通用模板.md"])
+    chapter_files = sorted(text_dir.rglob("*.md"))
+    chapter_count = len([f for f in chapter_files if re.search(r'第\d+章', f.name)])
 
     # 超过 30 章建议建关系矩阵
     if chapter_count > 30:
