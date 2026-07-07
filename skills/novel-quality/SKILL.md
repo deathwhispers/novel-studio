@@ -70,6 +70,18 @@ description: "中文小说质量检查与修订 skill。用于检查章节质量
 - `40-修订/修稿报告/{chapter}-revision.md`（如果进行了修订）
 - 更新后的正文
 
+## 三道门禁
+
+写作流程的完整质量门禁是（必须顺序通过）：
+
+1. **写后自检**（即时）—— `novel-writing/references/写后自检卡.md`
+2. **章节体检**（找错）—— `references/章节体检模板.md`
+3. **叙事质量审计**（找美）—— `references/叙事质量审计.md`
+4. **状态回写**（持久化）—— `novel-writing/SKILL.md` 第五步
+
+> 章节体检解决"对不对"，叙事质量审计解决"够不够好"。
+> 任一环节不通过，不进入下一步。
+
 ## 资源
 
 需要更详细的说明时，读取以下参考文件：
@@ -83,3 +95,5 @@ description: "中文小说质量检查与修订 skill。用于检查章节质量
 - 常见AI味对照表：`references/AI味目录.md`
 - 去味动作库：`references/去味手法.md`
 - 修订阶梯：`references/修订阶梯.md`
+- **叙事质量审计（找"够不够好"）**：`references/叙事质量审计.md`
+- **文风快速自检卡（voice 漂移专项）**：`references/文风快速自检卡.md`
