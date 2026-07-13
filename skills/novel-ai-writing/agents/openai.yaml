@@ -1,4 +1,0 @@
-interface:
-  display_name: "AI 协作写作"
-  short_description: "把写作能力转译成 AI prompt 模板"
-  default_prompt: "用 $novel-ai-writing 帮我做当前章节的 AI 协作写作。"

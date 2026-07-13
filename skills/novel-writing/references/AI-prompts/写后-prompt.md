@@ -432,7 +432,7 @@
 5. 所有角色共享同一套修辞
 
 【去 AI 味规则】
-（请 AI 查阅 novel-quality 的核心规则）
+（请 AI 查阅 novel-quality/references/去味手法.md）
 
 【扫描输出】
 1. 每类 AI 味的具体例子

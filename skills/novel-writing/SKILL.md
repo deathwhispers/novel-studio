@@ -1,6 +1,6 @@
 ---
 name: novel-writing
-description: "中文小说写作流程 skill。用于按最小上下文包写场景、写章节、续写正文，并强制执行完整的质量门禁流程。适用于‘写下一章’‘把这一章扩成正文’‘按大纲继续往下写’等场景。"
+description: "中文小说写作流程 skill。整合写作执行、质量门禁、AI 协作 prompt 模板和状态回写。覆盖从写前准备、AI 辅助起稿、写中即时检查、写后自检到状态回写的完整闭环。适用于‘写下一章’‘让 AI 帮我写对话/战斗/感情戏’‘按大纲继续往下写’等场景。"
 ---
 
 # 写作流程
@@ -21,11 +21,12 @@ description: "中文小说写作流程 skill。用于按最小上下文包写场
 
 ## 功能定位
 
-把起稿执行、质量门禁、状态回写整合成一个连贯的流程。这个 skill 负责：
+把起稿执行、AI 协作、质量门禁、状态回写整合成一个连贯的流程。这个 skill 负责：
 
 1. **起稿执行**：按最小上下文包写场景或章节
-2. **质量门禁**：强制执行完整的写作流程
-3. **状态回写**：更新进度、伏笔、因果关系
+2. **AI 协作写作**：调用 AI prompt 模板辅助写对话、战斗、感情戏、章尾等具体技法
+3. **质量门禁**：强制执行完整的写作流程
+4. **状态回写**：更新进度、伏笔、因果关系
 
 ## 工作流程
 
@@ -63,6 +64,18 @@ description: "中文小说写作流程 skill。用于按最小上下文包写场
 - 卡文 → 跳段/回节拍卡/换场景/加意外
 
 急救无效 → 停笔，回对应 Step（节拍卡/前文/文风指南）。
+
+### AI 协作写作（可选增强）
+
+当需要 AI 辅助写具体技法时，按以下阶段调用 prompt：
+
+**写前阶段**：用 `references/AI-prompts/写前-prompt.md` 做节拍卡补全、爽点设计、伏笔规划
+**写中阶段**：用 `references/AI-prompts/写中-prompt.md` 写对话、战斗、感情戏、章尾、描写等具体技法
+**写后阶段**：用 `references/AI-prompts/写后-prompt.md` 做章节体检、去 AI 味、连贯性检查
+
+**特殊场景**：用 `references/AI-prompts/特殊场景-prompt.md` 做角色扮演对戏、批量生成、风格学习、灵感生成
+
+> AI 协作原则：作者是导演，AI 是演员/编剧/编辑。重要决策自己做，重复工作给 AI，AI 产出后必改。
 
 ### 第三步：写后自检（与用户互动）
 
@@ -110,6 +123,7 @@ description: "中文小说写作流程 skill。用于按最小上下文包写场
 
 需要更详细的说明时，读取以下参考文件：
 
+**写作流程**：
 - 最小上下文包：`references/上下文包.md`
 - 写前检查表：`references/写前检查表.md`
 - **写中即时检查卡（防漂核心）**：`references/写中即时检查卡.md`
@@ -117,6 +131,17 @@ description: "中文小说写作流程 skill。用于按最小上下文包写场
 - 写后自检卡：`references/写后自检卡.md`
 - 章节质量标准：`references/章节质量标准.md`
 - 连载续写卡：`references/连载续写卡.md`
-- 写作技法库：`references/写作技法库/` 目录下的各种技法文件
-- 文风快速自检卡：`../novel-quality/references/文风快速自检卡.md`（写前锁 voice、写后验 voice）
 - 章节字数控制卡：`references/章节字数控制卡.md`（写前分配、写后校验）
+
+**写作技法库**：
+- `references/写作技法库/` 目录下的各种技法文件（对话、战斗、感情、爽虐、节奏、描写等）
+
+**AI 协作 Prompt**：
+- **写前 prompt 库**：`references/AI-prompts/写前-prompt.md`（节拍卡、爽点设计、伏笔规划）
+- **写中 prompt 库**：`references/AI-prompts/写中-prompt.md`（对话、战斗、感情、章尾、描写）
+- **写后 prompt 库**：`references/AI-prompts/写后-prompt.md`（体检、去 AI 味、连贯性检查）
+- **特殊场景 prompt**：`references/AI-prompts/特殊场景-prompt.md`（角色扮演、批量生成、风格学习、灵感）
+- **调用样例**：`assets/examples/调用样例.md`
+
+**跨 skill 参考**：
+- 文风快速自检卡：`../novel-quality/references/文风快速自检卡.md`（写前锁 voice、写后验 voice）

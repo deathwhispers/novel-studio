@@ -22,7 +22,7 @@ description: "中文小说工作台路由 skill。用于用户想写小说但任
 | novel-outline | 大纲规划、卷纲建设、章节节拍卡 |
 | novel-writing | 写作流程、质量门禁、状态回写 |
 | novel-quality | 体检、修订、去AI味 |
-| novel-ai-writing | AI 协作写作 prompt 模板库 |
+| novel-writing | 写作流程、质量门禁、AI 协作 prompt |
 
 ## 路由顺序
 
@@ -58,7 +58,7 @@ description: "中文小说工作台路由 skill。用于用户想写小说但任
 12. 用户已经有正文，想重写、查错、润色、修结构
     - 路由到 `novel-quality`
 13. 用户明确要求"让 AI 帮我写一节对话/战斗/感情戏""让 AI 扮演角色对戏""让 AI 帮我做体检""让 AI 帮我批量生成"
-    - 路由到 `novel-ai-writing`
+    - 路由到 `novel-writing`（调用其 `references/AI-prompts/` 下的对应 prompt 模板）
 
 ## 路由规则
 
@@ -92,6 +92,12 @@ description: "中文小说工作台路由 skill。用于用户想写小说但任
 如果需要更细的路由例子，读取 `references/路由地图.md`。
 如果用户需要快速了解每个技能的能力边界，读取 `references/技能调用速查.md`。
 如果用户要走完整的端到端写作流程，读取 `references/重构流程.md`。
+
+## 资源
+
+- **路由地图**：`references/路由地图.md`——完整的 skill 路由决策树和 7 个跨阶段工作流链路
+- **重构流程**：`references/重构流程.md`——7 步强制端到端写作流程的执行细则
+- **技能调用速查**：`references/技能调用速查.md`——每个 skill 的能力边界和快速调用指南
 
 ## 输出要求
 

@@ -5,7 +5,7 @@
 ## 核心价值
 
 - **质量优先**：每章 2000-2500 字，确保戏成立、逻辑闭合、细节落地
-- **结构清晰**：8 个专项 skill，各司其职，协同工作
+- **结构清晰**：7 个专项 skill，各司其职，协同工作
 - **中文适配**：按中文写作习惯组织，适合长篇连载
 - **互动规划**：与用户互动确认小说篇幅、分卷数量、更新频率等关键信息
 - **渐进披露**：SKILL.md 只包含核心概念，详细内容按需加载
@@ -23,13 +23,12 @@
 | novel-project | 项目初始化、立项定核、篇幅规划 |
 | novel-worldbuilding | 构建人物、世界规则、设定圣经 |
 | novel-outline | 大纲规划、卷纲建设、章节节拍卡 |
-| novel-writing | 写作流程、质量门禁、状态回写 |
+| novel-writing | 写作流程、质量门禁、AI 协作 prompt、状态回写 |
 | novel-quality | 体检、修订、去AI味 |
-| novel-ai-writing | AI 协作写作 prompt 模板库 |
 
 ## 技能合并说明
 
-为了简化使用流程，我们将原有的 15 个技能合并为 8 个：
+为了简化使用流程，我们将原有的 16 个技能合并为 7 个：
 
 | 原技能 | 合并后 | 职责 |
 |--------|--------|------|
@@ -37,9 +36,9 @@
 | novel-bootstrap + novel-ideation | **novel-project** | 项目初始化、立项定核、篇幅规划 |
 | novel-worldbuilding | **novel-worldbuilding** | 设定构建（保持独立） |
 | novel-outlining + novel-volumning | **novel-outline** | 大纲规划、卷纲建设 |
-| novel-drafting + novel-chapter-workflow | **novel-writing** | 写作流程、质量门禁 |
+| novel-drafting + novel-chapter-workflow + novel-ai-writing | **novel-writing** | 写作流程、质量门禁、AI 协作 prompt |
 | novel-checkup + novel-revision + novel-deslop | **novel-quality** | 体检、修订、去AI味 |
-| novel-ai-writing | **novel-ai-writing** | AI协作prompt（保持独立） |
+
 | novel-studio | **novel-studio** | 工作台路由（保持独立） |
 
 ## 项目结构
