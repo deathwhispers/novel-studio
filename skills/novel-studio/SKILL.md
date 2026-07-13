@@ -11,7 +11,7 @@ description: "中文小说工作台路由 skill。用于用户想写小说但任
 
 ## 技能体系
 
-本项目包含 8 个核心技能：
+本项目包含 9 个核心技能：
 
 | 技能 | 职责 |
 |------|------|
@@ -22,6 +22,7 @@ description: "中文小说工作台路由 skill。用于用户想写小说但任
 | novel-outline | 大纲规划、卷纲建设、章节节拍卡 |
 | novel-writing | 写作流程、质量门禁、状态回写 |
 | novel-quality | 体检、修订、去AI味 |
+| novel-feedback | 读者反馈追踪、分析、驱动后续优化 |
 
 ## 路由顺序
 
@@ -58,6 +59,8 @@ description: "中文小说工作台路由 skill。用于用户想写小说但任
     - 路由到 `novel-quality`
 13. 用户明确要求"让 AI 帮我写一节对话/战斗/感情戏""让 AI 扮演角色对戏""让 AI 帮我做体检""让 AI 帮我批量生成"
     - 路由到 `novel-writing`（调用其 `references/AI-prompts/` 下的对应 prompt 模板）
+14. 用户提到"读者反馈""追读率跌了""评论说""根据反馈调整""分析读者反应"
+    - 路由到 `novel-feedback`
 
 ## 路由规则
 
