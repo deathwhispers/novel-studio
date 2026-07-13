@@ -133,8 +133,18 @@ description: "中文小说写作流程 skill。整合写作执行、质量门禁
 - 连载续写卡：`references/连载续写卡.md`
 - 章节字数控制卡：`references/章节字数控制卡.md`（写前分配、写后校验）
 
-**写作技法库**：
-- `references/写作技法库/` 目录下的各种技法文件（对话、战斗、感情、爽虐、节奏、描写等）
+**写作技法库**（按技法类型）：
+- 对话写作：`references/写作技法库/对话写作技法.md`
+- 战斗场景：`references/写作技法库/战斗场景写作技法.md`
+- 感情线推进：`references/写作技法库/感情线发展阶段模板.md`
+- 爽点设计：`references/写作技法库/爽点设计模式库.md`
+- 虐点设计：`references/写作技法库/虐点设计模式库.md`
+- 反转技巧：`references/写作技法库/反转设计技法.md`
+- 节奏控制：`references/写作技法库/章节内节奏设计.md`
+- 环境描写：`references/写作技法库/环境描写技法.md`
+- 心理描写：`references/写作技法库/心理描写技法.md`
+- 章名设计：`references/写作技法库/章名设计技法.md`
+- 场景多样化：`references/写作技法库/场景多样化检查表.md`
 
 **AI 协作 Prompt**：
 - **写前 prompt 库**：`references/AI-prompts/写前-prompt.md`（节拍卡、爽点设计、伏笔规划）
