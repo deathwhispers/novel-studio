@@ -1,4 +1,4 @@
 interface:
   display_name: "小说质量修订"
-  short_description: "诊断小说结构、连续性、文风和AI痕迹，并执行分层修订"
-  default_prompt: "用 $novel-quality 体检这段正文，先列出问题，再按优先级完成修订。"
+  short_description: "按写作模式和正文目的引用原文证据诊断，并在明确授权时执行最小修订"
+  default_prompt: "用 $novel-quality 按这段文字的写作目的做证据型体检；若我要求改写，再执行最小修订。"

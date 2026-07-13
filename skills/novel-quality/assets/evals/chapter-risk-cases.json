@@ -1,0 +1,72 @@
+[
+  {
+    "id": "quiet-scene-low-dialogue",
+    "profile": "auto",
+    "text": "雨落在旧瓦上。她沿着廊下慢慢走，鞋底每一次落下，都把积水推向更暗的地方。门没有锁。她停了一会儿，把钥匙放回袖中。",
+    "expect_present": [],
+    "expect_absent": ["dialogue_below_profile", "explain_density"]
+  },
+  {
+    "id": "normal-causal-language",
+    "profile": "auto",
+    "text": "因为桥断了，他们只能绕路。风从河面扑过来，吹灭两盏灯。老周把剩下的一盏护在怀里，示意众人别出声。",
+    "expect_present": [],
+    "expect_absent": ["explain_density"]
+  },
+  {
+    "id": "repeated-explicit-explanation",
+    "profile": "auto",
+    "text": "他意识到这意味着失败。她明白这说明计划已经泄露。他知道这意味着门内有人。她注意到这说明对方早有准备。换句话说，他们已经无路可退。也就是说，所有选择都被算到了。",
+    "expect_present": ["explain_density"],
+    "expect_absent": []
+  },
+  {
+    "id": "auto-profile-does-not-enforce-length",
+    "profile": "auto",
+    "text": "门开了。没人进来。",
+    "expect_present": [],
+    "expect_absent": ["length_below_profile"]
+  },
+  {
+    "id": "serial-profile-length-signal",
+    "profile": "web-serial",
+    "text": "门开了。没人进来。",
+    "expect_present": ["length_below_profile"],
+    "expect_absent": []
+  },
+  {
+    "id": "dialogue-profile-is-opt-in",
+    "profile": "dialogue-heavy",
+    "text": "院子里没有人。风把桌上的纸翻了一页，又翻回来。守门人望着那张空椅子，直到天色全部暗下去。",
+    "expect_present": ["dialogue_below_profile"],
+    "expect_absent": []
+  },
+  {
+    "id": "dialogue-overload-signal",
+    "profile": "web-serial",
+    "text": "“你去吗？我等了三天。你若不去，我就自己去。别再问我为什么，也别告诉别人。”他说。",
+    "expect_present": ["dialogue_above_profile"],
+    "expect_absent": []
+  },
+  {
+    "id": "modifier-cluster",
+    "profile": "auto",
+    "text": "很冷的风轻轻地吹过非常安静的长街，特别苍白的灯影极其缓慢地摇动。很旧的门非常轻地响着，特别细的灰十分安静地落下。很远的地方传来非常低的钟声，特别漫长的回音极其缓慢地穿过空巷。很冷的风又轻轻地吹过非常安静的长街。",
+    "expect_present": ["modifier_density"],
+    "expect_absent": []
+  },
+  {
+    "id": "markdown-title-not-body",
+    "profile": "auto",
+    "text": "# 他意识到这意味着失败\n\n门开了。雨水越过门槛。",
+    "expect_present": [],
+    "expect_absent": ["explain_density"]
+  },
+  {
+    "id": "literary-profile-allows-longer-syntax",
+    "profile": "literary",
+    "text": "等最后一班车从看不见的山后绕出来，车灯先照亮积水里那些颤动的树影，然后才照见站牌下始终没有抬头的人。",
+    "expect_present": [],
+    "expect_absent": ["long_sentence_cluster"]
+  }
+]

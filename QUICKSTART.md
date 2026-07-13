@@ -26,19 +26,41 @@ python3 skills/novel-project/scripts/init_novel_project.py \
   --output /path/to/my-novel \
   --title "书名" \
   --genre "题材" \
-  --premise "一句话故事前提"
+  --premise "一句话故事前提" \
+  --profile serial
 ```
+
+模板档位：`minimal` 适合短篇或试写，`serial` 适合常规连载（默认），`longform` 适合多线、多人和超长篇。
 
 ## 3. 开始写作
 
-按以下顺序使用技能：
+按当前意图选择最短链路；下面是需要完整项目时的常见顺序：
 
 1. `novel-project` - 初始化项目、立项定核、篇幅规划
 2. `novel-worldbuilding` - 设定总表
 3. `novel-outline` - 铺线列纲
-4. `novel-writing` - 写章起稿（强制执行完整流程）
-5. `novel-quality` - 体检、修订、去AI味
+4. `novel-writing` - 按模式优先完成正文，再做轻量硬伤检查
+5. `novel-quality` - 证据型体检、最小修订、语言与形式校准
 6. `novel-feedback` - 发布后追踪读者反馈并调整后续写作
+
+短篇、文学叙事或人物试写可直接从 `novel-writing` 开始；未知但可逆的信息不阻止起草。
+
+续写前可生成最小上下文包：
+
+```bash
+python3 scripts/build_context_pack.py /path/to/my-novel \
+  --chapter 12 \
+  --output /path/to/my-novel/90-运行/上下文包-chapter-012.md
+```
+
+正文完成后可扫描表层风险。该工具不输出文学质量综合分：
+
+```bash
+python3 scripts/evaluate_chapter.py /path/to/my-novel \
+  --chapter 第012章 \
+  --profile web-serial \
+  --verbose
+```
 
 ## 项目结构
 

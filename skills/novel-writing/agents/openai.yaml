@@ -1,4 +1,4 @@
 interface:
   display_name: "小说章节写作"
-  short_description: "按节拍卡完成章节起稿、写中检查、写后自检和状态回写"
-  default_prompt: "用 $novel-writing 根据现有节拍卡续写下一章，并完成质量门禁和状态回写。"
+  short_description: "按五种写作模式优先完成正文起稿，轻量检查叙事硬伤并记录章节状态增量"
+  default_prompt: "用 $novel-writing 根据现有文本和我的意图继续写；先给正文，再做必要检查和状态增量。"

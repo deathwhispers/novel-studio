@@ -7,9 +7,9 @@
 
 自动完成:
     1. 在对应卷目录中创建章节文件
-    2. 从模板复制节拍卡并填充编号
+    2. 创建可裁剪的写作支点
     3. 更新 90-运行/当前进度.md
-    4. 更新 90-运行/连载驾驶舱.md
+    4. 若项目启用了连载驾驶舱，则同步更新
 """
 
 from __future__ import annotations
@@ -30,12 +30,15 @@ def parse_args() -> argparse.Namespace:
 
 
 def find_volume_dir(project_dir: Path) -> Path | None:
-    """在 30-正文/ 中查找已有的卷目录"""
+    """优先选择卷目录；minimal 项目回退到通用章节目录。"""
     text_dir = project_dir / "30-正文"
     if not text_dir.exists():
         return None
     volumes = sorted([d for d in text_dir.iterdir() if d.is_dir() and re.search(r'第.+卷', d.name)])
-    return volumes[-1] if volumes else None
+    if volumes:
+        return volumes[-1]
+    chapter_dir = text_dir / "章节"
+    return chapter_dir if chapter_dir.exists() else None
 
 
 def main() -> int:
@@ -69,7 +72,7 @@ def main() -> int:
     else:
         vol = find_volume_dir(project_dir)
         if vol is None:
-            print("错误：未找到卷目录（30-正文/下没有 第X卷-卷名/ 目录）")
+            print("错误：未找到正文目录（需要 第X卷-卷名/ 或 30-正文/章节/）")
             return 1
         volume_dir = vol
         print(f"自动选择卷目录：{volume_dir.name}")
@@ -97,17 +100,24 @@ def main() -> int:
                 encoding="utf-8"
             )
 
-    # 2. 创建节拍卡（非必须，跳过时仅提示）
+    # 2. 创建写作支点（可裁剪，跳过时仅提示）
     if beat_file.exists():
         actions.append(f"[跳过] 节拍卡已存在：{beat_file.name}")
     elif beat_file.suffix == ".md":
         actions.append(f"[创建] 节拍卡：{beat_file.name}")
         if not args.dry_run:
             beat_file.write_text(
-                f"# {chapter_name} 节拍卡\n\n"
-                "## 本章任务\n\n"
-                "## 核心冲突\n\n"
-                "## 章尾钩子\n\n",
+                f"# {chapter_name} 写作支点\n\n"
+                "- 写作模式：\n"
+                "- 当前视角与注意力：\n"
+                "- 人物想靠近、逃避、理解或维持什么：\n"
+                "- 当前压力或未知：\n"
+                "- 希望产生的阅读效果：\n"
+                "- 必须遵守的 canon：\n"
+                "- 允许通过正文发现的部分：\n\n"
+                "## 写后继承\n\n"
+                "- 人物选择与真实变化：\n"
+                "- 下一段继承的后果或余韵：\n",
                 encoding="utf-8"
             )
 

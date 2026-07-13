@@ -1,4 +1,4 @@
 interface:
   display_name: "小说项目立项"
-  short_description: "初始化小说工作区，完成立项定核、篇幅规划和旧稿导入"
-  default_prompt: "用 $novel-project 为我的小说创建工作区，并完成立项与篇幅规划。"
+  short_description: "按写作模式初始化最小工作区，支持试写、立项和旧稿导入"
+  default_prompt: "用 $novel-project 按我的写作模式创建最小工作区；未确定的信息保持可探索，不要阻止试写。"

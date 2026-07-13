@@ -39,7 +39,7 @@ REQUIRED_DIRS = [
 CORE_FILES = [
     "00-书核/作品总表.md", "00-书核/立项单.md", "00-书核/长线承诺.md",
     "20-大纲/全书总纲.md",
-    "90-运行/当前进度.md", "90-运行/连载驾驶舱.md",
+    "90-运行/当前进度.md",
     "90-运行/会话交接.md", "90-运行/决策记录.md",
 ]
 
@@ -126,10 +126,15 @@ def scan_progress(project_dir: Path) -> dict:
         return info
     text = progress_file.read_text(encoding="utf-8")
     for line in text.splitlines():
-        if "当前卷" in line or "当前写到" in line:
-            info["current_volume"] = line.split("：")[-1].strip() if "：" in line else line
-        if "当前章" in line or "第" in line and "章" in line:
-            info["current_chapter"] = line.split("：")[-1].strip() if "：" in line else line
+        if line.startswith(("- 正在写到：", "- 当前写到：")):
+            location = line.split("：", 1)[-1].strip()
+            parts = [part.strip() for part in location.split("/", 1)]
+            info["current_volume"] = parts[0]
+            info["current_chapter"] = parts[1] if len(parts) > 1 else parts[0]
+        elif line.startswith("- 当前卷："):
+            info["current_volume"] = line.split("：", 1)[-1].strip()
+        elif line.startswith("- 当前章节："):
+            info["current_chapter"] = line.split("：", 1)[-1].strip()
     return info
 
 
@@ -396,59 +401,12 @@ def check_world_setting_files(project_dir: Path) -> list[str]:
 
 
 def check_voice_drift(project_dir: Path, chapters: list[dict]) -> list[str]:
-    """检测角色 voice 是否漂移
+    """保留兼容入口，但不以口头禅频率自动判定人物声音。
 
-    策略：从角色卡中提取 "口头禅" 字段，对比最近 20 章的对话内容，
-    如果某个口头禅在最近 20 章里完全没出现，提示 voice 漂移。
+    Voice 需要比较注意力、信息策略、句法节奏、叙述距离和压力变化；缺少
+    口头禅既不构成漂移，也不适合由结构校验器给出修订结论。
     """
-    issues = []
-    role_dir = project_dir / "10-设定" / "角色"
-    if not role_dir.exists():
-        return issues
-
-    # 收集每个角色的口头禅
-    role_catchphrases: dict[str, list[str]] = {}
-    for f in role_dir.glob("*.md"):
-        if f.name in ("角色卡模板.md",):
-            continue
-        text = f.read_text(encoding="utf-8")
-        m = re.search(r'^#\s+(.+)', text, re.MULTILINE)
-        role_name = m.group(1).strip() if m else f.stem
-        # 找 "口头禅" 字段后的内容（直到下一个 **字段**）
-        catchphrase_m = re.search(r'口头禅[^*]*?：\s*([^\n]+)', text)
-        if catchphrase_m:
-            line = catchphrase_m.group(1)
-            # 提取中文短语
-            phrases = re.findall(r'[「「""][^」」""]+[」」""]|[\u4e00-\u9fff]{3,8}', line)
-            if phrases:
-                role_catchphrases[role_name] = phrases
-
-    if not role_catchphrases:
-        return issues
-
-    # 取出最近 20 章的文本
-    recent_texts = [c["text"] for c in chapters if c["has_content"]][-20:]
-    if not recent_texts:
-        return issues
-    combined = "\n".join(recent_texts)
-
-    # 检查每个角色的口头禅是否还在出现
-    for role_name, phrases in role_catchphrases.items():
-        # 跳过只在最近章节没有的（可能是新角色或短期未出场）
-        # 简化策略：检查至少 1 个口头禅是否出现
-        appeared = any(phrase in combined for phrase in phrases)
-        if not appeared:
-            # 进一步检查该角色是否在最近 20 章有对话
-            role_in_recent = role_name in combined
-            if role_in_recent:
-                issues.append(
-                    f"🎭 voice 漂移：'{role_name}' 在最近 20 章有出场但未使用任何口头禅——辨识度可能下降"
-                )
-            else:
-                issues.append(
-                    f"🎭 '{role_name}' 已超过 20 章未出场——口头禅无法验证，请确认是否需要回归"
-                )
-    return issues
+    return []
 
 
 # =============================================================================
@@ -488,10 +446,11 @@ def main() -> int:
         if not (project_dir / f).exists():
             errors.append(f"缺少核心文件：{f}")
 
-    # 3. 检查可选文件（仅提示）
-    for f in OPTIONAL_FILES:
-        if not (project_dir / f).exists():
-            warnings.append(f"可选文件缺失：{f}")
+    # 3. 可选文件只在详细模式汇总；缺失不构成项目风险。
+    if args.verbose:
+        missing_optional = [f for f in OPTIONAL_FILES if not (project_dir / f).exists()]
+        if missing_optional:
+            info.append(f"未启用的按需资料：{len(missing_optional)} 项")
 
     # 4. 扫描章节字数
     chapters = scan_chapters(project_dir)
@@ -505,14 +464,15 @@ def main() -> int:
             for c in chapters:
                 status = "✓" if c["has_content"] else "○"
                 info.append(f"  [{status}] {c['file']}: {format_wc(c['words'])}")
-        # 检查字数异常
-        for c in chapters:
-            if c["has_content"] and c["words"] < 500:
-                warnings.append(f"章节字数偏低：{c['file']}（{format_wc(c['words'])}字）")
-            elif c["has_content"] and c["words"] > 8000:
-                warnings.append(f"章节字数偏高：{c['file']}（{format_wc(c['words'])}字）")
+        # 字数只在详细模式提供观察信号，不构成质量警告。
+        if args.verbose:
+            for c in chapters:
+                if c["has_content"] and (c["words"] < 500 or c["words"] > 8000):
+                    info.append(
+                        f"篇幅观察：{c['file']}（{format_wc(c['words'])}字，请结合写作模式判断）"
+                    )
     else:
-        warnings.append("未找到章节文件")
+        info.append("尚未找到正文章节；新项目可从探索起草开始")
 
     # 5. 进度检查
     progress = scan_progress(project_dir)
@@ -526,8 +486,6 @@ def main() -> int:
             warnings.append("连载驾驶舱.md 未填写当前写到位置")
         if "风险" not in cockpit_text:
             warnings.append("连载驾驶舱.md 未填写风险项")
-    else:
-        errors.append("缺少连载驾驶舱.md")
 
     # 7. 检查回收总账
     ledger = project_dir / "20-大纲" / "回收" / "回收总账.md"
