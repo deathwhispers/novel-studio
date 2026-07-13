@@ -46,7 +46,7 @@ CORE_FILES = [
 OPTIONAL_FILES = [
     "05-市场/趋势笔记.md", "05-市场/对标书单.md",
     "10-设定/硬设定.md", "10-设定/世界规则.md", "10-设定/力量体系.md",
-    "10-设定/势力.md", "10-设定/地点.md", "10-设定/时间线.md", "10-设定/母题.md",
+    "10-设定/势力/势力总览.md", "10-设定/地点/地点总览.md", "10-设定/时间线.md", "10-设定/母题.md",
     "10-设定/角色/主角.md", "10-设定/角色/反派.md", "10-设定/角色/配角.md",
     "10-设定/角色/角色弧线追踪表.md", "10-设定/角色/角色决策记录表.md",
     "10-设定/势力关系矩阵.md", "10-设定/势力动态史.md",
@@ -386,8 +386,6 @@ def check_world_setting_files(project_dir: Path) -> list[str]:
                 warnings.append(
                     f"💡 已写 {chapter_count} 章，建议补建 `{f}` —— 防止中后期角色写丢"
                 )
-        return warnings  # 提示一次
-
     # 超过 100 章建议建前文索引
     if chapter_count > 100:
         if not (project_dir / "90-运行/前文索引.md").exists():

@@ -1,0 +1,4 @@
+interface:
+  display_name: "小说读者反馈"
+  short_description: "收集评论和追读数据，识别趋势并转化为可验证的写作调整"
+  default_prompt: "用 $novel-feedback 分析这些评论和追读数据，生成具体的后续写作调整指令。"

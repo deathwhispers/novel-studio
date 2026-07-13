@@ -4,7 +4,8 @@
 将 skills/ 目录复制到指定位置。
 
 用法:
-    python3 scripts/install.py --target-dir /path/to/project  # 复制到项目目录
+    python3 scripts/install.py --target-dir /path/to/project
+    python3 scripts/install.py --target-dir /path/to/project --force  # 覆盖旧版
     python3 scripts/install.py --target-dir ~/.config/opencode/skills  # 复制到全局位置
 """
 
@@ -18,11 +19,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def install_skills(target_dir: Path) -> bool:
+def install_skills(target_dir: Path, force: bool = False) -> bool:
     """将 skills/ 目录复制到目标位置"""
+    target_dir = target_dir.expanduser().resolve()
     target = target_dir / "novel-skills"
     if target.exists():
-        shutil.rmtree(target)
+        if not force:
+            print(f"❌ 目标已存在：{target}", file=sys.stderr)
+            print("如需覆盖，请显式传入 --force。", file=sys.stderr)
+            return False
+        if target.is_symlink():
+            target.unlink()
+        else:
+            shutil.rmtree(target)
     target.mkdir(parents=True, exist_ok=True)
     
     skills_src = ROOT / "skills"
@@ -48,10 +57,15 @@ def main() -> int:
         required=True,
         help="目标目录路径",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="覆盖目标中已存在的 novel-skills 目录",
+    )
     args = parser.parse_args()
 
     print("📚 novel-skills 安装脚本\n")
-    return 0 if install_skills(args.target_dir) else 1
+    return 0 if install_skills(args.target_dir, force=args.force) else 1
 
 
 if __name__ == "__main__":

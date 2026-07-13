@@ -1,4 +1,4 @@
 interface:
-  display_name: "设定总表"
-  short_description: "整理人物、世界规则和连续性"
-  default_prompt: "用 $novel-worldbuilding 帮我整理人物、世界规则和关键设定。"
+  display_name: "小说设定圣经"
+  short_description: "构建人物、世界规则、势力、时间线并维护长篇创作连续性"
+  default_prompt: "用 $novel-worldbuilding 整理人物、世界规则和需要持续维护的核心设定。"

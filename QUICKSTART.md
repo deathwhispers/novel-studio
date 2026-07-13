@@ -7,6 +7,18 @@
 python3 scripts/install.py --target-dir /path/to/your/project
 ```
 
+更新已安装的副本时显式使用 `--force`：
+
+```bash
+python3 scripts/install.py --target-dir /path/to/your/project --force
+```
+
+卸载时使用同一个目标目录：
+
+```bash
+python3 scripts/uninstall.py --target-dir /path/to/your/project
+```
+
 ## 2. 初始化项目
 
 ```bash
@@ -26,6 +38,7 @@ python3 skills/novel-project/scripts/init_novel_project.py \
 3. `novel-outline` - 铺线列纲
 4. `novel-writing` - 写章起稿（强制执行完整流程）
 5. `novel-quality` - 体检、修订、去AI味
+6. `novel-feedback` - 发布后追踪读者反馈并调整后续写作
 
 ## 项目结构
 
@@ -64,4 +77,4 @@ my-novel/
 | novel-outline | 大纲规划、卷纲建设、章节节拍卡 |
 | novel-writing | 写作流程、质量门禁、状态回写 |
 | novel-quality | 体检、修订、去AI味 |
-| novel-ai-writing | AI 协作写作 prompt 模板库 |
+| novel-feedback | 读者反馈追踪、趋势分析、驱动后续优化 |

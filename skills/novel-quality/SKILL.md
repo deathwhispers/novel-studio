@@ -105,7 +105,7 @@ description: "中文小说质量检查与修订 skill。用于检查章节质量
 - `40-修订/修稿报告/{chapter}-revision.md`（如果进行了修订）
 - 更新后的正文
 
-## 三道门禁
+## 四道门禁
 
 写作流程的完整质量门禁是（必须顺序通过）：
 
@@ -133,6 +133,11 @@ description: "中文小说质量检查与修订 skill。用于检查章节质量
 - **叙事质量审计（找"够不够好"）**：`references/叙事质量审计.md`
 - **文风快速自检卡（voice 漂移专项）**：`references/文风快速自检卡.md`
 - **读者反馈处理（转 novel-feedback）**：`../novel-feedback/SKILL.md`——读者反馈追踪、分析、决策的独立 skill
+- 逻辑修补模板：`references/逻辑修补模板.md`
+- 回收修补模板：`references/回收修补模板.md`
+- 细节修补模板：`references/细节修补模板.md`
+- 完本与中期审视：`references/完本检查清单.md`、`references/中期审视模板.md`
+- 失败案例与 AI 味对照：`references/失败案例库.md`、`references/常见AI味示例.md`
 
 ## 快速诊断（5 分钟体检）
 

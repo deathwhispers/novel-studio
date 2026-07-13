@@ -4,8 +4,8 @@
 对章节做基础质量评分，扫描字数、句长、对话密度、AI解释腔、形容词密度。
 
 用法:
-    python3 scripts/evaluate_chapter.py /path/to/my-novel --chapter 第一章
-    python3 scripts/evaluate_chapter.py /path/to/my-novel --chapter 第二章 --verbose
+    python3 scripts/evaluate_chapter.py /path/to/my-novel --chapter 第001章
+    python3 scripts/evaluate_chapter.py /path/to/my-novel --chapter 第002章 --verbose
 """
 
 from __future__ import annotations
@@ -65,7 +65,7 @@ def dialogue_ratio(text: str) -> float:
 def main() -> int:
     parser = argparse.ArgumentParser(description="章节质量评估")
     parser.add_argument("project_dir", help="小说项目目录")
-    parser.add_argument("--chapter", "-c", required=True, help="章节名，如 第一章")
+    parser.add_argument("--chapter", "-c", required=True, help="章节名，如 第001章")
     parser.add_argument("--verbose", "-v", action="store_true", help="输出详细信息")
     args = parser.parse_args()
 

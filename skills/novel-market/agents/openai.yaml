@@ -1,0 +1,4 @@
+interface:
+  display_name: "小说市场研究"
+  short_description: "研究中文小说市场、拆解对标作品并设计商业化包装方案"
+  default_prompt: "用 $novel-market 分析目标平台和对标作品，给出可执行的市场与包装建议。"

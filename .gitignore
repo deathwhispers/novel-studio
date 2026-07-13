@@ -35,5 +35,6 @@ __pycache__/
 /bundle/
 
 # Editors
+.idea/
 *.swp
 .omo/

@@ -1,0 +1,4 @@
+interface:
+  display_name: "小说大纲规划"
+  short_description: "从故事核心逐步生成总纲、分卷规划、节拍卡和伏笔方案"
+  default_prompt: "用 $novel-outline 把我的故事核心拆成可执行的总纲、卷纲和章节节拍卡。"

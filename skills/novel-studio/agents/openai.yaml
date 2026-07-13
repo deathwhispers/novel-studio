@@ -1,4 +1,4 @@
 interface:
   display_name: "小说工作台"
-  short_description: "为整条写作流程自动分流"
-  default_prompt: "用 $novel-studio 帮我判断这一步该先立项、列纲、写章还是修稿。"
+  short_description: "判断小说创作所处阶段，并把任务路由到合适的专项工作流"
+  default_prompt: "用 $novel-studio 检查当前小说项目，并告诉我下一步应该调用哪个写作技能。"

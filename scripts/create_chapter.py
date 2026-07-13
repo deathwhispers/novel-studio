@@ -15,10 +15,7 @@
 from __future__ import annotations
 
 import argparse
-import shutil
-import sys
 import re
-from datetime import date
 from pathlib import Path
 
 
@@ -38,7 +35,7 @@ def find_volume_dir(project_dir: Path) -> Path | None:
     if not text_dir.exists():
         return None
     volumes = sorted([d for d in text_dir.iterdir() if d.is_dir() and re.search(r'第.+卷', d.name)])
-    return volumes[0] if volumes else None
+    return volumes[-1] if volumes else None
 
 
 def main() -> int:
@@ -49,13 +46,23 @@ def main() -> int:
     if not project_dir.exists():
         print(f"错误：目录不存在 -> {project_dir}")
         return 1
+    if ch < 1:
+        print("错误：章节编号必须大于 0")
+        return 1
+    if args.name and ("/" in args.name or "\\" in args.name or args.name in {".", ".."}):
+        print("错误：章节名不能包含路径分隔符")
+        return 1
 
     ch_num = f"第{ch:03d}章"
     chapter_name = f"{ch_num}-{args.name}" if args.name else ch_num
 
     # 确定卷目录
     if args.volume:
-        volume_dir = project_dir / "30-正文" / args.volume
+        text_dir = (project_dir / "30-正文").resolve()
+        volume_dir = (text_dir / args.volume).resolve()
+        if not volume_dir.is_relative_to(text_dir):
+            print("错误：卷目录必须位于 30-正文/ 内")
+            return 1
         if not volume_dir.exists():
             print(f"错误：卷目录不存在 -> {volume_dir}")
             return 1
@@ -68,11 +75,16 @@ def main() -> int:
         print(f"自动选择卷目录：{volume_dir.name}")
 
     chapter_file = volume_dir / f"{chapter_name}.md"
-    beat_file = project_dir / "20-大纲" / "节拍卡" / f"{chapter_name}节拍卡.md"
+    beat_file = project_dir / "20-大纲" / "节拍卡" / f"chapter-{ch:03d}.md"
     progress_file = project_dir / "90-运行" / "当前进度.md"
     cockpit_file = project_dir / "90-运行" / "连载驾驶舱.md"
 
     actions = []
+
+    # 写入前完成所有目录预检，避免留下半成品。
+    if not args.dry_run:
+        volume_dir.mkdir(parents=True, exist_ok=True)
+        beat_file.parent.mkdir(parents=True, exist_ok=True)
 
     # 1. 创建章节文件
     if chapter_file.exists():
@@ -102,9 +114,16 @@ def main() -> int:
     # 3. 更新当前进度
     if progress_file.exists() and not args.dry_run:
         text = progress_file.read_text(encoding="utf-8")
-        today = date.today().isoformat()
         if "- 当前章节：" in text:
             text = re.sub(r"- 当前章节：.*", f"- 当前章节：{chapter_name}", text)
+            progress_file.write_text(text, encoding="utf-8")
+            actions.append(f"[更新] 当前进度.md → {chapter_name}")
+        elif "- 正在写到：" in text:
+            text = re.sub(
+                r"- 正在写到：.*",
+                f"- 正在写到：{volume_dir.name} / {chapter_name}",
+                text,
+            )
             progress_file.write_text(text, encoding="utf-8")
             actions.append(f"[更新] 当前进度.md → {chapter_name}")
         else:
@@ -113,25 +132,26 @@ def main() -> int:
     # 4. 更新连载驾驶舱
     if cockpit_file.exists() and not args.dry_run:
         text = cockpit_file.read_text(encoding="utf-8")
-        table_marker = "| Ch "
-        if table_marker in text:
+        if "## 近 5 章任务" in text:
             lines = text.splitlines()
-            actions_taken = 0
-            table_count = 0
-            for line in lines:
-                if line.strip().startswith("| Ch"):
-                    table_count += 1
-            if table_count < 5:
-                insert_pos = None
-                for i, line in enumerate(lines):
-                    if line.strip().startswith("| Ch ") and i + 1 < len(lines) and "|" in lines[i + 1]:
-                        insert_pos = i + table_count
-                if insert_pos:
-                    text = text[:insert_pos] + f"| Ch {ch} | | | | |\n" + text[insert_pos:]
-                    cockpit_file.write_text(text, encoding="utf-8")
-                    actions.append(f"[更新] 连载驾驶舱.md → 添加 Ch {ch}")
+            start = lines.index("## 近 5 章任务")
+            end = next(
+                (i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
+                len(lines),
+            )
+            row_indices = [i for i in range(start, end) if lines[i].strip().startswith("| Ch ")]
+            new_row = f"| Ch {ch} | | | | |"
+            if any(re.match(rf"\| Ch {ch}\s*\|", lines[i].strip()) for i in row_indices):
+                actions.append(f"[跳过] 连载驾驶舱.md 已包含 Ch {ch}")
+            elif row_indices:
+                current_rows = [lines[i] for i in row_indices]
+                updated_rows = (current_rows + [new_row])[-5:]
+                for index, row in zip(row_indices[-len(updated_rows):], updated_rows):
+                    lines[index] = row
+                cockpit_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+                actions.append(f"[更新] 连载驾驶舱.md → 添加 Ch {ch}")
             else:
-                actions.append(f"[提示] 连载驾驶舱.md 已满5行，请手动管理")
+                actions.append(f"[提示] 连载驾驶舱.md 近 5 章表格格式不匹配")
         else:
             actions.append(f"[提示] 连载驾驶舱.md 格式不匹配，请手动更新")
 

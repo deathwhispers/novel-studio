@@ -19,6 +19,13 @@ def count_chinese(text: str) -> int:
     return len(re.findall(r'[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]', text))
 
 
+def chapter_sort_key(path: Path) -> tuple[int, str]:
+    """按章节数字排序，避免第10章排在第2章之前。"""
+    match = re.search(r'第\s*0*(\d+)\s*章|chapter-0*(\d+)', path.name, re.IGNORECASE)
+    number = int(next(group for group in match.groups() if group is not None)) if match else 10**9
+    return number, str(path)
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="小说导出工具")
     parser.add_argument("project_dir", help="小说项目目录")
@@ -41,7 +48,10 @@ def main() -> int:
 
     # 收集章节文件（按卷目录排序）
     md_files = sorted(text_dir.rglob("*.md"))
-    chapters = sorted(f for f in md_files if re.search(r'第\d+章', f.name))
+    chapters = sorted(
+        (f for f in md_files if re.search(r'第\d+章', f.name)),
+        key=chapter_sort_key,
+    )
     if not chapters:
         print("错误：未找到章节文件", file=sys.stderr)
         return 1
