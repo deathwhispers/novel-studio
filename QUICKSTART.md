@@ -66,6 +66,18 @@ python3 scripts/evaluate_chapter.py /path/to/my-novel \
   --verbose
 ```
 
+已有至少两份作者认可的原文时，可生成带来源的 voice 证据审读包。工具只组装样本与候选证据，不输出相似度、综合分或自动改写：
+
+```bash
+python3 scripts/prepare_voice_review.py \
+  --sample /path/to/approved-01.md \
+  --sample /path/to/approved-02.md \
+  --candidate /path/to/chapter-012.md \
+  --mode 文学叙事 \
+  --intent "人物在压力下刻意保持礼貌" \
+  --output /path/to/voice-review.md
+```
+
 ## 项目结构
 
 初始化后的项目遵循以下目录分层：

@@ -152,3 +152,4 @@ description: "中文小说正文写作 skill。根据商业连载、类型长篇
 
 **跨 skill 参考**：
 - 文风快速自检卡：`../novel-quality/references/文风快速自检卡.md`（写前锁 voice、写后验 voice）
+- Voice 证据审读：`references/voice证据审读.md`（至少两份作者认可原文；按证据区分保持、合理变化与无依据漂移，不评分、不自动改写）

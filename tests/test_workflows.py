@@ -463,6 +463,68 @@ class WorkflowTests(unittest.TestCase):
             self.assertNotEqual(invalid.returncode, 0)
             self.assertIn("能力、保留项和失败信号", invalid.stderr)
 
+    def test_voice_review_packet_and_boundaries(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            sample_one = root / "approved-one.md"
+            sample_two = root / "approved-two.md"
+            candidate = root / "candidate.md"
+            output = root / "review.md"
+            sample_one.write_text("甲" * 700, encoding="utf-8")
+            sample_two.write_text("他先看门，再回答。\n压力来时，他把解释压成短句。", encoding="utf-8")
+            candidate_text = "她没有回答，先把窗扣按紧。\n然后才问：你从哪里来？"
+            candidate.write_text(candidate_text, encoding="utf-8")
+
+            result = run_script(
+                "scripts/prepare_voice_review.py",
+                "--sample", str(sample_one), "--sample", str(sample_two),
+                "--candidate", str(candidate), "--mode", "文学叙事",
+                "--intent", "人物在压力下延迟回答", "--sample-max-chars", "500",
+                "--output", str(output),
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            packet = output.read_text(encoding="utf-8")
+            self.assertIn(str(sample_one.resolve()), packet)
+            self.assertIn(str(sample_two.resolve()), packet)
+            self.assertIn(str(candidate.resolve()), packet)
+            self.assertIn(candidate_text, packet)
+            self.assertIn("甲" * 500, packet)
+            self.assertNotIn("甲" * 501, packet)
+            self.assertIn("原文 700 字符，收入 500 字符，已截断", packet)
+            for dimension in (
+                "注意力对象", "判断方式", "信息与回避策略", "叙述距离", "句法节奏", "压力下变化",
+            ):
+                self.assertIn(dimension, packet)
+            for classification in ("保持", "合理变化", "无依据漂移"):
+                self.assertIn(classification, packet)
+            self.assertIn("不要输出综合分、相似度或自动改写稿", packet)
+
+            duplicate = run_script(
+                "scripts/prepare_voice_review.py",
+                "--sample", str(sample_one), "--sample", str(sample_one),
+                "--candidate", str(candidate), "--mode", "短篇", "--output", str(root / "duplicate.md"),
+            )
+            self.assertNotEqual(duplicate.returncode, 0)
+            self.assertIn("样本不能重复", duplicate.stderr)
+
+            same_candidate = run_script(
+                "scripts/prepare_voice_review.py",
+                "--sample", str(sample_one), "--sample", str(sample_two),
+                "--candidate", str(sample_one), "--mode", "短篇", "--output", str(root / "same.md"),
+            )
+            self.assertNotEqual(same_candidate.returncode, 0)
+            self.assertIn("不能同时作为", same_candidate.stderr)
+
+            empty = root / "empty.md"
+            empty.write_text(" \n", encoding="utf-8")
+            empty_result = run_script(
+                "scripts/prepare_voice_review.py",
+                "--sample", str(sample_one), "--sample", str(empty),
+                "--candidate", str(candidate), "--mode", "探索起草", "--output", str(root / "empty-review.md"),
+            )
+            self.assertNotEqual(empty_result.returncode, 0)
+            self.assertIn("不能为空", empty_result.stderr)
+
     def test_document_contracts_and_script_permissions(self) -> None:
         for relative in ("README.md", "DEPLOYMENT.md"):
             text = (ROOT / relative).read_text(encoding="utf-8")
