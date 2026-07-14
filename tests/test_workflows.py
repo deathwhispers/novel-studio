@@ -233,7 +233,7 @@ class WorkflowTests(unittest.TestCase):
             self.assertIn("沈砚开始怀疑债主", text)
             self.assertNotIn("这段短记不能冒充正文结尾", text)
             self.assertIn("写前最后确认", text)
-            self.assertLess(text.index("本章节拍卡"), text.index("作品总表"))
+            self.assertLess(text.index("作品总表"), text.index("本章节拍卡"))
             self.assertLessEqual(len(text), 5000)
 
     def test_context_pack_skips_placeholder_chapters_and_uses_task_entities(self) -> None:
@@ -260,6 +260,48 @@ class WorkflowTests(unittest.TestCase):
             self.assertIn("父亲把旧表放回抽屉", text)
             self.assertIn("她总先收起坏掉的东西", text)
             self.assertNotIn("当前状态：未起草", text)
+
+            generic = project / "90-运行" / "generic-context.md"
+            generic_result = run_script(
+                "scripts/build_context_pack.py", str(project), "--chapter", "3",
+                "--task", "主角回到旧屋", "--output", str(generic),
+            )
+            self.assertEqual(generic_result.returncode, 0, generic_result.stdout + generic_result.stderr)
+            self.assertNotIn("角色卡：主角", generic.read_text(encoding="utf-8"))
+
+    def test_context_pack_preserves_core_sources_and_hard_limit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "novel"
+            init = run_script(
+                "skills/novel-project/scripts/init_novel_project.py",
+                "--output", str(project), "--title", "预算测试",
+                "--genre", "类型", "--premise", "一轮红月", "--profile", "minimal",
+            )
+            self.assertEqual(init.returncode, 0, init.stdout + init.stderr)
+            (project / "90-运行" / "项目配置.md").write_text(
+                "# 项目配置\n\n- 模板档位：minimal\n- 写作模式：文学叙事\n", encoding="utf-8"
+            )
+            (project / "00-书核" / "作品总表.md").write_text(
+                "# 作品总表\n\n作品承诺：追问记忆是否可靠。\n", encoding="utf-8"
+            )
+            (project / "10-设定" / "硬设定.md").write_text(
+                "# 硬设定\n\n月亮始终是红色。\n", encoding="utf-8"
+            )
+            (project / "90-运行" / "当前进度.md").write_text(
+                "# 当前进度\n\n- 当前章节：第002章\n", encoding="utf-8"
+            )
+            (project / "20-大纲" / "节拍卡" / "chapter-002.md").write_text(
+                "# 长节拍\n\n" + "局部计划。" * 1000, encoding="utf-8"
+            )
+            context_builder = load_script_module("scripts/build_context_pack.py", "context_hard_limit")
+            for budget in (800, 1000, 1500, 18000):
+                with self.subTest(budget=budget):
+                    pack = context_builder.build_context_pack(project, 2, max_chars=budget)
+                    self.assertLessEqual(len(pack), budget)
+                    self.assertIn("文学叙事", pack)
+                    self.assertIn("追问记忆是否可靠", pack)
+                    self.assertIn("月亮始终是红色", pack)
+                    self.assertIn("当前章节：第002章", pack)
 
     def test_writing_eval_manifest_and_blind_packets(self) -> None:
         manifest = ROOT / "skills/novel-writing/assets/evals/writing-cases.json"

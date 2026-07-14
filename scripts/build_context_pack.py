@@ -11,6 +11,11 @@ from pathlib import Path
 
 CHAPTER_RE = re.compile(r"第(\d+)章")
 PLACEHOLDER_RE = re.compile(r"未起草|【在此处写章节正文】|\{\{.*?\}\}")
+GENERIC_ENTITY_STEMS = {
+    "主角", "配角", "反派", "角色卡模板", "角色模板",
+    "地点模板", "物件模板", "地点", "物件",
+}
+CORE_LABELS = {"项目配置", "作品承诺", "硬设定", "当前进度"}
 
 
 def chapter_number(value: str) -> int:
@@ -75,6 +80,33 @@ def document_keys(path: Path) -> set[str]:
     return {key for key in keys if len(key) >= 2 and "模板" not in key and "说明" not in key}
 
 
+def has_substantive_entity_content(path: Path) -> bool:
+    """过滤初始化后的通用卡和未填卡。
+
+    具名实体卡只要有有效正文即可；“主角.md”这类通用文件则必须出现
+    已填的姓名/名称字段，避免“主角”一词召回整张空模板。
+    """
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return False
+    if path.stem in GENERIC_ENTITY_STEMS:
+        filled_identity = re.search(
+            r"(?:\*\*)?(?:姓名|名称)(?:\*\*)?[ \t]*[：:][ \t]*([^\s>|{【][^\n]*)",
+            text,
+        )
+        return bool(filled_identity)
+    cleaned = re.sub(r"<!--.*?-->|\{\{.*?\}\}", "", text, flags=re.DOTALL)
+    meaningful = [
+        line.strip() for line in cleaned.splitlines()
+        if line.strip()
+        and not line.lstrip().startswith(("#", ">", "|", "- **"))
+        and "例如" not in line
+        and not re.fullmatch(r"[-:|空\s]+", line)
+    ]
+    return len("".join(meaningful)) >= 3
+
+
 def find_relevant_docs(project: Path, source_text: str) -> list[tuple[str, Path, str]]:
     relevant: list[tuple[str, Path, str]] = []
     groups = (
@@ -86,17 +118,27 @@ def find_relevant_docs(project: Path, source_text: str) -> list[tuple[str, Path,
         if not directory.is_dir():
             continue
         for path in sorted(directory.glob("*.md")):
-            if any(key in source_text for key in document_keys(path)):
+            if has_substantive_entity_content(path) and any(
+                key in source_text for key in document_keys(path)
+            ):
                 relevant.append((label, path, "compact"))
     return relevant
 
 
 def trim_text(text: str, limit: int, tail: bool = False) -> str:
-    if len(text) <= limit:
-        return text.strip()
+    if limit <= 0:
+        return ""
+    clean = text.strip()
+    if len(clean) <= limit:
+        return clean
+    marker = "[…前文已截断…]\n" if tail else "\n[…后文已截断…]"
+    if limit <= len(marker):
+        return marker.strip()[:limit]
     if tail:
-        return "[…前文已截断…]\n" + text[-limit:].lstrip()
-    return text[:limit].rstrip() + "\n[…后文已截断…]"
+        payload = clean[-(limit - len(marker)):].lstrip()
+        return marker + payload
+    payload = clean[:limit - len(marker)].rstrip()
+    return payload + marker
 
 
 def recent_deltas(project: Path, number: int, limit: int = 5) -> list[Path]:
@@ -122,6 +164,13 @@ def collect_sources(
     def add(label: str, path: Path | None, mode: str = "head") -> None:
         if path and path.is_file() and all(existing[1] != path for existing in sources):
             sources.append((label, path, mode))
+
+    # 这四类来源定义“这是什么项目、承诺什么、不能破坏什么、
+    # 已经写到哪里”，紧预算下也先于长节拍卡和正文。
+    add("项目配置", first_existing(project, ["90-运行/项目配置.md"]), "compact")
+    add("作品承诺", first_existing(project, ["00-书核/作品总表.md", "00-书核/立项单.md"]), "summary")
+    add("硬设定", first_existing(project, ["10-设定/硬设定.md", "10-设定/世界规则.md"]), "compact")
+    add("当前进度", first_existing(project, ["90-运行/当前进度.md"]), "compact")
 
     beat = first_existing(project, [
         f"20-大纲/节拍卡/chapter-{number:03d}.md",
@@ -174,12 +223,9 @@ def collect_sources(
         add(label, path, mode)
 
     add("文风指南", first_existing(project, ["10-设定/文风指南.md"]))
-    add("硬设定", first_existing(project, ["10-设定/硬设定.md", "10-设定/世界规则.md"]), "compact")
     add("场景因果", first_existing(project, ["20-大纲/因果/场景因果图.md"]), "compact")
     add("回收总账", first_existing(project, ["20-大纲/回收/回收总账.md"]), "compact")
-    add("当前进度", first_existing(project, ["90-运行/当前进度.md"]), "compact")
     add("分卷计划", selected_volume, "summary")
-    add("作品总表", first_existing(project, ["00-书核/作品总表.md"]), "summary")
     return sources
 
 
@@ -197,28 +243,27 @@ def build_context_pack(
     if per_file_chars < 200 or previous_chars < 200:
         raise ValueError("单文件字符预算不能小于 200")
     sources = collect_sources(project, number, includes or [], task)
-    prefix = [
-        f"# 第{number:03d}章最小上下文包",
-        "",
-        "> 自动汇总只负责召回，不替代作者判断。缺失文件会跳过；写前只确认当前模式真正需要的信息。",
-        "",
-        "## 来源清单",
-        "",
-    ]
-    footer = [
-        "",
-        "## 写前最后确认",
-        "",
-        "- 当前写作模式、单位和这次最想完成或发现的是什么？",
-        "- 当前视角注意什么；人物想靠近、逃避、理解或维持什么？",
-        "- 压力、关系、信息或形式将怎样运动；若不变化，停顿有什么意义？",
-        "- 哪些 hard canon 不能破坏，哪些未知项可以通过正文探索？",
-        "- 需要延续的 voice 证据来自哪段可靠文本？",
-    ]
-    source_lines: list[str] = []
+    intro = (
+        f"# 第{number:03d}章最小上下文包\n\n"
+        "> 自动召回不替代作者判断；项目承诺、模式、hard canon 和进度优先。\n"
+    )
+    footer = (
+        "\n## 写前最后确认\n\n"
+        "- 这次要完成或发现什么？\n"
+        "- 哪些 hard canon 不能破坏，需延续哪段 voice 证据？\n"
+    )
+    # 为来源状态预留空间。清单过长时聚合“因预算省略”项，但不伪装成全部已纳入。
+    metadata_budget = min(1200, max(180, max_chars // 5))
+    content_budget = max_chars - len(intro) - len(footer) - metadata_budget - 2
     content_sections: list[str] = []
-    base_size = len("\n".join(prefix + footer)) + 2
-    for label, path, mode in sources:
+    included: list[tuple[str, Path]] = []
+    omitted: list[tuple[str, Path]] = []
+
+    def raw_for(path: Path, mode: str) -> str:
+        return chapter_body(path) if mode == "body-tail" else path.read_text(encoding="utf-8")
+
+    remaining = content_budget
+    for index, (label, path, mode) in enumerate(sources):
         if mode == "body-tail":
             allowance = previous_chars
         elif mode == "compact":
@@ -227,19 +272,54 @@ def build_context_pack(
             allowance = min(1600, per_file_chars)
         else:
             allowance = per_file_chars
-        source_line = f"- {label}: `{path.relative_to(project)}`"
-        section_head = f"\n## {label}\n\n<!-- source: {path.relative_to(project)} -->\n\n"
-        remaining = max_chars - base_size - len("\n".join(source_lines + content_sections))
-        allowance = min(allowance, remaining - len(source_line) - len(section_head) - 4)
-        if allowance < 200:
-            break
-        raw_content = chapter_body(path) if mode == "body-tail" else path.read_text(encoding="utf-8")
-        content = trim_text(raw_content, allowance, tail=mode == "body-tail")
-        source_lines.append(source_line)
-        content_sections.append(section_head + content)
+        relative = path.relative_to(project)
+        section_head = f"\n## {label}\n<!-- source: {relative} -->\n"
+        later_core = sum(
+            1 for later_label, _, _ in sources[index + 1:]
+            if later_label in CORE_LABELS
+        )
+        # 给后续核心来源保留“标题 + 最小内容”的位置。
+        reserve = later_core * 80
+        available = remaining - len(section_head) - reserve
+        minimum = 24 if label in CORE_LABELS else 120
+        if available < minimum:
+            omitted.append((label, path))
+            continue
+        allowance = min(allowance, available)
+        content = trim_text(raw_for(path, mode), allowance, tail=mode == "body-tail")
+        section = section_head + content + "\n"
+        if len(section) > remaining:
+            omitted.append((label, path))
+            continue
+        content_sections.append(section)
+        included.append((label, path))
+        remaining -= len(section)
 
-    sections = prefix + source_lines + content_sections + footer
-    result = "\n".join(sections).rstrip() + "\n"
+    status_lines = ["## 来源清单"]
+    used = len(status_lines[0]) + 1
+    for label, path in included:
+        line = f"- [纳入] {label}: `{path.relative_to(project)}`"
+        if used + len(line) + 1 > metadata_budget:
+            break
+        status_lines.append(line)
+        used += len(line) + 1
+    omitted_shown = 0
+    for label, path in omitted:
+        line = f"- [因预算省略] {label}: `{path.relative_to(project)}`"
+        if used + len(line) + 1 > metadata_budget - 24:
+            break
+        status_lines.append(line)
+        used += len(line) + 1
+        omitted_shown += 1
+    if len(omitted) > omitted_shown:
+        line = f"- [因预算省略] 另 {len(omitted) - omitted_shown} 项"
+        if used + len(line) + 1 <= metadata_budget:
+            status_lines.append(line)
+    status = "\n".join(status_lines) + "\n"
+    result = intro + "\n" + status + "".join(content_sections) + footer
+    # 计算已包含截断标记、来源清单和所有连接换行；此断言是硬边界的回归保护。
+    if len(result) > max_chars:
+        raise AssertionError(f"上下文包超出硬上限: {len(result)} > {max_chars}")
     return result
 
 
