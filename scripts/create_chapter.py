@@ -19,6 +19,34 @@ import re
 from pathlib import Path
 
 
+VALID_PROFILES = {"minimal", "serial", "longform"}
+VALID_MODES = {"商业连载", "类型长篇", "文学叙事", "短篇", "探索起草"}
+
+
+def read_writing_mode(project_dir: Path) -> str | None:
+    """只从完整、有效的新版项目配置继承模式。
+
+    旧项目或非法配置仍可建章，但不猜测其模式。
+    """
+    config = project_dir / "90-运行" / "项目配置.md"
+    if not config.is_file():
+        return None
+    text = config.read_text(encoding="utf-8")
+    values: dict[str, str] = {}
+    for key in ("模板档位", "写作模式", "配置版本", "连载工具"):
+        match = re.search(rf"^- {key}：\s*(\S+)\s*$", text, re.MULTILINE)
+        if match:
+            values[key] = match.group(1)
+    if (
+        values.get("模板档位") not in VALID_PROFILES
+        or values.get("写作模式") not in VALID_MODES
+        or values.get("配置版本") != "1"
+        or values.get("连载工具") not in {"启用", "停用"}
+    ):
+        return None
+    return values["写作模式"]
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="新建章节")
     parser.add_argument("project_dir", help="小说项目目录")
@@ -81,6 +109,7 @@ def main() -> int:
     beat_file = project_dir / "20-大纲" / "节拍卡" / f"chapter-{ch:03d}.md"
     progress_file = project_dir / "90-运行" / "当前进度.md"
     cockpit_file = project_dir / "90-运行" / "连载驾驶舱.md"
+    writing_mode = read_writing_mode(project_dir)
 
     actions = []
 
@@ -95,8 +124,12 @@ def main() -> int:
     else:
         actions.append(f"[创建] 章节文件：{chapter_file.name}")
         if not args.dry_run:
+            mode_line = f"- 写作模式：{writing_mode}\n\n" if writing_mode else ""
             chapter_file.write_text(
-                f"# {chapter_name}\n\n",
+                f"# {chapter_name}\n\n"
+                "当前状态：未起草\n\n"
+                f"{mode_line}"
+                "## 正文\n\n",
                 encoding="utf-8"
             )
 
@@ -106,9 +139,10 @@ def main() -> int:
     elif beat_file.suffix == ".md":
         actions.append(f"[创建] 节拍卡：{beat_file.name}")
         if not args.dry_run:
+            mode_value = writing_mode or ""
             beat_file.write_text(
                 f"# {chapter_name} 写作支点\n\n"
-                "- 写作模式：\n"
+                f"- 写作模式：{mode_value}\n"
                 "- 当前视角与注意力：\n"
                 "- 人物想靠近、逃避、理解或维持什么：\n"
                 "- 当前压力或未知：\n"

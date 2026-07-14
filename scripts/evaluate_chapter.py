@@ -72,12 +72,20 @@ def count_chinese(text: str) -> int:
 
 
 def body_text(text: str) -> str:
-    """排除 Markdown 标题和 YAML frontmatter，减少元数据误报。"""
-    if text.startswith("---\n"):
-        _, separator, remainder = text[4:].partition("\n---\n")
-        if separator:
-            text = remainder
-    return "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
+    """排除 Markdown 标题和有效 YAML frontmatter，但保留原始行号占位。"""
+    lines = text.splitlines()
+    excluded: set[int] = set()
+    if lines and lines[0].strip() == "---":
+        closing = next(
+            (index for index, line in enumerate(lines[1:], start=1) if line.strip() == "---"),
+            None,
+        )
+        if closing is not None:
+            excluded.update(range(closing + 1))
+    return "\n".join(
+        "" if index in excluded or line.lstrip().startswith("#") else line
+        for index, line in enumerate(lines)
+    )
 
 
 def sentence_lengths(text: str) -> list[int]:

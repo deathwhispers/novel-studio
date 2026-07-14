@@ -65,6 +65,12 @@ class WorkflowTests(unittest.TestCase):
             self.assertEqual(chapter.returncode, 0, chapter.stdout + chapter.stderr)
             self.assertTrue((project / "30-正文" / "第一卷-初入江湖" / "第004章-新章.md").exists())
             self.assertTrue((project / "20-大纲" / "节拍卡" / "chapter-004.md").exists())
+            chapter_text = (project / "30-正文" / "第一卷-初入江湖" / "第004章-新章.md").read_text(encoding="utf-8")
+            beat_text = (project / "20-大纲" / "节拍卡" / "chapter-004.md").read_text(encoding="utf-8")
+            self.assertIn("当前状态：未起草", chapter_text)
+            self.assertIn("## 正文", chapter_text)
+            self.assertIn("写作模式：商业连载", chapter_text)
+            self.assertIn("写作模式：商业连载", beat_text)
             self.assertIn(
                 "第004章-新章",
                 (project / "90-运行" / "当前进度.md").read_text(encoding="utf-8"),
@@ -193,6 +199,11 @@ class WorkflowTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertTrue((project / "30-正文" / "第一卷-测试" / "第001章.md").exists())
             self.assertTrue((project / "20-大纲" / "节拍卡" / "chapter-001.md").exists())
+            chapter = (project / "30-正文" / "第一卷-测试" / "第001章.md").read_text(encoding="utf-8")
+            beat = (project / "20-大纲" / "节拍卡" / "chapter-001.md").read_text(encoding="utf-8")
+            self.assertIn("## 正文", chapter)
+            self.assertNotIn("写作模式：商业连载", chapter)
+            self.assertIn("- 写作模式：\n", beat)
 
     def test_long_project_recommends_foretext_index(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -237,6 +248,26 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("disclaimer", report)
         malformed = scanner.scan_text("---\ntitle: 未闭合\n正文仍然必须被扫描。")
         self.assertGreater(malformed["metrics"]["chinese_chars"], 0)
+
+    def test_chapter_scanner_evidence_uses_original_file_lines(self) -> None:
+        scanner = load_script_module("scripts/evaluate_chapter.py", "evaluate_original_lines")
+        text = (
+            "---\n"
+            "title: 元数据不应计入正文\n"
+            "author: 测试\n"
+            "---\n"
+            "# 章节标题不应计入正文\n"
+            "\n"
+            "他意识到门已经锁上。\n"
+            "她明白今夜无法离开。\n"
+            "这意味着他们必须等待。\n"
+            "也就是说，他们别无选择。\n"
+        )
+        report = scanner.scan_text(text)
+        risk = next(item for item in report["risks"] if item["code"] == "explain_density")
+        self.assertEqual(risk["evidence"][0]["line"], 7)
+        self.assertNotIn("元数据不应计入正文", scanner.body_text(text))
+        self.assertNotIn("章节标题不应计入正文", scanner.body_text(text))
 
     def test_chapter_scanner_rejects_invalid_config(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
