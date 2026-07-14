@@ -13,7 +13,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "skills" / "novel-writing" / "assets" / "evals" / "writing-cases.json"
 MODES = {"商业连载", "类型长篇", "文学叙事", "短篇", "探索起草"}
-REQUIRED = {"id", "mode", "task", "context", "must_preserve", "failure_signals"}
+DIFFICULTIES = {"standard", "adversarial"}
+REQUIRED = {
+    "id", "mode", "difficulty", "capabilities", "task", "context",
+    "must_preserve", "failure_signals",
+}
 
 
 def load_cases(path: Path) -> list[dict]:
@@ -33,21 +37,29 @@ def load_cases(path: Path) -> list[dict]:
             raise ValueError(f"重复评测 id: {case['id']}")
         if not isinstance(case["mode"], str) or case["mode"] not in MODES:
             raise ValueError(f"未知写作模式: {case['mode']}")
-        if not isinstance(case["task"], str) or not isinstance(case["context"], str):
-            raise ValueError(f"任务和上下文必须是字符串: {case['id']}")
-        if not all(isinstance(case[field], list) and case[field] for field in ("must_preserve", "failure_signals")):
-            raise ValueError(f"评测项必须包含保留项和失败信号: {case['id']}")
-        if not all(isinstance(item, str) and item.strip() for field in ("must_preserve", "failure_signals") for item in case[field]):
-            raise ValueError(f"保留项和失败信号必须是非空字符串: {case['id']}")
+        if case["difficulty"] not in DIFFICULTIES:
+            raise ValueError(f"未知评测难度: {case['id']}: {case['difficulty']}")
+        if not all(isinstance(case[field], str) and case[field].strip() for field in ("task", "context")):
+            raise ValueError(f"任务和上下文必须是非空字符串: {case['id']}")
+        list_fields = ("capabilities", "must_preserve", "failure_signals")
+        if not all(isinstance(case[field], list) and case[field] for field in list_fields):
+            raise ValueError(f"评测项必须包含能力、保留项和失败信号: {case['id']}")
+        if not all(isinstance(item, str) and item.strip() for field in list_fields for item in case[field]):
+            raise ValueError(f"能力、保留项和失败信号必须是非空字符串: {case['id']}")
+        if len(case["capabilities"]) != len(set(case["capabilities"])):
+            raise ValueError(f"能力标签不得重复: {case['id']}")
         seen.add(case["id"])
     return cases
 
 
 def prompt_packet(case: dict) -> str:
     preserve = "\n".join(f"- {item}" for item in case["must_preserve"])
+    capabilities = "、".join(case["capabilities"])
     return (
         f"# 写作任务：{case['id']}\n\n"
         f"写作模式：{case['mode']}\n\n"
+        f"任务难度：{case['difficulty']}\n\n"
+        f"能力焦点：{capabilities}\n\n"
         f"## 上下文\n\n{case['context']}\n\n"
         f"## 任务\n\n{case['task']}\n\n"
         f"## 必须保留的已知约束\n\n{preserve}\n\n"
@@ -58,6 +70,7 @@ def prompt_packet(case: dict) -> str:
 def evaluator_packet(case: dict) -> str:
     preserve = "\n".join(f"- {item}" for item in case["must_preserve"])
     failures = "\n".join(f"- {item}" for item in case["failure_signals"])
+    capabilities = "、".join(case["capabilities"])
     return f"""# 评审卡：{case['id']}
 
 本卡包含写作者已知的完整任务语义，并额外揭示失败信号。先盲读候选正文，
@@ -66,6 +79,11 @@ def evaluator_packet(case: dict) -> str:
 ## 写作模式
 
 {case['mode']}
+
+## 公开评测元数据
+
+- 难度：{case['difficulty']}
+- 能力焦点：{capabilities}
 
 ## 上下文
 
@@ -120,12 +138,20 @@ def prepare(cases: list[dict], writer_output: Path, evaluator_output: Path) -> N
     for case in cases:
         (writer_output / f"{case['id']}.md").write_text(prompt_packet(case), encoding="utf-8")
         (evaluator_output / f"{case['id']}.md").write_text(evaluator_packet(case), encoding="utf-8")
-    writer_manifest = [{"id": case["id"], "mode": case["mode"]} for case in cases]
+    public_manifest = [
+        {
+            "id": case["id"],
+            "mode": case["mode"],
+            "difficulty": case["difficulty"],
+            "capabilities": case["capabilities"],
+        }
+        for case in cases
+    ]
     (writer_output / "manifest.json").write_text(
-        json.dumps(writer_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        json.dumps(public_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     (evaluator_output / "manifest.json").write_text(
-        json.dumps(writer_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        json.dumps(public_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
 
 

@@ -393,9 +393,23 @@ class WorkflowTests(unittest.TestCase):
     def test_writing_eval_manifest_and_blind_packets(self) -> None:
         manifest = ROOT / "skills/novel-writing/assets/evals/writing-cases.json"
         cases = json.loads(manifest.read_text(encoding="utf-8"))
-        self.assertEqual({case["mode"] for case in cases}, {
+        modes = {
             "商业连载", "类型长篇", "文学叙事", "短篇", "探索起草",
-        })
+        }
+        self.assertGreaterEqual(len(cases), 25)
+        self.assertEqual({case["mode"] for case in cases}, modes)
+        for mode in modes:
+            self.assertGreaterEqual(sum(case["mode"] == mode for case in cases), 5)
+        self.assertEqual({case["difficulty"] for case in cases}, {"standard", "adversarial"})
+        for case in cases:
+            self.assertIsInstance(case["capabilities"], list)
+            self.assertTrue(case["capabilities"])
+            self.assertTrue(all(isinstance(item, str) and item.strip() for item in case["capabilities"]))
+        capability_coverage = {item for case in cases for item in case["capabilities"]}
+        self.assertTrue({
+            "对话", "行动空间", "人物选择", "信息控制", "voice", "结尾",
+            "类型兑现", "歧义", "压缩", "探索",
+        }.issubset(capability_coverage))
         with tempfile.TemporaryDirectory() as tmp:
             writer = Path(tmp) / "writer"
             evaluator = Path(tmp) / "evaluator"
@@ -404,17 +418,28 @@ class WorkflowTests(unittest.TestCase):
                 "--writer-output", str(writer), "--evaluator-output", str(evaluator),
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            public_fields = {"id", "mode", "difficulty", "capabilities"}
+            writer_manifest = json.loads((writer / "manifest.json").read_text(encoding="utf-8"))
+            evaluator_manifest = json.loads((evaluator / "manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(writer_manifest, evaluator_manifest)
+            self.assertTrue(all(set(item) == public_fields for item in writer_manifest))
             for case in cases:
                 prompt = (writer / f"{case['id']}.md").read_text(encoding="utf-8")
                 scorecard = (evaluator / f"{case['id']}.md").read_text(encoding="utf-8")
                 self.assertNotIn("失败信号", prompt)
-                self.assertNotIn(case["failure_signals"][0], prompt)
+                for signal in case["failure_signals"]:
+                    self.assertNotIn(signal, prompt)
                 self.assertIn(case["must_preserve"][0], prompt)
+                self.assertIn(case["difficulty"], prompt)
+                self.assertIn(case["capabilities"][0], prompt)
                 self.assertIn(case["mode"], scorecard)
                 self.assertIn(case["context"], scorecard)
                 self.assertIn(case["task"], scorecard)
                 self.assertIn(case["must_preserve"][0], scorecard)
-                self.assertIn(case["failure_signals"][0], scorecard)
+                self.assertIn(case["difficulty"], scorecard)
+                self.assertIn(case["capabilities"][0], scorecard)
+                for signal in case["failure_signals"]:
+                    self.assertIn(signal, scorecard)
             stale = run_script(
                 "scripts/prepare_writing_evals.py",
                 "--writer-output", str(writer), "--evaluator-output", str(evaluator),
@@ -429,6 +454,14 @@ class WorkflowTests(unittest.TestCase):
             )
             self.assertNotEqual(nested.returncode, 0)
             self.assertIn("互不包含", nested.stderr)
+
+            invalid_manifest = Path(tmp) / "invalid.json"
+            invalid_case = dict(cases[0])
+            invalid_case["capabilities"] = []
+            invalid_manifest.write_text(json.dumps([invalid_case], ensure_ascii=False), encoding="utf-8")
+            invalid = run_script("scripts/prepare_writing_evals.py", "--manifest", str(invalid_manifest))
+            self.assertNotEqual(invalid.returncode, 0)
+            self.assertIn("能力、保留项和失败信号", invalid.stderr)
 
     def test_document_contracts_and_script_permissions(self) -> None:
         for relative in ("README.md", "DEPLOYMENT.md"):
