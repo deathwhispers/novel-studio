@@ -717,6 +717,9 @@ class WorkflowTests(unittest.TestCase):
         combined = "\n".join(path.read_text(encoding="utf-8") for path in technique_files)
         for phrase in retired:
             self.assertNotIn(phrase, combined)
+        live_check = (ROOT / "skills/novel-writing/references/写中即时检查卡.md").read_text(encoding="utf-8")
+        self.assertNotIn("主动争取什么", live_check)
+        self.assertIn("争取、维持、回避、拖延，还是观察", live_check)
 
 
 if __name__ == "__main__":
