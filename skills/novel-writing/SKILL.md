@@ -150,6 +150,10 @@ description: "中文小说正文写作 skill。根据商业连载、类型长篇
 - **特殊场景 prompt**：`references/AI-prompts/特殊场景-prompt.md`（角色扮演、批量生成、风格学习、灵感）
 - **调用样例**：`assets/examples/调用样例.md`
 
+**能力评测资源**（只在验证 skill 行为时使用，不参与正文起稿）：
+- 单轮能力案例：`assets/evals/writing-cases.json`
+- 多轮连续性压力序列：`assets/evals/writing-sequences.json`（用 `../../scripts/prepare_writing_sequences.py` 生成隔离的 writer/evaluator 包）
+
 **跨 skill 参考**：
 - 文风快速自检卡：`../novel-quality/references/文风快速自检卡.md`（写前锁 voice、写后验 voice）
 - Voice 证据审读：`references/voice证据审读.md`（至少两份作者认可原文；按证据区分保持、合理变化与无依据漂移，不评分、不自动改写）

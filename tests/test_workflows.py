@@ -525,6 +525,81 @@ class WorkflowTests(unittest.TestCase):
             self.assertNotEqual(empty_result.returncode, 0)
             self.assertIn("不能为空", empty_result.stderr)
 
+    def test_writing_sequence_packets_and_boundaries(self) -> None:
+        manifest = ROOT / "skills/novel-writing/assets/evals/writing-sequences.json"
+        sequences = json.loads(manifest.read_text(encoding="utf-8"))
+        modes = {"商业连载", "类型长篇", "文学叙事", "短篇", "探索起草"}
+        self.assertGreaterEqual(len(sequences), 5)
+        self.assertEqual({sequence["mode"] for sequence in sequences}, modes)
+        coverage = {capability for sequence in sequences for capability in sequence["capabilities"]}
+        self.assertTrue({"状态继承", "远距离回声", "模式稳定", "voice", "不擅增canon"} <= coverage)
+        for sequence in sequences:
+            self.assertGreaterEqual(len(sequence["turns"]), 4)
+            self.assertIn(sequence["turns"][0]["id"], sequence["turns"][-1]["recall_from"])
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            writer = root / "writer"
+            evaluator = root / "evaluator"
+            result = run_script(
+                "scripts/prepare_writing_sequences.py",
+                "--writer-output", str(writer), "--evaluator-output", str(evaluator),
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            writer_manifest = json.loads((writer / "manifest.json").read_text(encoding="utf-8"))
+            evaluator_manifest = json.loads((evaluator / "manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(writer_manifest, evaluator_manifest)
+            self.assertTrue(all(set(item) == {"id", "mode", "capabilities", "turns"} for item in writer_manifest))
+
+            for sequence in sequences:
+                review = (evaluator / f"{sequence['id']}.md").read_text(encoding="utf-8")
+                self.assertIn(sequence["initial_context"], review)
+                self.assertIn("按轮次顺序读取全部候选正文与状态增量", review)
+                self.assertIn("不输出综合分", review)
+                for index, turn in enumerate(sequence["turns"]):
+                    prompt = (writer / sequence["id"] / f"{turn['id']}.md").read_text(encoding="utf-8")
+                    self.assertIn(sequence["initial_context"], prompt)
+                    self.assertIn(turn["task"], prompt)
+                    for signal in turn["failure_signals"]:
+                        self.assertNotIn(signal, prompt)
+                        self.assertIn(signal, review)
+                    if index:
+                        self.assertIn("先按顺序读取或粘贴此前所有候选输出与状态增量", prompt)
+                final_prompt = (
+                    writer / sequence["id"] / f"{sequence['turns'][-1]['id']}.md"
+                ).read_text(encoding="utf-8")
+                self.assertIn(sequence["turns"][0]["id"], final_prompt)
+
+            stale = run_script(
+                "scripts/prepare_writing_sequences.py",
+                "--writer-output", str(writer), "--evaluator-output", str(evaluator),
+            )
+            self.assertNotEqual(stale.returncode, 0)
+            self.assertIn("输出目录必须为空", stale.stderr)
+            nested = run_script(
+                "scripts/prepare_writing_sequences.py",
+                "--writer-output", str(root / "nested"),
+                "--evaluator-output", str(root / "nested" / "evaluator"),
+            )
+            self.assertNotEqual(nested.returncode, 0)
+            self.assertIn("互不包含", nested.stderr)
+
+            invalid_reference = json.loads(json.dumps(sequences, ensure_ascii=False))
+            invalid_reference[0]["turns"][-1]["recall_from"] = ["missing-turn"]
+            invalid_path = root / "invalid-reference.json"
+            invalid_path.write_text(json.dumps(invalid_reference, ensure_ascii=False), encoding="utf-8")
+            invalid = run_script("scripts/prepare_writing_sequences.py", "--manifest", str(invalid_path))
+            self.assertNotEqual(invalid.returncode, 0)
+            self.assertIn("非法或非前序轮次引用", invalid.stderr)
+
+            duplicate_turn = json.loads(json.dumps(sequences, ensure_ascii=False))
+            duplicate_turn[0]["turns"][1]["id"] = duplicate_turn[0]["turns"][0]["id"]
+            duplicate_path = root / "duplicate-turn.json"
+            duplicate_path.write_text(json.dumps(duplicate_turn, ensure_ascii=False), encoding="utf-8")
+            duplicate = run_script("scripts/prepare_writing_sequences.py", "--manifest", str(duplicate_path))
+            self.assertNotEqual(duplicate.returncode, 0)
+            self.assertIn("重复轮次 id", duplicate.stderr)
+
     def test_document_contracts_and_script_permissions(self) -> None:
         for relative in ("README.md", "DEPLOYMENT.md"):
             text = (ROOT / relative).read_text(encoding="utf-8")
