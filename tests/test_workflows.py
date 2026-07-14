@@ -436,6 +436,16 @@ class WorkflowTests(unittest.TestCase):
             self.assertNotIn("默认每章 2000-2500", text)
             self.assertNotIn("强制执行完整", text)
         self.assertTrue(os.access(ROOT / "scripts/evaluate_chapter.py", os.X_OK))
+        technique_dir = ROOT / "skills/novel-writing/references/写作技法库"
+        technique_files = sorted(technique_dir.glob("*.md"))
+        self.assertEqual(len(technique_files), 11)
+        retired = (
+            "每场战斗至少 1 个不可逆代价", "网文开篇 1000 字必须",
+            "一段有效对话至少有 3 段", "章尾必须有发动机",
+        )
+        combined = "\n".join(path.read_text(encoding="utf-8") for path in technique_files)
+        for phrase in retired:
+            self.assertNotIn(phrase, combined)
 
 
 if __name__ == "__main__":
