@@ -323,6 +323,10 @@ class WorkflowTests(unittest.TestCase):
                 self.assertNotIn("失败信号", prompt)
                 self.assertNotIn(case["failure_signals"][0], prompt)
                 self.assertIn(case["must_preserve"][0], prompt)
+                self.assertIn(case["mode"], scorecard)
+                self.assertIn(case["context"], scorecard)
+                self.assertIn(case["task"], scorecard)
+                self.assertIn(case["must_preserve"][0], scorecard)
                 self.assertIn(case["failure_signals"][0], scorecard)
             stale = run_script(
                 "scripts/prepare_writing_evals.py",

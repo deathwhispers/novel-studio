@@ -60,7 +60,20 @@ def evaluator_packet(case: dict) -> str:
     failures = "\n".join(f"- {item}" for item in case["failure_signals"])
     return f"""# 评审卡：{case['id']}
 
-先盲读候选正文，再查看本卡。每项 1-5 分，并引用候选原文。
+本卡包含写作者已知的完整任务语义，并额外揭示失败信号。先盲读候选正文，
+再按本卡判断。每项 1-5 分，并引用候选原文。
+
+## 写作模式
+
+{case['mode']}
+
+## 上下文
+
+{case['context']}
+
+## 任务
+
+{case['task']}
 
 ## 共同维度
 
