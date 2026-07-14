@@ -600,6 +600,107 @@ class WorkflowTests(unittest.TestCase):
             self.assertNotEqual(duplicate.returncode, 0)
             self.assertIn("重复轮次 id", duplicate.stderr)
 
+    def test_revision_eval_packets_and_anonymous_pair(self) -> None:
+        manifest = ROOT / "skills/novel-writing/assets/evals/revision-cases.json"
+        cases = json.loads(manifest.read_text(encoding="utf-8"))
+        modes = {"商业连载", "类型长篇", "文学叙事", "短篇", "探索起草"}
+        self.assertGreaterEqual(len(cases), 10)
+        self.assertEqual({case["mode"] for case in cases}, modes)
+        self.assertEqual({case["difficulty"] for case in cases}, {"standard", "adversarial"})
+        for mode in modes:
+            self.assertGreaterEqual(sum(case["mode"] == mode for case in cases), 2)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            writer = root / "writer"
+            evaluator = root / "evaluator"
+            prepared = run_script(
+                "scripts/prepare_revision_evals.py",
+                "--writer-output", str(writer), "--evaluator-output", str(evaluator),
+            )
+            self.assertEqual(prepared.returncode, 0, prepared.stdout + prepared.stderr)
+            self.assertEqual(
+                json.loads((writer / "manifest.json").read_text(encoding="utf-8")),
+                json.loads((evaluator / "manifest.json").read_text(encoding="utf-8")),
+            )
+            for case in cases:
+                prompt = (writer / f"{case['id']}.md").read_text(encoding="utf-8")
+                rubric = (evaluator / f"{case['id']}.md").read_text(encoding="utf-8")
+                self.assertIn(case["original"], prompt)
+                self.assertIn(case["revision_goal"], prompt)
+                self.assertIn(case["must_preserve"][0], prompt)
+                for signal in case["failure_signals"]:
+                    self.assertNotIn(signal, prompt)
+                    self.assertIn(signal, rubric)
+                self.assertIn("不预先宣称新版本更好", rubric)
+
+            stale = run_script(
+                "scripts/prepare_revision_evals.py",
+                "--writer-output", str(writer), "--evaluator-output", str(evaluator),
+            )
+            self.assertNotEqual(stale.returncode, 0)
+            self.assertIn("输出目录必须为空", stale.stderr)
+            nested = run_script(
+                "scripts/prepare_revision_evals.py",
+                "--writer-output", str(root / "nested"),
+                "--evaluator-output", str(root / "nested" / "evaluator"),
+            )
+            self.assertNotEqual(nested.returncode, 0)
+            self.assertIn("互不包含", nested.stderr)
+
+            case = cases[0]
+            candidate_text = "债主第三次拍门。沈砚看了一眼滴水的檐口，没有许诺，只问对方愿不愿先验那只钱袋。"
+            candidate = root / "candidate.md"
+            candidate.write_text(candidate_text, encoding="utf-8")
+
+            def make_pair(suffix: str, revision_path: Path = candidate):
+                review = root / f"review-{suffix}.md"
+                key = root / f"key-{suffix}.json"
+                result = run_script(
+                    "scripts/prepare_revision_pair.py",
+                    "--case-id", case["id"], "--revision", str(revision_path),
+                    "--seed", "fixed-seed", "--review-output", str(review), "--key-output", str(key),
+                )
+                return result, review, key
+
+            first, first_review, first_key = make_pair("one")
+            second, second_review, second_key = make_pair("two")
+            self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
+            self.assertEqual(second.returncode, 0, second.stdout + second.stderr)
+            first_review_text = first_review.read_text(encoding="utf-8")
+            self.assertEqual(first_review_text, second_review.read_text(encoding="utf-8"))
+            self.assertEqual(
+                json.loads(first_key.read_text(encoding="utf-8"))["candidates"],
+                json.loads(second_key.read_text(encoding="utf-8"))["candidates"],
+            )
+            self.assertIn(case["original"], first_review_text)
+            self.assertIn(candidate_text, first_review_text)
+            self.assertIn("候选 A", first_review_text)
+            self.assertIn("候选 B", first_review_text)
+            self.assertIn("持平", first_review_text)
+            self.assertNotIn('"identity"', first_review_text)
+            self.assertNotIn('"original"', first_review_text)
+            self.assertNotIn('"revision"', first_review_text)
+            key_data = json.loads(first_key.read_text(encoding="utf-8"))
+            self.assertEqual(
+                {item["identity"] for item in key_data["candidates"].values()},
+                {"original", "revision"},
+            )
+
+            same_text = root / "same-text.md"
+            same_text.write_text(case["original"], encoding="utf-8")
+            same, same_review, _ = make_pair("same", same_text)
+            self.assertEqual(same.returncode, 0, same.stdout + same.stderr)
+            self.assertIn("相同文本允许持平", same_review.read_text(encoding="utf-8"))
+
+            collision = run_script(
+                "scripts/prepare_revision_pair.py",
+                "--case-id", case["id"], "--revision", str(candidate), "--seed", "x",
+                "--review-output", str(candidate), "--key-output", str(root / "collision.json"),
+            )
+            self.assertNotEqual(collision.returncode, 0)
+            self.assertIn("输出不能覆盖", collision.stderr)
+
     def test_document_contracts_and_script_permissions(self) -> None:
         for relative in ("README.md", "DEPLOYMENT.md"):
             text = (ROOT / relative).read_text(encoding="utf-8")

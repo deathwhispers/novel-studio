@@ -107,6 +107,7 @@ description: "中文小说质量检查与修订 skill。根据写作模式，用
 - **叙事质量审计（找"够不够好"）**：`references/叙事质量审计.md`
 - **文风快速自检卡（voice 漂移专项）**：`references/文风快速自检卡.md`
 - **质量评测方法（防误报与回归）**：`references/质量评测方法.md`
+- **修订前后盲评**：按 `references/质量评测方法.md` 生成修订任务包，再将两个版本匿名为 A/B；不预设修订版更好
 - **读者反馈处理（转 novel-feedback）**：`../novel-feedback/SKILL.md`——读者反馈追踪、分析、决策的独立 skill
 - 逻辑修补模板：`references/逻辑修补模板.md`
 - 回收修补模板：`references/回收修补模板.md`
