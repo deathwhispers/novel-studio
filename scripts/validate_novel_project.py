@@ -43,6 +43,9 @@ CORE_FILES = [
     "90-运行/会话交接.md", "90-运行/决策记录.md",
 ]
 VALID_PROFILES = {"minimal", "serial", "longform"}
+VALID_MODES = {"商业连载", "类型长篇", "文学叙事", "短篇", "探索起草"}
+VALID_SERIAL_TOOLS = {"启用", "停用"}
+CONFIG_VERSION = "1"
 
 OPTIONAL_FILES = [
     "05-市场/趋势笔记.md", "05-市场/对标书单.md",
@@ -81,12 +84,29 @@ def format_wc(n: int) -> str:
     return f"{n}"
 
 
-def read_project_profile(project_dir: Path) -> str | None:
+def read_project_config(project_dir: Path) -> tuple[dict[str, str] | None, list[str]]:
     config = project_dir / "90-运行" / "项目配置.md"
     if not config.is_file():
-        return None
-    match = re.search(r"^- 模板档位：\s*(\S+)\s*$", config.read_text(encoding="utf-8"), re.MULTILINE)
-    return match.group(1) if match and match.group(1) in VALID_PROFILES else None
+        return None, []
+    text = config.read_text(encoding="utf-8")
+    fields: dict[str, str] = {}
+    for key in ("模板档位", "写作模式", "配置版本", "连载工具"):
+        match = re.search(rf"^- {key}：\s*(\S+)\s*$", text, re.MULTILINE)
+        if match:
+            fields[key] = match.group(1)
+    errors: list[str] = []
+    missing = [key for key in ("模板档位", "写作模式", "配置版本", "连载工具") if key not in fields]
+    if missing:
+        errors.append(f"项目配置缺少字段：{', '.join(missing)}")
+    if fields.get("模板档位") not in VALID_PROFILES:
+        errors.append(f"项目配置的模板档位非法：{fields.get('模板档位', '<缺失>')}")
+    if fields.get("写作模式") not in VALID_MODES:
+        errors.append(f"项目配置的写作模式非法：{fields.get('写作模式', '<缺失>')}")
+    if fields.get("配置版本") != CONFIG_VERSION:
+        errors.append(f"项目配置版本不支持：{fields.get('配置版本', '<缺失>')}")
+    if fields.get("连载工具") not in VALID_SERIAL_TOOLS:
+        errors.append(f"项目配置的连载工具值非法：{fields.get('连载工具', '<缺失>')}")
+    return fields, errors
 
 
 def scan_chapters(project_dir: Path) -> list[dict]:
@@ -444,11 +464,16 @@ def main() -> int:
     warnings = []
     info = []
     consistency_issues = []
-    profile = read_project_profile(project_dir)
-    if profile:
-        info.append(f"模板档位：{profile}")
+    config, config_errors = read_project_config(project_dir)
+    errors.extend(config_errors)
+    if config and not config_errors:
+        info.append(f"模板档位：{config['模板档位']}")
+        info.append(f"写作模式：{config['写作模式']}")
+        info.append(f"连载工具：{config['连载工具']}")
+    elif config is None:
+        info.append("未找到项目配置；按旧项目兼容模式校验")
     else:
-        info.append("未记录模板档位；按兼容模式校验")
+        info.append("项目配置存在但非法；不启用兼容回退")
 
     # 1. 检查目录
     for d in REQUIRED_DIRS:
@@ -500,8 +525,8 @@ def main() -> int:
             warnings.append("连载驾驶舱.md 未填写当前写到位置")
         if "风险" not in cockpit_text:
             warnings.append("连载驾驶舱.md 未填写风险项")
-    elif profile in {"serial", "longform"}:
-        errors.append(f"{profile} 项目缺少核心文件：90-运行/连载驾驶舱.md")
+    elif config and not config_errors and config["连载工具"] == "启用":
+        errors.append("连载工具已启用，缺少核心文件：90-运行/连载驾驶舱.md")
 
     # 7. 检查回收总账
     ledger = project_dir / "20-大纲" / "回收" / "回收总账.md"

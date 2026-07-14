@@ -33,6 +33,8 @@ python3 skills/novel-project/scripts/init_novel_project.py \
 
 模板档位：`minimal` 适合短篇或试写，`serial` 适合常规连载（默认），`longform` 适合多线、多人和超长篇。
 
+`profile` 只决定通用脚手架深度；`mode` 决定模式专项资料。“商业连载”会生成驾驶舱、留存和发射台等工具。其他模式只有在显式加上 `--enable-serial-tools` 时才生成它们。`serial` 和 `longform` 未指定 mode 时仍默认为“商业连载”，以保持兼容。
+
 ## 3. 开始写作
 
 按当前意图选择最短链路；下面是需要完整项目时的常见顺序：

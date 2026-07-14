@@ -32,6 +32,8 @@ python3 skills/novel-project/scripts/init_novel_project.py \
 
 可选写作模式：商业连载、类型长篇、文学叙事、短篇、探索起草。
 
+`profile` 只控制通用脚手架深度。连载驾驶舱、前 3/30 章资料、升级阶梯、首卷发射台、首章杀手锏和连载工作流由 `mode=商业连载` 启用；非商业模式可用 `--enable-serial-tools` 显式开启。
+
 ## 使用方式
 
 根据当前任务选择最短链路：
@@ -59,7 +61,7 @@ python3 -m unittest discover -s tests -v
 python3 scripts/validate_novel_project.py /path/to/my-novel
 ```
 
-serial 与 longform 项目会根据 `90-运行/项目配置.md` 检查连载驾驶舱；minimal 项目不会被可选连载资料阻塞。
+校验器依据 `90-运行/项目配置.md` 中的“连载工具：启用 / 停用”决定是否强制检查连载驾驶舱，与 profile 无关。配置文件缺失时进入旧项目兼容模式；文件存在但 profile、mode、版本或连载工具值非法时直接报错。
 
 ## 常见问题
 

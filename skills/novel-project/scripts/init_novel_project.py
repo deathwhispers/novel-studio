@@ -50,12 +50,20 @@ LONGFORM_ONLY_PREFIXES = (
 LONGFORM_ONLY_FILES = {
     "20-大纲/多主角分工表.md",
     "20-大纲/多线并行管理表.md",
-    "20-大纲/前30章留存期管理.md",
-    "20-大纲/升级阶梯.md",
     "90-运行/人物状态变迁日志.md",
     "90-运行/全角色卷末快照.md",
     "90-运行/角色立场漂移记录.md",
     "90-运行/连续性查询.md",
+}
+
+SERIAL_TOOL_FILES = {
+    "20-大纲/前3章逐章技法.md",
+    "20-大纲/前30章留存期管理.md",
+    "20-大纲/升级阶梯.md",
+    "20-大纲/首卷发射台.md",
+    "20-大纲/首章杀手锏集合.md",
+    "90-运行/连载驾驶舱.md",
+    "90-运行/连载工作流.md",
 }
 
 
@@ -81,8 +89,10 @@ def replace_tokens(path: Path, tokens: dict[str, str]) -> None:
     path.write_text(text, encoding="utf-8")
 
 
-def include_in_profile(relative: Path, profile: str) -> bool:
+def include_in_profile(relative: Path, profile: str, serial_tools: bool) -> bool:
     name = relative.as_posix()
+    if name in SERIAL_TOOL_FILES:
+        return serial_tools
     if profile == "minimal":
         return name in MINIMAL_FILES
     if profile == "serial":
@@ -90,14 +100,16 @@ def include_in_profile(relative: Path, profile: str) -> bool:
     return True
 
 
-def copy_template(output_dir: Path, tokens: dict[str, str], profile: str) -> int:
+def copy_template(
+    output_dir: Path, tokens: dict[str, str], profile: str, serial_tools: bool,
+) -> int:
     copied = 0
     for source in TEMPLATE_DIR.rglob("*"):
         relative = source.relative_to(TEMPLATE_DIR)
         target = output_dir / relative
         if source.is_dir():
             continue
-        if not include_in_profile(relative, profile):
+        if not include_in_profile(relative, profile, serial_tools):
             continue
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
@@ -126,6 +138,11 @@ def parse_args() -> argparse.Namespace:
         choices=WRITING_MODES,
         help="写作模式；省略时 minimal=探索起草，其余=商业连载",
     )
+    parser.add_argument(
+        "--enable-serial-tools",
+        action="store_true",
+        help="在非商业连载模式下也显式启用连载驾驶舱、留存和发射台等资料",
+    )
     return parser.parse_args()
 
 
@@ -143,6 +160,7 @@ def main() -> int:
 
     output_dir.mkdir(parents=True, exist_ok=True)
     writing_mode = args.mode or ("探索起草" if args.profile == "minimal" else "商业连载")
+    serial_tools = writing_mode == "商业连载" or args.enable_serial_tools
     tokens = {
         "{{书名}}": args.title,
         "{{题材}}": args.genre,
@@ -152,8 +170,9 @@ def main() -> int:
         "{{项目标识}}": slugify(args.title),
         "{{模板档位}}": args.profile,
         "{{写作模式}}": writing_mode,
+        "{{连载工具}}": "启用" if serial_tools else "停用",
     }
-    copied = copy_template(output_dir, tokens, args.profile)
+    copied = copy_template(output_dir, tokens, args.profile, serial_tools)
     print(f"initialized {args.profile} novel project at {output_dir} ({copied} files)")
     return 0
 

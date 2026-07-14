@@ -112,13 +112,14 @@ class WorkflowTests(unittest.TestCase):
             minimal_config = (Path(tmp) / "minimal" / "90-运行" / "项目配置.md").read_text(encoding="utf-8")
             self.assertIn("模板档位：minimal", minimal_config)
             self.assertIn("写作模式：探索起草", minimal_config)
-            self.assertFalse((Path(tmp) / "serial" / "20-大纲" / "升级阶梯.md").exists())
+            self.assertIn("连载工具：停用", minimal_config)
+            self.assertTrue((Path(tmp) / "serial" / "20-大纲" / "升级阶梯.md").exists())
 
             serial_cockpit = Path(tmp) / "serial" / "90-运行" / "连载驾驶舱.md"
             serial_cockpit.unlink()
             serial_validation = run_script("scripts/validate_novel_project.py", str(Path(tmp) / "serial"))
             self.assertNotEqual(serial_validation.returncode, 0)
-            self.assertIn("serial 项目缺少核心文件", serial_validation.stdout)
+            self.assertIn("连载工具已启用", serial_validation.stdout)
 
             minimal_chapter = run_script(
                 "scripts/create_chapter.py", str(Path(tmp) / "minimal"),
@@ -128,6 +129,61 @@ class WorkflowTests(unittest.TestCase):
             self.assertTrue((Path(tmp) / "minimal" / "30-正文" / "章节" / "第001章-试写.md").exists())
             support = Path(tmp) / "minimal" / "20-大纲" / "节拍卡" / "chapter-001.md"
             self.assertIn("写作模式", support.read_text(encoding="utf-8"))
+
+    def test_mode_controls_serial_tools_independently_from_profile(self) -> None:
+        serial_assets = (
+            "20-大纲/前3章逐章技法.md", "20-大纲/前30章留存期管理.md",
+            "20-大纲/升级阶梯.md", "20-大纲/首卷发射台.md",
+            "20-大纲/首章杀手锏集合.md", "90-运行/连载驾驶舱.md",
+            "90-运行/连载工作流.md",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            literary = Path(tmp) / "literary"
+            result = run_script(
+                "skills/novel-project/scripts/init_novel_project.py",
+                "--output", str(literary), "--title", "文学长篇", "--genre", "文学",
+                "--premise", "一家人的记忆", "--profile", "longform", "--mode", "文学叙事",
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            for relative in serial_assets:
+                self.assertFalse((literary / relative).exists(), relative)
+            config = (literary / "90-运行" / "项目配置.md").read_text(encoding="utf-8")
+            self.assertIn("连载工具：停用", config)
+            validation = run_script("scripts/validate_novel_project.py", str(literary))
+            self.assertEqual(validation.returncode, 0, validation.stdout + validation.stderr)
+            self.assertNotIn("缺少核心文件：90-运行/连载驾驶舱.md", validation.stdout)
+
+            enabled = Path(tmp) / "enabled"
+            result = run_script(
+                "skills/novel-project/scripts/init_novel_project.py",
+                "--output", str(enabled), "--title", "实验连载", "--genre", "文学",
+                "--premise", "分章发布", "--profile", "minimal", "--mode", "文学叙事",
+                "--enable-serial-tools",
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            for relative in serial_assets:
+                self.assertTrue((enabled / relative).exists(), relative)
+            self.assertIn("连载工具：启用", (enabled / "90-运行" / "项目配置.md").read_text(encoding="utf-8"))
+
+    def test_validator_rejects_present_but_invalid_project_config(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "novel"
+            result = run_script(
+                "skills/novel-project/scripts/init_novel_project.py",
+                "--output", str(project), "--title", "坏配置", "--genre", "测试",
+                "--premise", "测试", "--profile", "minimal",
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            (project / "90-运行" / "项目配置.md").write_text(
+                "# 项目配置\n\n- 模板档位：deep\n- 写作模式：随便写\n- 配置版本：99\n- 连载工具：也许\n",
+                encoding="utf-8",
+            )
+            validation = run_script("scripts/validate_novel_project.py", str(project))
+            self.assertNotEqual(validation.returncode, 0)
+            self.assertIn("项目配置的模板档位非法", validation.stdout)
+            self.assertIn("项目配置的写作模式非法", validation.stdout)
+            self.assertIn("项目配置版本不支持", validation.stdout)
+            self.assertIn("项目配置的连载工具值非法", validation.stdout)
 
     def test_create_chapter_builds_missing_beat_directory(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
