@@ -10,6 +10,7 @@ from pathlib import Path
 
 
 CHAPTER_RE = re.compile(r"第(\d+)章")
+PLACEHOLDER_RE = re.compile(r"未起草|【在此处写章节正文】|\{\{.*?\}\}")
 
 
 def chapter_number(value: str) -> int:
@@ -36,6 +37,32 @@ def find_chapter_files(project: Path) -> list[tuple[int, Path]]:
     return sorted(found, key=lambda item: (item[0], str(item[1])))
 
 
+def markdown_section(text: str, heading: str) -> str | None:
+    match = re.search(rf"^##\s+{re.escape(heading)}\s*$", text, re.MULTILINE)
+    if not match:
+        return None
+    rest = text[match.end():]
+    end = re.search(r"^##\s+", rest, re.MULTILINE)
+    return rest[:end.start() if end else None].strip()
+
+
+def chapter_body(path: Path) -> str:
+    text = path.read_text(encoding="utf-8")
+    body = markdown_section(text, "正文")
+    if body is None:
+        body = "\n".join(
+            line for line in text.splitlines()
+            if not line.startswith("#") and not line.startswith("当前状态：")
+        ).strip()
+    body = re.sub(r"<!--.*?-->", "", body, flags=re.DOTALL).strip()
+    return "" if PLACEHOLDER_RE.fullmatch(body) else body
+
+
+def has_substantive_body(path: Path) -> bool:
+    body = chapter_body(path)
+    return len(re.findall(r"[\u4e00-\u9fffA-Za-z0-9]", body)) >= 3
+
+
 def document_keys(path: Path) -> set[str]:
     keys = {path.stem}
     try:
@@ -48,17 +75,18 @@ def document_keys(path: Path) -> set[str]:
     return {key for key in keys if len(key) >= 2 and "模板" not in key and "说明" not in key}
 
 
-def find_relevant_docs(project: Path, beat_text: str) -> list[tuple[str, Path, str]]:
+def find_relevant_docs(project: Path, source_text: str) -> list[tuple[str, Path, str]]:
     relevant: list[tuple[str, Path, str]] = []
     groups = (
         ("相关人物", project / "10-设定" / "角色"),
         ("相关地点", project / "10-设定" / "地点"),
+        ("相关物件", project / "10-设定" / "物件"),
     )
     for label, directory in groups:
         if not directory.is_dir():
             continue
         for path in sorted(directory.glob("*.md")):
-            if any(key in beat_text for key in document_keys(path)):
+            if any(key in source_text for key in document_keys(path)):
                 relevant.append((label, path, "compact"))
     return relevant
 
@@ -71,7 +99,24 @@ def trim_text(text: str, limit: int, tail: bool = False) -> str:
     return text[:limit].rstrip() + "\n[…后文已截断…]"
 
 
-def collect_sources(project: Path, number: int, includes: list[str]) -> list[tuple[str, Path, str]]:
+def recent_deltas(project: Path, number: int, limit: int = 5) -> list[Path]:
+    directory = project / "90-运行" / "章节增量"
+    if not directory.is_dir():
+        return []
+    found: list[tuple[int, Path]] = []
+    for path in directory.glob("chapter-*.md"):
+        match = re.search(r"chapter-(\d+)", path.stem)
+        if match and int(match.group(1)) < number:
+            found.append((int(match.group(1)), path))
+    return [path for _, path in sorted(found)[-limit:]]
+
+
+def collect_sources(
+    project: Path,
+    number: int,
+    includes: list[str],
+    task: str = "",
+) -> list[tuple[str, Path, str]]:
     sources: list[tuple[str, Path, str]] = []
 
     def add(label: str, path: Path | None, mode: str = "head") -> None:
@@ -85,7 +130,8 @@ def collect_sources(project: Path, number: int, includes: list[str]) -> list[tup
     add("本章节拍卡", beat)
 
     chapter_files = find_chapter_files(project)
-    previous = [item for item in chapter_files if item[0] < number]
+    written_chapters = [item for item in chapter_files if has_substantive_body(item[1])]
+    previous = [item for item in written_chapters if item[0] < number]
     anchor = next((path for chapter, path in chapter_files if chapter == number), None)
     if anchor is None and previous:
         anchor = previous[-1][1]
@@ -100,7 +146,13 @@ def collect_sources(project: Path, number: int, includes: list[str]) -> list[tup
                 f"20-大纲/分卷/volume-{index}.md",
             ]) or selected_volume
     if previous:
-        add("最近正文末段", previous[-1][1], "tail")
+        add("最近有效正文末段", previous[-1][1], "body-tail")
+
+    deltas = recent_deltas(project, number)
+    for path in deltas:
+        delta_number = re.search(r"(\d+)", path.stem)
+        label = f"最近状态增量 Ch {int(delta_number.group(1))}" if delta_number else "最近状态增量"
+        add(label, path, "compact")
 
     for relative in includes:
         path = (project / relative).resolve()
@@ -112,8 +164,13 @@ def collect_sources(project: Path, number: int, includes: list[str]) -> list[tup
             raise ValueError(f"附加文件不存在: {relative}")
         add(f"附加：{relative}", path, "compact")
 
-    beat_text = beat.read_text(encoding="utf-8") if beat else ""
-    for label, path, mode in find_relevant_docs(project, beat_text):
+    retrieval_text = "\n".join([
+        task,
+        beat.read_text(encoding="utf-8") if beat else "",
+        chapter_body(previous[-1][1]) if previous else "",
+        *(path.read_text(encoding="utf-8") for path in deltas),
+    ])
+    for label, path, mode in find_relevant_docs(project, retrieval_text):
         add(label, path, mode)
 
     add("文风指南", first_existing(project, ["10-设定/文风指南.md"]))
@@ -130,12 +187,17 @@ def build_context_pack(
     project: Path,
     number: int,
     includes: list[str] | None = None,
+    task: str = "",
     max_chars: int = 18000,
     per_file_chars: int = 3500,
     previous_chars: int = 3000,
 ) -> str:
-    sources = collect_sources(project, number, includes or [])
-    sections: list[str] = [
+    if max_chars < 800:
+        raise ValueError("max_chars 不能小于 800")
+    if per_file_chars < 200 or previous_chars < 200:
+        raise ValueError("单文件字符预算不能小于 200")
+    sources = collect_sources(project, number, includes or [], task)
+    prefix = [
         f"# 第{number:03d}章最小上下文包",
         "",
         "> 自动汇总只负责召回，不替代作者判断。缺失文件会跳过；写前只确认当前模式真正需要的信息。",
@@ -143,29 +205,7 @@ def build_context_pack(
         "## 来源清单",
         "",
     ]
-    for label, path, _ in sources:
-        sections.append(f"- {label}: `{path.relative_to(project)}`")
-
-    used = len("\n".join(sections))
-    for label, path, mode in sources:
-        if mode == "tail":
-            allowance = previous_chars
-        elif mode == "compact":
-            allowance = min(1800, per_file_chars)
-        elif mode == "summary":
-            allowance = min(1600, per_file_chars)
-        else:
-            allowance = per_file_chars
-        allowance = min(allowance, max_chars - used)
-        if allowance < 200:
-            sections.extend(["", "## 截断提示", "", "上下文包达到总字符上限；其余来源只保留在来源清单中。"])
-            break
-        content = trim_text(path.read_text(encoding="utf-8"), allowance, tail=mode == "tail")
-        section = f"\n## {label}\n\n<!-- source: {path.relative_to(project)} -->\n\n{content}"
-        sections.append(section)
-        used += len(section)
-
-    sections.extend([
+    footer = [
         "",
         "## 写前最后确认",
         "",
@@ -174,8 +214,33 @@ def build_context_pack(
         "- 压力、关系、信息或形式将怎样运动；若不变化，停顿有什么意义？",
         "- 哪些 hard canon 不能破坏，哪些未知项可以通过正文探索？",
         "- 需要延续的 voice 证据来自哪段可靠文本？",
-    ])
-    return "\n".join(sections).rstrip() + "\n"
+    ]
+    source_lines: list[str] = []
+    content_sections: list[str] = []
+    base_size = len("\n".join(prefix + footer)) + 2
+    for label, path, mode in sources:
+        if mode == "body-tail":
+            allowance = previous_chars
+        elif mode == "compact":
+            allowance = min(1800, per_file_chars)
+        elif mode == "summary":
+            allowance = min(1600, per_file_chars)
+        else:
+            allowance = per_file_chars
+        source_line = f"- {label}: `{path.relative_to(project)}`"
+        section_head = f"\n## {label}\n\n<!-- source: {path.relative_to(project)} -->\n\n"
+        remaining = max_chars - base_size - len("\n".join(source_lines + content_sections))
+        allowance = min(allowance, remaining - len(source_line) - len(section_head) - 4)
+        if allowance < 200:
+            break
+        raw_content = chapter_body(path) if mode == "body-tail" else path.read_text(encoding="utf-8")
+        content = trim_text(raw_content, allowance, tail=mode == "body-tail")
+        source_lines.append(source_line)
+        content_sections.append(section_head + content)
+
+    sections = prefix + source_lines + content_sections + footer
+    result = "\n".join(sections).rstrip() + "\n"
+    return result
 
 
 def parse_args() -> argparse.Namespace:
@@ -183,6 +248,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("project_dir", help="小说项目目录")
     parser.add_argument("--chapter", "-c", required=True, help="目标章节号，如 12 或 第012章")
     parser.add_argument("--include", action="append", default=[], help="额外加入的项目内相对路径，可重复")
+    parser.add_argument("--task", default="", help="当前写作任务，用于召回相关人物、地点和物件")
     parser.add_argument("--output", "-o", help="输出文件；省略时打印到 stdout")
     parser.add_argument("--max-chars", type=int, default=18000, help="上下文包字符上限")
     parser.add_argument("--per-file-chars", type=int, default=3500, help="普通来源单文件字符上限")
@@ -202,6 +268,7 @@ def main() -> int:
             project,
             number,
             args.include,
+            args.task,
             args.max_chars,
             args.per_file_chars,
             args.previous_chars,

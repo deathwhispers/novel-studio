@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
@@ -140,10 +141,48 @@ def check_template(errors: list[str]) -> None:
         "50-归档/说明.md",
         "90-运行/当前进度.md",
         "90-运行/决策记录.md",
+        "90-运行/项目配置.md",
     ]
     for rel in required:
         if not (template / rel).exists():
             errors.append(f"template file not found: {rel}")
+
+
+def check_writing_contract(errors: list[str]) -> None:
+    """Prevent universal entry points from reintroducing retired one-mode rules."""
+    files = [
+        ROOT / "README.md",
+        ROOT / "QUICKSTART.md",
+        ROOT / "DEPLOYMENT.md",
+        SKILLS_DIR / "novel-studio" / "SKILL.md",
+        SKILLS_DIR / "novel-project" / "SKILL.md",
+        SKILLS_DIR / "novel-outline" / "SKILL.md",
+        SKILLS_DIR / "novel-writing" / "SKILL.md",
+        SKILLS_DIR / "novel-quality" / "SKILL.md",
+    ]
+    banned = (
+        "默认每章 2000-2500",
+        "强制执行完整的章节写作流程",
+        "每章至少要明确 10 项",
+        "每章的章尾必须有",
+        "一章只能一个 POV",
+    )
+    for file in files:
+        text = file.read_text(encoding="utf-8")
+        for phrase in banned:
+            if phrase in text:
+                errors.append(
+                    f"universal writing contract contains retired rule: "
+                    f"{file.relative_to(ROOT)} -> {phrase}"
+                )
+
+    for relative in (
+        "scripts/build_context_pack.py",
+        "scripts/evaluate_chapter.py",
+        "scripts/prepare_writing_evals.py",
+    ):
+        if not os.access(ROOT / relative, os.X_OK):
+            errors.append(f"script is not executable: {relative}")
 
 
 def check_duplicate_references(warnings: list[str]) -> None:
@@ -171,6 +210,7 @@ def main() -> int:
 
     check_routing(errors)
     check_template(errors)
+    check_writing_contract(errors)
     check_duplicate_references(warnings)
 
     if warnings:

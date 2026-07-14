@@ -13,6 +13,7 @@ TEXT_SUFFIXES = {".md", ".txt", ".json", ".yaml", ".yml"}
 SCRIPT_DIR = Path(__file__).resolve().parent
 SKILL_DIR = SCRIPT_DIR.parent
 TEMPLATE_DIR = SKILL_DIR / "assets" / "novel-project-template"
+WRITING_MODES = ("商业连载", "类型长篇", "文学叙事", "短篇", "探索起草")
 
 MINIMAL_FILES = {
     "00-书核/作品总表.md",
@@ -31,6 +32,7 @@ MINIMAL_FILES = {
     "90-运行/当前进度.md",
     "90-运行/会话交接.md",
     "90-运行/决策记录.md",
+    "90-运行/项目配置.md",
     "90-运行/章节增量/说明.md",
     "90-运行/写作训练日志.md",
 }
@@ -49,7 +51,7 @@ LONGFORM_ONLY_FILES = {
     "20-大纲/多主角分工表.md",
     "20-大纲/多线并行管理表.md",
     "20-大纲/前30章留存期管理.md",
-    "20-大纲/升级阶段.md",
+    "20-大纲/升级阶梯.md",
     "90-运行/人物状态变迁日志.md",
     "90-运行/全角色卷末快照.md",
     "90-运行/角色立场漂移记录.md",
@@ -119,6 +121,11 @@ def parse_args() -> argparse.Namespace:
         default="serial",
         help="Template depth: minimal, serial (default), or longform",
     )
+    parser.add_argument(
+        "--mode",
+        choices=WRITING_MODES,
+        help="写作模式；省略时 minimal=探索起草，其余=商业连载",
+    )
     return parser.parse_args()
 
 
@@ -135,6 +142,7 @@ def main() -> int:
         return 1
 
     output_dir.mkdir(parents=True, exist_ok=True)
+    writing_mode = args.mode or ("探索起草" if args.profile == "minimal" else "商业连载")
     tokens = {
         "{{书名}}": args.title,
         "{{题材}}": args.genre,
@@ -142,6 +150,8 @@ def main() -> int:
         "{{作者}}": args.author,
         "{{日期}}": date.today().isoformat(),
         "{{项目标识}}": slugify(args.title),
+        "{{模板档位}}": args.profile,
+        "{{写作模式}}": writing_mode,
     }
     copied = copy_template(output_dir, tokens, args.profile)
     print(f"initialized {args.profile} novel project at {output_dir} ({copied} files)")

@@ -22,27 +22,35 @@ def load_cases(path: Path) -> list[dict]:
         raise ValueError("评测清单必须是非空数组")
     seen: set[str] = set()
     for case in cases:
+        if not isinstance(case, dict):
+            raise ValueError("每个评测项必须是对象")
         missing = REQUIRED - set(case)
         if missing:
             raise ValueError(f"评测项缺少字段: {sorted(missing)}")
-        if not re.fullmatch(r"[a-z0-9-]+", case["id"]):
+        if not isinstance(case["id"], str) or not re.fullmatch(r"[a-z0-9-]+", case["id"]):
             raise ValueError(f"非法评测 id: {case['id']}")
         if case["id"] in seen:
             raise ValueError(f"重复评测 id: {case['id']}")
-        if case["mode"] not in MODES:
+        if not isinstance(case["mode"], str) or case["mode"] not in MODES:
             raise ValueError(f"未知写作模式: {case['mode']}")
-        if not case["must_preserve"] or not case["failure_signals"]:
+        if not isinstance(case["task"], str) or not isinstance(case["context"], str):
+            raise ValueError(f"任务和上下文必须是字符串: {case['id']}")
+        if not all(isinstance(case[field], list) and case[field] for field in ("must_preserve", "failure_signals")):
             raise ValueError(f"评测项必须包含保留项和失败信号: {case['id']}")
+        if not all(isinstance(item, str) and item.strip() for field in ("must_preserve", "failure_signals") for item in case[field]):
+            raise ValueError(f"保留项和失败信号必须是非空字符串: {case['id']}")
         seen.add(case["id"])
     return cases
 
 
 def prompt_packet(case: dict) -> str:
+    preserve = "\n".join(f"- {item}" for item in case["must_preserve"])
     return (
         f"# 写作任务：{case['id']}\n\n"
         f"写作模式：{case['mode']}\n\n"
         f"## 上下文\n\n{case['context']}\n\n"
         f"## 任务\n\n{case['task']}\n\n"
+        f"## 必须保留的已知约束\n\n{preserve}\n\n"
         "直接输出正文。不要输出分析、检查表或写作说明。\n"
     )
 
@@ -79,20 +87,40 @@ def evaluator_packet(case: dict) -> str:
 """
 
 
-def prepare(cases: list[dict], output: Path) -> None:
-    prompts = output / "prompts"
-    scorecards = output / "scorecards"
-    prompts.mkdir(parents=True, exist_ok=True)
-    scorecards.mkdir(parents=True, exist_ok=True)
+def ensure_empty_output(path: Path) -> None:
+    if path.exists() and any(path.iterdir()):
+        raise ValueError(f"输出目录必须为空，避免残留旧评测项: {path}")
+    path.mkdir(parents=True, exist_ok=True)
+
+
+def prepare(cases: list[dict], writer_output: Path, evaluator_output: Path) -> None:
+    writer_output = writer_output.resolve()
+    evaluator_output = evaluator_output.resolve()
+    if (
+        writer_output == evaluator_output
+        or writer_output.is_relative_to(evaluator_output)
+        or evaluator_output.is_relative_to(writer_output)
+    ):
+        raise ValueError("写作者包和评审者包必须使用互不包含的独立目录")
+    ensure_empty_output(writer_output)
+    ensure_empty_output(evaluator_output)
     for case in cases:
-        (prompts / f"{case['id']}.md").write_text(prompt_packet(case), encoding="utf-8")
-        (scorecards / f"{case['id']}.md").write_text(evaluator_packet(case), encoding="utf-8")
+        (writer_output / f"{case['id']}.md").write_text(prompt_packet(case), encoding="utf-8")
+        (evaluator_output / f"{case['id']}.md").write_text(evaluator_packet(case), encoding="utf-8")
+    writer_manifest = [{"id": case["id"], "mode": case["mode"]} for case in cases]
+    (writer_output / "manifest.json").write_text(
+        json.dumps(writer_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
+    (evaluator_output / "manifest.json").write_text(
+        json.dumps(writer_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="准备写作 Skill 的盲评任务包")
     parser.add_argument("--manifest", default=str(DEFAULT_MANIFEST), help="评测清单 JSON")
-    parser.add_argument("--output", help="输出目录；省略时只校验")
+    parser.add_argument("--writer-output", help="只交给写作者的任务包目录")
+    parser.add_argument("--evaluator-output", help="只交给评审者的评分卡目录")
     return parser.parse_args()
 
 
@@ -100,12 +128,18 @@ def main() -> int:
     args = parse_args()
     try:
         cases = load_cases(Path(args.manifest).expanduser().resolve())
-        if args.output:
-            prepare(cases, Path(args.output).expanduser().resolve())
+        if bool(args.writer_output) != bool(args.evaluator_output):
+            raise ValueError("生成评测包时必须同时提供 --writer-output 和 --evaluator-output")
+        if args.writer_output:
+            prepare(
+                cases,
+                Path(args.writer_output).expanduser(),
+                Path(args.evaluator_output).expanduser(),
+            )
     except (OSError, ValueError, json.JSONDecodeError) as error:
         print(f"错误：{error}", file=sys.stderr)
         return 1
-    action = "已生成" if args.output else "校验通过"
+    action = "已生成并分离" if args.writer_output else "校验通过"
     print(f"写作评测清单{action}：{len(cases)} 个任务，覆盖 {len({case['mode'] for case in cases})} 种模式")
     return 0
 

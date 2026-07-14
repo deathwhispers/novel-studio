@@ -6,6 +6,7 @@ import tempfile
 import unittest
 import json
 import importlib.util
+import os
 from pathlib import Path
 
 
@@ -108,6 +109,16 @@ class WorkflowTests(unittest.TestCase):
             self.assertNotIn("可选文件缺失", validation.stdout)
             self.assertNotIn("缺少连载驾驶舱", validation.stdout)
             self.assertFalse((Path(tmp) / "minimal" / "90-运行" / "连载驾驶舱.md").exists())
+            minimal_config = (Path(tmp) / "minimal" / "90-运行" / "项目配置.md").read_text(encoding="utf-8")
+            self.assertIn("模板档位：minimal", minimal_config)
+            self.assertIn("写作模式：探索起草", minimal_config)
+            self.assertFalse((Path(tmp) / "serial" / "20-大纲" / "升级阶梯.md").exists())
+
+            serial_cockpit = Path(tmp) / "serial" / "90-运行" / "连载驾驶舱.md"
+            serial_cockpit.unlink()
+            serial_validation = run_script("scripts/validate_novel_project.py", str(Path(tmp) / "serial"))
+            self.assertNotEqual(serial_validation.returncode, 0)
+            self.assertIn("serial 项目缺少核心文件", serial_validation.stdout)
 
             minimal_chapter = run_script(
                 "scripts/create_chapter.py", str(Path(tmp) / "minimal"),
@@ -168,6 +179,23 @@ class WorkflowTests(unittest.TestCase):
         self.assertNotIn("score", report)
         self.assertNotIn("grade", report)
         self.assertIn("disclaimer", report)
+        malformed = scanner.scan_text("---\ntitle: 未闭合\n正文仍然必须被扫描。")
+        self.assertGreater(malformed["metrics"]["chinese_chars"], 0)
+
+    def test_chapter_scanner_rejects_invalid_config(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            bad = Path(tmp) / "bad.json"
+            bad.write_text('{"max_modifier_ratio": "很多"}', encoding="utf-8")
+            project = Path(tmp) / "novel"
+            chapter_dir = project / "30-正文"
+            chapter_dir.mkdir(parents=True)
+            (chapter_dir / "第001章.md").write_text("门开了。雨落进来。", encoding="utf-8")
+            result = run_script(
+                "scripts/evaluate_chapter.py", str(project),
+                "--chapter", "第001章", "--config", str(bad),
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("必须是数字或 null", result.stderr)
 
     def test_build_context_pack_uses_previous_chapter_tail(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -181,23 +209,57 @@ class WorkflowTests(unittest.TestCase):
             )
             self.assertEqual(init.returncode, 0, init.stdout + init.stderr)
             previous = project / "30-正文" / "第一卷-初入江湖" / "第003章.md"
-            previous.write_text("# 第003章\n\n前文开头。\n\n钥匙落进井里。\n", encoding="utf-8")
+            previous.write_text(
+                "# 第003章\n\n## 正文\n\n前文开头。\n\n钥匙落进井里。\n\n"
+                "## 写后短记\n\n这段短记不能冒充正文结尾。\n",
+                encoding="utf-8",
+            )
             character = project / "10-设定" / "角色" / "沈砚.md"
             character.write_text("# 沈砚\n\n他从不轻易许诺。\n", encoding="utf-8")
             beat = project / "20-大纲" / "节拍卡" / "chapter-004.md"
             beat.write_text("# chapter-004\n\n沈砚来到井边寻找钥匙。\n", encoding="utf-8")
+            delta = project / "90-运行" / "章节增量" / "chapter-003.md"
+            delta.write_text("# chapter-003 状态增量\n\n- 关系变化：沈砚开始怀疑债主。\n", encoding="utf-8")
             output = project / "90-运行" / "context.md"
             result = run_script(
                 "scripts/build_context_pack.py", str(project),
-                "--chapter", "4", "--output", str(output),
+                "--chapter", "4", "--max-chars", "5000", "--output", str(output),
             )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             text = output.read_text(encoding="utf-8")
             self.assertIn("钥匙落进井里", text)
             self.assertIn("作品总表", text)
             self.assertIn("他从不轻易许诺", text)
+            self.assertIn("沈砚开始怀疑债主", text)
+            self.assertNotIn("这段短记不能冒充正文结尾", text)
             self.assertIn("写前最后确认", text)
             self.assertLess(text.index("本章节拍卡"), text.index("作品总表"))
+            self.assertLessEqual(len(text), 5000)
+
+    def test_context_pack_skips_placeholder_chapters_and_uses_task_entities(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp) / "novel"
+            init = run_script(
+                "skills/novel-project/scripts/init_novel_project.py",
+                "--output", str(project), "--title", "占位测试",
+                "--genre", "文学", "--premise", "旧屋相见", "--profile", "minimal",
+            )
+            self.assertEqual(init.returncode, 0, init.stdout + init.stderr)
+            chapter_dir = project / "30-正文" / "章节"
+            (chapter_dir / "第001章.md").write_text("# 第一章\n\n## 正文\n\n父亲把旧表放回抽屉。\n", encoding="utf-8")
+            (chapter_dir / "第002章.md").write_text("# 第二章\n\n当前状态：未起草\n\n## 正文\n", encoding="utf-8")
+            role = project / "10-设定" / "角色" / "周禾.md"
+            role.write_text("# 周禾\n\n她总先收起坏掉的东西。\n", encoding="utf-8")
+            output = project / "90-运行" / "context.md"
+            result = run_script(
+                "scripts/build_context_pack.py", str(project), "--chapter", "3",
+                "--task", "周禾回到旧屋", "--output", str(output),
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            text = output.read_text(encoding="utf-8")
+            self.assertIn("父亲把旧表放回抽屉", text)
+            self.assertIn("她总先收起坏掉的东西", text)
+            self.assertNotIn("当前状态：未起草", text)
 
     def test_writing_eval_manifest_and_blind_packets(self) -> None:
         manifest = ROOT / "skills/novel-writing/assets/evals/writing-cases.json"
@@ -206,14 +268,41 @@ class WorkflowTests(unittest.TestCase):
             "商业连载", "类型长篇", "文学叙事", "短篇", "探索起草",
         })
         with tempfile.TemporaryDirectory() as tmp:
-            result = run_script("scripts/prepare_writing_evals.py", "--output", tmp)
+            writer = Path(tmp) / "writer"
+            evaluator = Path(tmp) / "evaluator"
+            result = run_script(
+                "scripts/prepare_writing_evals.py",
+                "--writer-output", str(writer), "--evaluator-output", str(evaluator),
+            )
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             for case in cases:
-                prompt = (Path(tmp) / "prompts" / f"{case['id']}.md").read_text(encoding="utf-8")
-                scorecard = (Path(tmp) / "scorecards" / f"{case['id']}.md").read_text(encoding="utf-8")
+                prompt = (writer / f"{case['id']}.md").read_text(encoding="utf-8")
+                scorecard = (evaluator / f"{case['id']}.md").read_text(encoding="utf-8")
                 self.assertNotIn("失败信号", prompt)
                 self.assertNotIn(case["failure_signals"][0], prompt)
+                self.assertIn(case["must_preserve"][0], prompt)
                 self.assertIn(case["failure_signals"][0], scorecard)
+            stale = run_script(
+                "scripts/prepare_writing_evals.py",
+                "--writer-output", str(writer), "--evaluator-output", str(evaluator),
+            )
+            self.assertNotEqual(stale.returncode, 0)
+            self.assertIn("输出目录必须为空", stale.stderr)
+
+            nested = run_script(
+                "scripts/prepare_writing_evals.py",
+                "--writer-output", str(Path(tmp) / "nested"),
+                "--evaluator-output", str(Path(tmp) / "nested" / "evaluator"),
+            )
+            self.assertNotEqual(nested.returncode, 0)
+            self.assertIn("互不包含", nested.stderr)
+
+    def test_document_contracts_and_script_permissions(self) -> None:
+        for relative in ("README.md", "DEPLOYMENT.md"):
+            text = (ROOT / relative).read_text(encoding="utf-8")
+            self.assertNotIn("默认每章 2000-2500", text)
+            self.assertNotIn("强制执行完整", text)
+        self.assertTrue(os.access(ROOT / "scripts/evaluate_chapter.py", os.X_OK))
 
 
 if __name__ == "__main__":

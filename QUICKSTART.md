@@ -27,7 +27,8 @@ python3 skills/novel-project/scripts/init_novel_project.py \
   --title "书名" \
   --genre "题材" \
   --premise "一句话故事前提" \
-  --profile serial
+  --profile minimal \
+  --mode 探索起草
 ```
 
 模板档位：`minimal` 适合短篇或试写，`serial` 适合常规连载（默认），`longform` 适合多线、多人和超长篇。
@@ -50,6 +51,7 @@ python3 skills/novel-project/scripts/init_novel_project.py \
 ```bash
 python3 scripts/build_context_pack.py /path/to/my-novel \
   --chapter 12 \
+  --task "当前要写的人物、场景与意图" \
   --output /path/to/my-novel/90-运行/上下文包-chapter-012.md
 ```
 
@@ -96,7 +98,7 @@ my-novel/
 | novel-market | 市场研究、拆解爆款、商业化包装 |
 | novel-project | 项目初始化、立项定核、篇幅规划 |
 | novel-worldbuilding | 构建人物、世界规则、设定圣经 |
-| novel-outline | 大纲规划、卷纲建设、章节节拍卡 |
-| novel-writing | 写作流程、质量门禁、状态回写 |
-| novel-quality | 体检、修订、去AI味 |
+| novel-outline | 按模式规划作品、阶段、场景与线索结构 |
+| novel-writing | 正文优先起稿、轻量硬伤检查、状态增量 |
+| novel-quality | 证据型体检、最小修订、语言与形式校准 |
 | novel-feedback | 读者反馈追踪、趋势分析、驱动后续优化 |

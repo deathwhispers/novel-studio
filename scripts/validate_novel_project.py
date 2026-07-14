@@ -42,6 +42,7 @@ CORE_FILES = [
     "90-运行/当前进度.md",
     "90-运行/会话交接.md", "90-运行/决策记录.md",
 ]
+VALID_PROFILES = {"minimal", "serial", "longform"}
 
 OPTIONAL_FILES = [
     "05-市场/趋势笔记.md", "05-市场/对标书单.md",
@@ -78,6 +79,14 @@ def format_wc(n: int) -> str:
     if n >= 10000:
         return f"{n / 10000:.1f}万"
     return f"{n}"
+
+
+def read_project_profile(project_dir: Path) -> str | None:
+    config = project_dir / "90-运行" / "项目配置.md"
+    if not config.is_file():
+        return None
+    match = re.search(r"^- 模板档位：\s*(\S+)\s*$", config.read_text(encoding="utf-8"), re.MULTILINE)
+    return match.group(1) if match and match.group(1) in VALID_PROFILES else None
 
 
 def scan_chapters(project_dir: Path) -> list[dict]:
@@ -435,6 +444,11 @@ def main() -> int:
     warnings = []
     info = []
     consistency_issues = []
+    profile = read_project_profile(project_dir)
+    if profile:
+        info.append(f"模板档位：{profile}")
+    else:
+        info.append("未记录模板档位；按兼容模式校验")
 
     # 1. 检查目录
     for d in REQUIRED_DIRS:
@@ -486,6 +500,8 @@ def main() -> int:
             warnings.append("连载驾驶舱.md 未填写当前写到位置")
         if "风险" not in cockpit_text:
             warnings.append("连载驾驶舱.md 未填写风险项")
+    elif profile in {"serial", "longform"}:
+        errors.append(f"{profile} 项目缺少核心文件：90-运行/连载驾驶舱.md")
 
     # 7. 检查回收总账
     ledger = project_dir / "20-大纲" / "回收" / "回收总账.md"

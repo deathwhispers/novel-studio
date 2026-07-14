@@ -38,7 +38,8 @@ python3 scripts/init_novel_project.py \
   --title "<novel-title>" \
   --genre "<genre>" \
   --premise "<one-line-premise>" \
-  --profile serial
+  --profile minimal \
+  --mode 探索起草
 ```
 
 选择最小资料集用 `minimal`，常规连载用 `serial`，百万字、多主角或复杂势力项目用 `longform`。模板档位不等于写作模式；文学、短篇和探索项目通常从 `minimal` 开始。

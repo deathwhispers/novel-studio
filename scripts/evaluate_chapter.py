@@ -74,9 +74,9 @@ def count_chinese(text: str) -> int:
 def body_text(text: str) -> str:
     """排除 Markdown 标题和 YAML frontmatter，减少元数据误报。"""
     if text.startswith("---\n"):
-        _, separator, text = text[4:].partition("\n---\n")
-        if not separator:
-            text = text
+        _, separator, remainder = text[4:].partition("\n---\n")
+        if separator:
+            text = remainder
     return "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
 
 
@@ -107,10 +107,25 @@ def load_thresholds(profile: str, config_path: str | None) -> dict[str, float | 
     thresholds = dict(PROFILE_DEFAULTS[profile])
     if config_path:
         custom = json.loads(Path(config_path).read_text(encoding="utf-8"))
+        if not isinstance(custom, dict):
+            raise ValueError("扫描配置必须是 JSON 对象")
         unknown = sorted(set(custom) - set(thresholds))
         if unknown:
             raise ValueError(f"未知配置项: {', '.join(unknown)}")
         thresholds.update(custom)
+    for key, value in thresholds.items():
+        if value is None:
+            continue
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise ValueError(f"配置项 {key} 必须是数字或 null")
+        if key.endswith("_ratio") and not 0 <= float(value) <= 1:
+            raise ValueError(f"配置项 {key} 必须在 0..1 之间")
+        if not key.endswith("_ratio") and float(value) <= 0:
+            raise ValueError(f"配置项 {key} 必须大于 0")
+    minimum = thresholds.get("min_chars")
+    maximum = thresholds.get("max_chars")
+    if minimum is not None and maximum is not None and float(minimum) > float(maximum):
+        raise ValueError("min_chars 不能大于 max_chars")
     return thresholds
 
 
@@ -157,7 +172,7 @@ def scan_text(
         add(
             "explain_density",
             f"解释性句式约 {explain_per_1000:.1f} 次/千字；逐处判断是否真的替代了行动或潜台词。",
-            line_evidence(text, EXPLAIN_PATTERNS),
+            line_evidence(clean, EXPLAIN_PATTERNS),
         )
 
     max_modifier = limits.get("max_modifier_ratio")
