@@ -89,7 +89,7 @@ description: "中文小说正文写作 skill。根据商业连载、类型长篇
 
 ### 第四步：轻量写后检查
 
-检查正文是否忠于写作模式、人物和上下文。软问题先标记，不自动覆盖作者选择；硬伤优先做最小修复。读取 `references/写后自检卡.md`。
+检查正文是否忠于写作模式、人物和上下文。软问题先标记，不自动覆盖作者选择；硬伤优先做最小修复。读取 `references/写后自检卡.md`。这是交付前的轻量自检，不展开 `novel-quality` 的章节体检；精修、发布前检查或跨章证据问题转 `novel-quality`。
 
 ### 第五步：状态回写
 
@@ -122,7 +122,7 @@ description: "中文小说正文写作 skill。根据商业连载、类型长篇
 - 写前检查表：`references/写前检查表.md`
 - **写中即时检查卡（防漂核心）**：`references/写中即时检查卡.md`
 - **写中急救指南（5 种常见问题）**：`references/写中急救指南.md`
-- 写后自检卡：`references/写后自检卡.md`
+- 写后自检卡：`references/写后自检卡.md`（交付前轻量硬门禁检查，不做深度章节体检）
 - 章节质量标准：`references/章节质量标准.md`
 - 连载续写卡：`references/连载续写卡.md`
 - 章节字数控制卡：`references/章节字数控制卡.md`（写前分配、写后校验）
@@ -153,4 +153,5 @@ description: "中文小说正文写作 skill。根据商业连载、类型长篇
 
 **跨 skill 参考**：
 - 文风快速自检卡：`../novel-quality/references/文风快速自检卡.md`（写前锁 voice、写后验 voice）
+- 章节体检模板：`../novel-quality/references/章节体检模板.md`（仅精修/发布前检查时加载）
 - Voice 证据审读：`references/voice证据审读.md`（至少两份作者认可原文；按证据区分保持、合理变化与无依据漂移，不评分、不自动改写）

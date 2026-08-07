@@ -49,6 +49,7 @@
 ```text
 my-novel/
 ├── 00-书核/作品总表.md
+├── 05-市场/（按需，仅商业分析时创建）
 ├── 10-设定/
 ├── 20-大纲/
 ├── 30-正文/
@@ -56,7 +57,7 @@ my-novel/
 └── 90-运行/当前进度.md
 ```
 
-这是最小参考，不是必须逐项复制的模板。详细目录约定、创建原则与关联见 `skills/novel-project/references/工作区规范.md`。`skills/novel-project/assets/examples/` 提供片段级范例，用来理解每个文件应该承载什么信息，而不是完整工作区脚手架。`35-参考片段/` 是用户自填的段落素材目录，使用规则见 `skills/novel-writing/references/段落参考使用卡.md`。
+这是最小参考，不是必须逐项复制的模板。`05-市场/` 只在用户做市场扫描、拆解或商业化包装时由 `novel-market` 按需创建，不作为新项目默认结构。详细目录约定、创建原则与关联见 `skills/novel-project/references/工作区规范.md`。`skills/novel-project/assets/examples/` 提供片段级范例，用来理解每个文件应该承载什么信息，而不是完整工作区脚手架。`35-参考片段/` 是用户自填的段落素材目录，使用规则见 `skills/novel-writing/references/段落参考使用卡.md`。
 
 `00-书核/` 默认只保留 `作品总表.md`，立项、读者承诺和续集衔接按需作为其中的分区，不单独建文件。
 

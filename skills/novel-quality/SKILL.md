@@ -94,7 +94,7 @@ description: "中文小说质量检查与修订 skill。根据写作模式，用
 
 需要更详细的说明时，读取以下参考文件：
 
-- 章节体检模板：`references/章节体检模板.md`
+- 章节体检模板：`references/章节体检模板.md`（Step 5 证据型体检；写后轻量自检见 `../novel-writing/references/写后自检卡.md`）
 - 前后照应检查清单：`references/前后照应检查清单.md`
 - 连续性检查清单：`references/连续性检查清单.md`
 - 卷体检模板：`references/卷体检模板.md`
@@ -112,7 +112,8 @@ description: "中文小说质量检查与修订 skill。根据写作模式，用
 - 回收修补模板：`references/回收修补模板.md`
 - 细节修补模板：`references/细节修补模板.md`
 - 完本与中期审视：`references/完本检查清单.md`、`references/中期审视模板.md`
-- 失败案例与模板化语言对照：`references/失败案例库.md`、`references/常见AI味示例.md`
+- 失败案例库：`references/失败案例库.md`
+- AI 味模式与示例：`references/AI味目录.md`
 
 ## 快速诊断（5 分钟体检）
 
