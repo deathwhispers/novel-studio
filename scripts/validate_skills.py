@@ -35,18 +35,31 @@ def parse_frontmatter(skill_file: Path) -> dict[str, str]:
     return data
 
 
-def resolve_resource(path_str: str, skill_dir: Path) -> Path | None:
-    """Resolve bundled resource references while ignoring novel workspace outputs."""
+def resolve_resource(path_str: str, skill_dir: Path, current_file: Path | None = None) -> Path | None:
+    """Resolve bundled resource references relative to the current markdown file."""
     path_str = path_str.strip()
     if not path_str.endswith(RESOURCE_SUFFIXES) or any(c in path_str for c in "*{}<>"):
         return None
     if path_str.startswith(("http://", "https://", "$")):
         return None
-    if path_str.startswith(("references/", "assets/", "scripts/", "agents/", "../")):
-        return (skill_dir / path_str).resolve()
+    if path_str.startswith(("references/", "assets/", "scripts/", "agents/")):
+        base = skill_dir if current_file is None or current_file == skill_dir / "SKILL.md" else current_file.parent
+        return (base / path_str).resolve()
+    if path_str.startswith("../"):
+        base = skill_dir if current_file is None else current_file.parent
+        return (base / path_str).resolve()
     if path_str.startswith("novel-"):
         return (SKILLS_DIR / path_str).resolve()
-    return None
+    if path_str.startswith("./"):
+        base = skill_dir if current_file is None else current_file.parent
+        return (base / path_str).resolve()
+    if "/" in path_str:
+        return None
+    if current_file is None or current_file == skill_dir / "SKILL.md":
+        candidate = skill_dir / "references" / path_str
+    else:
+        candidate = current_file.parent / path_str
+    return candidate.resolve() if candidate.exists() else None
 
 
 def validate_openai_yaml(agent_file: Path, skill_name: str) -> list[str]:
@@ -95,12 +108,19 @@ def validate_skill(skill_dir: Path) -> tuple[list[str], list[str]]:
     if len(text.splitlines()) > 500:
         errors.append("SKILL.md exceeds 500 lines")
     for path_str in BACKTICK_RE.findall(text):
-        resource = resolve_resource(path_str, skill_dir)
+        resource = resolve_resource(path_str, skill_dir, skill_file)
         if resource is not None and not resource.exists():
             errors.append(f"referenced resource not found: {path_str}")
 
     for ref in sorted((skill_dir / "references").rglob("*.md")) if (skill_dir / "references").exists() else []:
-        lines = ref.read_text(encoding="utf-8").splitlines()
+        ref_text = ref.read_text(encoding="utf-8")
+        lines = ref_text.splitlines()
+        for path_str in BACKTICK_RE.findall(ref_text):
+            resource = resolve_resource(path_str, skill_dir, ref)
+            if resource is not None and not resource.exists():
+                errors.append(
+                    f"{ref.relative_to(skill_dir)}: referenced resource not found: {path_str}"
+                )
         if len(lines) > 100 and not any("目录" in line or "Contents" in line for line in lines[:40]):
             warnings.append(f"long reference has no opening TOC: {ref.relative_to(skill_dir)} ({len(lines)} lines)")
     return errors, warnings

@@ -100,8 +100,8 @@ description: "中文小说质量检查与修订 skill。根据写作模式，用
 - 卷体检模板：`references/卷体检模板.md`
 - 长线漏线扫描：`references/长线扫描模板.md`
 - 追读弱点排查：`references/追读排查.md`
-- 模板化语言风险索引（兼容旧文件名）：`references/AI味目录.md`
-- 语言与形式修订动作（兼容旧文件名）：`references/去味手法.md`
+- 模板化语言风险索引：`references/AI味目录.md`
+- 语言与形式修订动作：`references/去味手法.md`
 - 修订阶梯：`references/修订阶梯.md`
 - **叙事质量审计（找"够不够好"）**：`references/叙事质量审计.md`
 - **文风快速自检卡（voice 漂移专项）**：`references/文风快速自检卡.md`
