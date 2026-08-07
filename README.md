@@ -56,7 +56,7 @@ my-novel/
 └── 90-运行/当前进度.md
 ```
 
-这是最小参考，不是必须逐项复制的模板。`skills/novel-project/assets/examples/` 提供片段级范例，用来理解每个文件应该承载什么信息，而不是完整工作区脚手架。`35-参考片段/` 是用户自填的段落素材目录，可按用途分子目录，写作时由 `novel-writing` 按场景读取。
+这是最小参考，不是必须逐项复制的模板。详细目录约定、创建原则与关联见 `skills/novel-project/references/工作区规范.md`。`skills/novel-project/assets/examples/` 提供片段级范例，用来理解每个文件应该承载什么信息，而不是完整工作区脚手架。`35-参考片段/` 是用户自填的段落素材目录，使用规则见 `skills/novel-writing/references/段落参考使用卡.md`。
 
 ## 验证
 

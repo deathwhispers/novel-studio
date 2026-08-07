@@ -178,7 +178,7 @@ def check_duplicate_references(warnings: list[str]) -> None:
 
 
 def check_legacy_references(errors: list[str]) -> None:
-    """Prevent old installer, generator, eval, and template paths from creeping back."""
+    """Prevent old installer, generator, eval, template, and retired workspace paths from creeping back."""
     legacy_paths = (
         "scripts/init_novel_project.py",
         "assets/novel-project-template",
@@ -194,6 +194,8 @@ def check_legacy_references(errors: list[str]) -> None:
         "assets/evals/",
         "QUICKSTART.md",
         "DEPLOYMENT.md",
+        "40-修订",
+        "50-归档",
     )
     for file in sorted(ROOT.rglob("*.md")):
         if ".git" in file.parts:
