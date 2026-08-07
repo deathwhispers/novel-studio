@@ -196,6 +196,9 @@ def check_legacy_references(errors: list[str]) -> None:
         "DEPLOYMENT.md",
         "40-修订",
         "50-归档",
+        "00-书核/立项单.md",
+        "00-书核/读者承诺.md",
+        "00-书核/长线承诺.md",
     )
     for file in sorted(ROOT.rglob("*.md")):
         if ".git" in file.parts:
