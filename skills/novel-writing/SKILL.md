@@ -36,6 +36,7 @@ description: "中文小说正文写作 skill。根据商业连载、类型长篇
 2. 上下文充分时直接继续；只有缺失信息会改变人物重大选择、核心设定或整章方向时才询问。
 3. 组装最小上下文：当前写作任务、最近正文、相关人物/地点/物件、必要 canon、voice 样本。
 4. 无法确认的设定列入待确认，不补写成既定事实。
+5. 当前场景匹配用户提供的段落参考时，读取 `35-参考片段/` 中对应文件，按 `references/段落参考使用卡.md` 使用。
 
 ### 第二步：起稿执行
 
@@ -44,7 +45,7 @@ description: "中文小说正文写作 skill。根据商业连载、类型长篇
 1. 先确定当前视角如何感知这一刻。
 2. 确定人物想靠近、逃避、理解或维持什么。
 3. 让压力迫使人物行动、拒绝行动或重新理解局面。
-4. 让细节、对话和节奏服从人物与场景，而不是服从技法清单。
+4. 让细节、对话和节奏服从人物与场景，而不是服从技法清单；段落参考只校准手法，不逐句照搬。
 5. 按写作模式决定结尾：推动、余震、回响、留白或暂时停顿。
 
 **场景边界检查**：
@@ -117,7 +118,7 @@ description: "中文小说正文写作 skill。根据商业连载、类型长篇
 **写作流程**：
 - 写作模式契约：`references/写作模式契约.md`
 - 最小上下文包：`references/上下文包.md`
-- 上下文包生成脚本：`../../scripts/build_context_pack.py`（长篇续写时优先运行，再人工精简）
+- 段落参考使用卡：`references/段落参考使用卡.md`
 - 写前检查表：`references/写前检查表.md`
 - **写中即时检查卡（防漂核心）**：`references/写中即时检查卡.md`
 - **写中急救指南（5 种常见问题）**：`references/写中急救指南.md`
@@ -149,10 +150,6 @@ description: "中文小说正文写作 skill。根据商业连载、类型长篇
 - **写后 prompt 库**：`references/AI-prompts/写后-prompt.md`（体检、语言与形式复核、连贯性检查）
 - **特殊场景 prompt**：`references/AI-prompts/特殊场景-prompt.md`（角色扮演、批量生成、风格学习、灵感）
 - **调用样例**：`assets/examples/调用样例.md`
-
-**能力评测资源**（只在验证 skill 行为时使用，不参与正文起稿）：
-- 单轮能力案例：`assets/evals/writing-cases.json`
-- 多轮连续性压力序列：`assets/evals/writing-sequences.json`（用 `../../scripts/prepare_writing_sequences.py` 生成隔离的 writer/evaluator 包）
 
 **跨 skill 参考**：
 - 文风快速自检卡：`../novel-quality/references/文风快速自检卡.md`（写前锁 voice、写后验 voice）

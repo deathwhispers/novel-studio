@@ -13,8 +13,6 @@ jobs:
         with:
           python-version: "3.11"
       - name: Compile Python scripts
-        run: python -m compileall -q scripts skills/novel-project/scripts tests
+        run: python -m compileall -q scripts
       - name: Validate skills
         run: python scripts/validate_skills.py
-      - name: Run workflow tests
-        run: python -m unittest discover -s tests -v

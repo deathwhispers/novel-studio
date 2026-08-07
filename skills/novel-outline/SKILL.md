@@ -71,7 +71,7 @@ description: "中文小说结构与大纲规划 skill。根据商业连载、类
 **商业连载 / 类型长篇按需**：
 - 渐进式长篇规划：`references/大纲阶梯.md`
 - 卷纲：`references/卷纲模板.md`
-- 章节节拍：`references/节拍卡模板.md`
+- 章节写作支点：`references/节拍卡模板.md`（范例片段，不要求填满固定字段）
 - 拆章：`references/卷纲拆章指引.md`
 - 卷级节奏：`references/卷级节奏型模板.md`
 - 追读钩子：`references/追读钩子设计.md`（仅明确追读目标）

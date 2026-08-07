@@ -1,6 +1,16 @@
 # novel-skills
 
-面向中文小说创作的写作 skill 套件。核心目标是帮助作者更稳定地完成正文、保持人物与连续性，并用可验证证据提升写作质量。
+面向中文小说创作的写作 skill 套件。核心目标是帮助作者更稳定地完成正文、保持人物与连续性，并用原文证据提升写作质量。
+
+## 安装
+
+这是一个标准 skills 项目，不需要安装脚本或插件。
+
+1. 下载或克隆本项目。
+2. 把 `skills/` 下的每个技能目录放进你的 agent 的 skills 目录，例如 `~/.codex/skills/`。
+3. 刷新技能列表后即可按技能名调用。
+
+项目不生成可执行安装器，也不要求把仓库放进特定路径。技能目录本身自包含，复制到目标 skills 目录即可加载。
 
 ## 核心原则
 
@@ -10,30 +20,6 @@
 - **审美目标可选择**：钩子、高潮、字数、对话比例和技法不作为通用质量分数。
 - **渐进披露**：只加载当前任务需要的 skill 与参考资料。
 - **状态增量**：逐章记录真实变化，周期性合并总账，减少维护对创作的打断。
-
-## 快速开始
-
-查看 [QUICKSTART.md](QUICKSTART.md)。
-
-初始化示例：
-
-```bash
-python3 skills/novel-project/scripts/init_novel_project.py \
-  --output /path/to/my-novel \
-  --title "书名" \
-  --genre "题材" \
-  --premise "一句话故事前提" \
-  --profile minimal \
-  --mode 探索起草
-```
-
-模板档位控制资料脚手架：
-
-- `minimal`：短篇、文学叙事、试写和轻量项目。
-- `serial`：常规项目资料深度。
-- `longform`：复杂势力、多主角或超长篇。
-
-模板档位不等于写作模式。例如文学长篇可以使用 `longform` 资料档位，同时保持“文学叙事”质量目标；这时不会生成连载驾驶舱、留存表和首卷发射台。商业连载模式会自动启用这组工具；其他模式如需分章发布管理，显式传入 `--enable-serial-tools`。启停状态会写入 `90-运行/项目配置.md`。
 
 ## 八个核心技能
 
@@ -52,60 +38,30 @@ python3 skills/novel-project/scripts/init_novel_project.py \
 
 - 只有一个人物或场景火花：直接使用 `novel-writing` 探索起草。
 - 需要规划短篇或长篇结构：使用 `novel-outline` 选择相应深度。
-- 续写长篇：先生成最小上下文包，再进入 `novel-writing`。
+- 续写长篇：先手写或复用最小上下文包，再进入 `novel-writing`。
 - 只想审查：使用 `novel-quality`，默认不修改正文。
 - 明确需要市场与平台适配：再使用 `novel-market`。
 
 不存在必须完整走完的固定流水线。
 
-## 工具
-
-生成续写上下文包：
-
-```bash
-python3 scripts/build_context_pack.py /path/to/my-novel \
-  --chapter 12 \
-  --task "沈砚回到旧屋，与妹妹谈昨夜的债主" \
-  --output /path/to/my-novel/90-运行/context-chapter-012.md
-```
-
-扫描表层文本风险（不输出文学质量综合分）：
-
-```bash
-python3 scripts/evaluate_chapter.py /path/to/my-novel \
-  --chapter 第012章 \
-  --profile auto
-```
-
-生成隔离的盲评包：
-
-```bash
-python3 scripts/prepare_writing_evals.py \
-  --writer-output /tmp/novel-writer-bundle \
-  --evaluator-output /tmp/novel-evaluator-bundle
-```
-
-两个目录应分别交给写作者和评审者，不能让写作者看到评审包中的隐藏失败信号。
-
-## 项目结构
+## 项目结构参考
 
 ```text
 my-novel/
-├── 00-书核/       # 写作模式、意图与作品承诺
-├── 05-市场/       # 明确需要商业研究时使用
-├── 10-设定/       # 人物、世界、hard canon 与 voice
-├── 20-大纲/       # 作品、阶段、写作支点、因果与线索
-├── 30-正文/       # 正文
-├── 40-修订/       # 深度体检或实际修订记录
-├── 50-归档/
-└── 90-运行/       # 当前进度、项目配置、状态增量与训练日志
+├── 00-书核/作品总表.md
+├── 10-设定/
+├── 20-大纲/
+├── 30-正文/
+├── 35-参考片段/
+└── 90-运行/当前进度.md
 ```
+
+这是最小参考，不是必须逐项复制的模板。`skills/novel-project/assets/examples/` 提供片段级范例，用来理解每个文件应该承载什么信息，而不是完整工作区脚手架。`35-参考片段/` 是用户自填的段落素材目录，可按用途分子目录，写作时由 `novel-writing` 按场景读取。
 
 ## 验证
 
 ```bash
 python3 scripts/validate_skills.py
-python3 -m unittest discover -s tests -v
 ```
 
 ## 参考来源

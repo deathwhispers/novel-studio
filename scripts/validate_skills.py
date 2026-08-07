@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import os
 import re
 import sys
 from pathlib import Path
@@ -51,9 +50,10 @@ def resolve_resource(path_str: str, skill_dir: Path) -> Path | None:
 
 
 def validate_openai_yaml(agent_file: Path, skill_name: str) -> list[str]:
+    """Validate UI metadata when present; agents are optional for standard skills."""
     errors: list[str] = []
     if not agent_file.exists():
-        return ["missing agents/openai.yaml"]
+        return []
     text = agent_file.read_text(encoding="utf-8")
     for key in ("display_name:", "short_description:", "default_prompt:"):
         if key not in text:
@@ -123,37 +123,25 @@ def check_routing(errors: list[str]) -> None:
                 errors.append(f"{file.relative_to(ROOT)} does not route {name}")
 
 
-def check_template(errors: list[str]) -> None:
-    template = SKILLS_DIR / "novel-project" / "assets" / "novel-project-template"
-    init_script = SKILLS_DIR / "novel-project" / "scripts" / "init_novel_project.py"
-    if not init_script.exists():
-        errors.append("novel-project initialization script not found")
+def check_examples(errors: list[str]) -> None:
+    """Keep the project skill's assets as minimal example fragments."""
+    examples = SKILLS_DIR / "novel-project" / "assets" / "examples"
     required = [
         "00-书核/作品总表.md",
-        "00-书核/立项单.md",
-        "10-设定/硬设定.md",
-        "10-设定/文风指南.md",
-        "20-大纲/全书总纲.md",
+        "10-设定/角色/主角.md",
         "20-大纲/分卷/volume-01.md",
-        "20-大纲/节拍卡/节拍卡通用模板.md",
-        "30-正文/第一卷-初入江湖/第001章.md",
-        "40-修订/体检报告/说明.md",
-        "50-归档/说明.md",
+        "30-正文/第001章-范例.md",
         "90-运行/当前进度.md",
-        "90-运行/决策记录.md",
-        "90-运行/项目配置.md",
     ]
     for rel in required:
-        if not (template / rel).exists():
-            errors.append(f"template file not found: {rel}")
+        if not (examples / rel).exists():
+            errors.append(f"novel-project example fragment not found: {rel}")
 
 
 def check_writing_contract(errors: list[str]) -> None:
     """Prevent universal entry points from reintroducing retired one-mode rules."""
     files = [
         ROOT / "README.md",
-        ROOT / "QUICKSTART.md",
-        ROOT / "DEPLOYMENT.md",
         SKILLS_DIR / "novel-studio" / "SKILL.md",
         SKILLS_DIR / "novel-project" / "SKILL.md",
         SKILLS_DIR / "novel-outline" / "SKILL.md",
@@ -176,14 +164,6 @@ def check_writing_contract(errors: list[str]) -> None:
                     f"{file.relative_to(ROOT)} -> {phrase}"
                 )
 
-    for relative in (
-        "scripts/build_context_pack.py",
-        "scripts/evaluate_chapter.py",
-        "scripts/prepare_writing_evals.py",
-    ):
-        if not os.access(ROOT / relative, os.X_OK):
-            errors.append(f"script is not executable: {relative}")
-
 
 def check_duplicate_references(warnings: list[str]) -> None:
     seen: dict[bytes, Path] = {}
@@ -195,6 +175,35 @@ def check_duplicate_references(warnings: list[str]) -> None:
             )
         else:
             seen[content] = file
+
+
+def check_legacy_references(errors: list[str]) -> None:
+    """Prevent old installer, generator, eval, and template paths from creeping back."""
+    legacy_paths = (
+        "scripts/init_novel_project.py",
+        "assets/novel-project-template",
+        "scripts/build_context_pack.py",
+        "scripts/evaluate_chapter.py",
+        "scripts/extract_index.py",
+        "scripts/validate_novel_project.py",
+        "scripts/prepare_writing_evals.py",
+        "scripts/prepare_writing_sequences.py",
+        "scripts/prepare_revision_evals.py",
+        "scripts/prepare_revision_pair.py",
+        "scripts/prepare_voice_review.py",
+        "assets/evals/",
+        "QUICKSTART.md",
+        "DEPLOYMENT.md",
+    )
+    for file in sorted(ROOT.rglob("*.md")):
+        if ".git" in file.parts:
+            continue
+        text = file.read_text(encoding="utf-8")
+        for legacy in legacy_paths:
+            if legacy in text:
+                errors.append(
+                    f"{file.relative_to(ROOT)} references removed path: {legacy}"
+                )
 
 
 def main() -> int:
@@ -209,8 +218,9 @@ def main() -> int:
         print(f"  [{'PASS' if not skill_errors else 'FAIL'}] {skill_dir.name}")
 
     check_routing(errors)
-    check_template(errors)
+    check_examples(errors)
     check_writing_contract(errors)
+    check_legacy_references(errors)
     check_duplicate_references(warnings)
 
     if warnings:
