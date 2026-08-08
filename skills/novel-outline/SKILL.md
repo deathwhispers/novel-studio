@@ -13,7 +13,7 @@ description: "中文小说结构与大纲规划 skill。根据商业连载、类
 
 ### 第一步：选择模式与规划深度
 
-读取 `../novel-writing/references/写作模式契约.md`，从项目和用户意图判断模式：
+读取 novel-writing 附录「写作模式契约」（novel-writing SKILL.md 末尾），从项目和用户意图判断模式：
 
 | 模式 | 默认规划单位 | 优先解决 | 不默认要求 |
 |---|---|---|---|
