@@ -9,9 +9,7 @@ description: "Canon 唯一所有者。世界规则、人物设定、硬约束的
 ## 在流水线中的位置
 
 ```
-Orchestrator → Architect → StateManager（初始化时）
-                ↑
-         Director/ScenePlanner/Writer（通过 Orchestrator 中转查询 canon）
+详见 workflows/pipeline.md。Architect 出现在初始化项目和世界观构建两条流水线。
 ```
 
 ## 角色定义

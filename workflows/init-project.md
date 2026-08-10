@@ -8,36 +8,27 @@ description: "小说项目初始化流程。Orchestrator 多轮确认 → Archit
 
 ## 状态机
 
-```
-用户: /novel init
-            │
-            ▼
-    Orchestrator: 多轮确认
-            │
-            ├── 品类（番茄系统爽文/玄幻/都市/言情/悬疑/其它）
-            ├── 主角定位（身份/初始处境/核心优势）
-            ├── 篇幅（短/中/长/超长）
-            └── 模式（商业连载/类型长篇/文学叙事/短篇/探索起草）
-            │
-            ▼
-    Architect: 创建 core/ + setting/ 骨架
-            │
-            ├── 读取品类配方 recipe.md（如选择了品类）
-            ├── 生成 作品总表.md + 硬设定.yaml + 主角档案
-            └── （可选）按品类骨架初始化力量体系/世界观
-            │
-            ▼
-    StateManager: 初始化 state/
-            │
-            ├── 创建 progress.yaml（chapter=0, status=COMPLETED）
-            ├── 创建 author.yaml（空模板）
-            ├── 创建 reader.yaml（空模板）
-            ├── 创建 character.yaml（从 Architect 的角色档案填充）
-            ├── 创建 foreshadow.yaml（空模板）
-            └── 创建 agent-log.yaml（首条：project initialized）
-            │
-            ▼
-    Orchestrator: 报告用户 → 项目就绪
+```mermaid
+flowchart TD
+    User["👤 User: /novel init"]
+    Orchestrator["🎯 Orchestrator<br/>多轮确认"]
+
+    User --> Orchestrator
+
+    Orchestrator --> Q1["品类选择<br/>番茄系统爽文 / 玄幻 / 都市<br/>言情 / 悬疑 / 其它"]
+    Orchestrator --> Q2["主角定位<br/>身份 / 初始处境 / 核心优势"]
+    Orchestrator --> Q3["篇幅 + 模式<br/>短/中/长/超长<br/>商业连载 / 类型长篇"]
+
+    Q1 --> Architect
+    Q2 --> Architect
+    Q3 --> Architect
+
+    Architect["🏗️ Architect<br/><b>创建 core/ + setting/ 骨架</b><br/>• 读取品类配方<br/>• 生成 作品总表 + 硬设定 + 主角档案<br/>• 初始化力量体系/世界观"]
+    StateManager["📋 StateManager<br/><b>初始化 state/</b><br/>• progress.yaml<br/>• author / reader / character<br/>• foreshadow / agent-log"]
+    Done["✅ 项目就绪"]
+
+    Architect --> StateManager
+    StateManager --> Done
 ```
 
 ## 详细步骤

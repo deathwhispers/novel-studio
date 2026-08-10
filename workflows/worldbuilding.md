@@ -8,19 +8,29 @@ description: "世界观构建流程。扩展设定、添加角色、完善力量
 
 ## 状态机
 
-```
-用户: /novel world
-            │
-            ▼
-    Orchestrator: 确认构建范围
-            │
-            ├── 添加角色 → Architect(角色档案)
-            ├── 完善力量体系 → Architect(力量体系)
-            ├── 扩展世界观 → Architect(地理/势力/时间线)
-            └── 修复设定冲突 → Architect(冲突检测+修复)
-            │
-            ▼
-    StateManager: 同步 character.yaml（如有角色变化）
+```mermaid
+flowchart TD
+    User["👤 User: /novel world"]
+    Orchestrator["🎯 Orchestrator<br/>确认构建范围"]
+
+    User --> Orchestrator
+
+    Orchestrator --> AddChar["添加角色"]
+    Orchestrator --> PowerSys["完善力量体系"]
+    Orchestrator --> WorldExp["扩展世界观"]
+    Orchestrator --> FixConflict["修复设定冲突"]
+
+    AddChar --> Architect
+    PowerSys --> Architect
+    WorldExp --> Architect
+    FixConflict --> Architect
+
+    Architect["🏗️ Architect<br/>创建/更新 canon 文件"]
+    StateManager["📋 StateManager<br/>同步 character.yaml<br/>更新 agent-log"]
+    Done["✅ 报告用户"]
+
+    Architect --> StateManager
+    StateManager --> Done
 ```
 
 ## 构建范围

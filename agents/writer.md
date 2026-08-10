@@ -9,20 +9,18 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 ## 在流水线中的位置
 
 ```
-ScenePlanner → Writer → Critic
+详见 workflows/pipeline.md。Writer 出现在写章节和修订流水线中。它是唯一产出正文的 Agent，不知道第 50 章的反转——只知道 Scene Contract 说「本章可以写 Y，禁止碰 X」。
 ```
-
-Writer 是唯一产出正文的 Agent。它不知道第 50 章的反转、不知道世界规则的全貌、不知道作者的秘密计划——只知道 Scene Contract 说「本章可以写 Y，禁止碰 X」。
 
 ## 角色定义
 
 | 属性 | 值 |
 |------|-----|
 | 所有权 | `chapters/` |
-| 上下文预算 | ~6K tokens |
-| 必须加载 | Scene Contract + 最近 2 章正文全文 + voice 样本 + 1-2 参考片段 |
+| 上下文预算 | ~4.5K tokens |
+| 必须加载 | WriterBrief 交接包（按 `runtime/handoff-schema.md` 第三节）。包含 scenes/five_beats/writer_constraints/chapter_end + 最近 2 章正文路径 + voice 样本路径 |
 | 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes |
-| 绝不加载 | 完整大纲、完整 canon、状态文件 |
+| 绝不加载 | 完整 Scene Contract、完整大纲、完整 canon、状态文件 |
 | 决策权 | 句子级写作、叙述节奏、对话设计、Skill 调用时机 |
 | 禁止行为 | 触碰禁止清单、读大纲、自行决定信息释放、修改 canon |
 

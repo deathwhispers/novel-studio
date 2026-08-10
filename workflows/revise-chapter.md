@@ -8,16 +8,17 @@ description: "章节修订流程。根据修订范围跳过部分阶段，目标
 
 ## 状态机
 
-```
-用户: /novel revise <chapter>
-            │
-            ▼
-    Orchestrator: 确认修订范围
-            │
-            ├── 全文重写 → 完整 write-chapter 流程
-            ├── 场景重设 → ScenePlanner → Writer → Critic → StateManager
-            ├── 局部修复 → Writer(限制范围) → Critic → StateManager
-            └── 仅去味   → Writer(仅修AI味) → Critic(Style Checker only) → StateManager
+```mermaid
+flowchart TD
+    User["👤 User: /novel revise N"]
+    Orchestrator["🎯 Orchestrator<br/>确认修订范围"]
+
+    User --> Orchestrator
+
+    Orchestrator -->|"全文重写"| Full["完整 write-chapter 流程<br/>Director → ScenePlanner →<br/>Writer → Critic → StateManager"]
+    Orchestrator -->|"场景重设"| SceneReset["跳过 Director<br/>ScenePlanner → Writer →<br/>Critic → StateManager"]
+    Orchestrator -->|"局部修复"| LocalFix["跳过 Director + ScenePlanner<br/>Writer（限制范围）→<br/>Critic → StateManager"]
+    Orchestrator -->|"仅去味"| DeFlavor["跳过 Director + ScenePlanner<br/>Writer（仅修AI味）→<br/>Critic（仅 Style Checker）→<br/>StateManager"]
 ```
 
 ## 修订范围判断
@@ -35,31 +36,25 @@ Orchestrator 通过多轮确认判断修订范围：
 
 ### 全文重写
 
+```mermaid
+flowchart LR
+    Director --> ScenePlanner --> Writer --> Critic --> StateManager
 ```
-Director → ScenePlanner → Writer → Critic → StateManager
+
 （等同于 write-chapter，不优化）
-```
 
 ### 场景重设
 
-```
-ScenePlanner（重新设计 Scene Contract，保持 Story Contract 不变）
-    ↓
-Writer（按新 Scene Contract 重写）
-    ↓
-Critic（完整 5 Checker）
-    ↓
-StateManager（更新状态）
+```mermaid
+flowchart LR
+    SP["ScenePlanner<br/>重设计 Scene Contract<br/>保持 Story Contract 不变"] --> W["Writer<br/>按新 Scene Contract 重写"] --> C["Critic<br/>完整 5 Checker"] --> SM["StateManager<br/>更新状态"]
 ```
 
 ### 局部修复
 
-```
-Writer（只修 Critic 标记的问题项，不重写全文）
-    ↓
-Critic（只重新检查标记项相关的 Checker）
-    ↓
-StateManager（更新状态）
+```mermaid
+flowchart LR
+    W["Writer<br/>只修 Critic 标记项<br/>不改动未标记段落"] --> C["Critic<br/>只重查相关 Checker"] --> SM["StateManager<br/>更新状态"]
 ```
 
 Writer 在局部修复模式的约束：
@@ -69,12 +64,9 @@ Writer 在局部修复模式的约束：
 
 ### 仅去味
 
-```
-Writer（全文搜索 AI 味关键词 → 逐项修复 → 不改动剧情/结构/角色）
-    ↓
-Critic（仅 Style Checker）
-    ↓
-StateManager（更新状态）
+```mermaid
+flowchart LR
+    W["Writer<br/>全文搜索 AI 味关键词<br/>逐项修复<br/>不改剧情/结构/角色"] --> C["Critic<br/>仅 Style Checker"] --> SM["StateManager<br/>更新状态"]
 ```
 
 ## 强制规则

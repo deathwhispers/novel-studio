@@ -8,39 +8,41 @@ description: "章节写作全流程。状态机自动流转 Director → ScenePl
 
 ## 状态机
 
-```
-用户: /novel write <chapter>
-            │
-            ▼
-    Orchestrator: 意图确认 + 多轮对话
-            │
-            ▼
-    ┌──────────────────────────────────────────┐
-    │         状态机自动流转                     │
-    │                                           │
-    │  NEED_PLAN                                │
-    │    ↓ Director                             │
-    │    ↓ 产出: Story Contract                  │
-    │    ↓ 流转条件: Story Contract 已生成        │
-    │                                           │
-    │  NEED_SCENE                               │
-    │    ↓ ScenePlanner                         │
-    │    ↓ 产出: Scene Contract                  │
-    │    ↓ 流转条件: Scene Contract 已生成        │
-    │                                           │
-    │  NEED_DRAFT                               │
-    │    ↓ Writer                               │
-    │    ↓ 产出: 正文 + state_delta              │
-    │    ↓ 流转条件: 正文已生成 + 自检通过         │
-    │                                           │
-    │  NEED_REVIEW                              │
-    │    ↓ Critic                               │
-    │    ↓ 产出: Review Report                  │
-    │    ↓                                      │
-    │    ├── 通过 → StateManager → COMPLETED     │
-    │    ├── 局部修复 → Writer(限制范围) → Critic │
-    │    └── 骨架失效 → ScenePlanner(重设计)     │
-    └──────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    User["👤 User: /novel write N"]
+    Orchestrator["🎯 Orchestrator<br/>意图确认 + 多轮对话"]
+
+    User --> Orchestrator
+
+    subgraph AutoFlow["状态机自动流转"]
+        direction TB
+
+        NEED_PLAN["🔵 NEED_PLAN"]
+        Director["📋 Director<br/>产出: Story Contract"]
+        NEED_SCENE["🔵 NEED_SCENE"]
+        ScenePlanner["🎬 ScenePlanner<br/>产出: Scene Contract"]
+        NEED_DRAFT["🔵 NEED_DRAFT"]
+        Writer["✍️ Writer<br/>产出: 正文 + state_delta"]
+        NEED_REVIEW["🔵 NEED_REVIEW"]
+        Critic["🔍 Critic<br/>产出: Review Report"]
+        StateManager["📋 StateManager"]
+        Completed(["✅ COMPLETED"])
+
+        NEED_PLAN --> Director
+        Director -->|"Story Contract ✓"| NEED_SCENE
+        NEED_SCENE --> ScenePlanner
+        ScenePlanner -->|"Scene Contract ✓"| NEED_DRAFT
+        NEED_DRAFT --> Writer
+        Writer -->|"正文 ✓ + 自检 ✓"| NEED_REVIEW
+        NEED_REVIEW --> Critic
+        Critic -->|"🟢 通过"| StateManager
+        StateManager --> Completed
+        Critic -->|"🟡 局部修复"| Writer
+        Critic -->|"🔴 骨架失效"| ScenePlanner
+    end
+
+    Orchestrator --> NEED_PLAN
 ```
 
 ## 状态定义
@@ -72,121 +74,99 @@ ORCHESTRATOR 动作:
 
 ### 步骤 2：Director 执行（NEED_PLAN）
 
-```
-INPUT: Orchestrator 交接包
+```mermaid
+flowchart LR
+    Input["📥 INPUT<br/>DirectorBrief 交接包"]
+    Director["📋 Director<br/>• 加载状态摘要<br/>• 加载卷纲 + 品类配方<br/>• 决策章节功能 + 信息释放<br/>• 生成 Story Contract"]
+    Check{"Orchestrator 检查<br/>必填字段完整?"}
+    Pass["流转: NEED_SCENE"]
+    Fail["重试 1 次<br/>仍失败 → 暂停"]
+    Output["📤 OUTPUT<br/>Story Contract"]
 
-DIRECTOR 动作:
-  1. 加载必须上下文（Canon摘要/卷纲/4个状态文件）
-  2. 加载品类配方 rhythm（如适用）
-  3. 决策本章功能、信息释放策略、禁止触碰清单、旧线触碰
-  4. 生成 Story Contract
-
-ORCHESTRATOR 检查:
-  - Story Contract 是否包含所有必填字段？
-  - forbid_touch 是否有具体内容？
-  - chapter_end_hook 是否可执行？
-
-流转:
-  - 通过 → 更新 progress.yaml: chapter_state = NEED_SCENE
-  - 失败 → 回到 Director 重试 1 次
-
-OUTPUT: Story Contract（YAML 格式）
+    Input --> Director
+    Director --> Output
+    Output --> Check
+    Check -->|"✓"| Pass
+    Check -->|"✗"| Fail
 ```
 
 ### 步骤 3：Scene Planner 执行（NEED_SCENE）
 
-```
-INPUT: Story Contract + Orchestrator 交接包
+```mermaid
+flowchart LR
+    Input["📥 INPUT<br/>ScenePlannerBrief<br/>（Story Contract + 结构）"]
+    SP["🎬 ScenePlanner<br/>• 切分场景（1-5个）<br/>• 每场景五拍骨架<br/>• 分配视角/叙述距离<br/>• 检查场景间因果链<br/>• 配置爽点位置"]
+    Check{"Orchestrator 检查<br/>五拍可执行?<br/>因果链完整?"}
+    Pass["流转: NEED_DRAFT"]
+    Fail["重试 1 次<br/>仍失败 → 暂停"]
+    Output["📤 OUTPUT<br/>Scene Contract"]
 
-SCENE PLANNER 动作:
-  1. 加载 Story Contract
-  2. 加载 POV 角色状态 + 最近 2 章正文结构
-  3. 切分场景（每章 1-5 个场景）
-  4. 每场景设计五拍骨架
-  5. 分配视角、叙述距离、环境压力
-  6. 检查场景间因果链
-  7. 按品类配方配置爽点位置（如适用）
-  8. 生成 Scene Contract
-
-ORCHESTRATOR 检查:
-  - 每场景是否都有可执行的五拍骨架？
-  - 场景间是否有因果链（不是「然后」而是「因为所以」）？
-  - 章尾落点是否与 Story Contract 对齐？
-
-流转:
-  - 通过 → 更新 progress.yaml: chapter_state = NEED_DRAFT
-  - 失败 → 回到 ScenePlanner 重试 1 次
-
-OUTPUT: Scene Contract（YAML 格式）
+    Input --> SP
+    SP --> Output
+    Output --> Check
+    Check -->|"✓"| Pass
+    Check -->|"✗"| Fail
 ```
 
 ### 步骤 4：Writer 执行（NEED_DRAFT）
 
-```
-INPUT: Scene Contract + Orchestrator 交接包
+```mermaid
+flowchart LR
+    Input["📥 INPUT<br/>WriterBrief<br/>（scenes + 约束 + 章尾）"]
+    Writer["✍️ Writer<br/>• 读取最近2章正文 + voice 样本<br/>• 按场景顺序连续起草<br/>• 每场景边界硬门禁自检<br/>• AI 味自检<br/>• 生成 state_delta"]
+    Check{"Orchestrator 检查<br/>正文非空?<br/>硬门禁全部通过?"}
+    Pass["流转: NEED_REVIEW"]
+    Fail["重试 1 次<br/>仍失败 → 暂停"]
+    Output["📤 OUTPUT<br/>正文 + state_delta"]
 
-WRITER 动作:
-  1. 加载 Scene Contract
-  2. 加载最近 2 章正文全文 + voice 样本
-  3. 按场景顺序连续起草
-  4. 每场景边界执行 4 项硬门禁
-  5. 整章完成做 AI 味自检
-  6. 生成正文 + state_delta
-
-ORCHESTRATOR 检查:
-  - 正文是否非空？
-  - 硬门禁自检是否全部通过？
-  - state_delta 是否完整？
-
-流转:
-  - 通过 → 更新 progress.yaml: chapter_state = NEED_REVIEW
-  - 失败 → 回到 Writer 重试 1 次
-
-OUTPUT: 正文文件 + state_delta（YAML 格式）
+    Input --> Writer
+    Writer --> Output
+    Output --> Check
+    Check -->|"✓"| Pass
+    Check -->|"✗"| Fail
 ```
 
 ### 步骤 5：Critic 执行（NEED_REVIEW）
 
-```
-INPUT: 正文 + Scene Contract + Story Contract 约束
+```mermaid
+flowchart LR
+    Input["📥 INPUT<br/>CriticBrief<br/>（合并检查清单 + 正文路径）"]
+    Critic["🔍 Critic<br/>• 1. Logic Checker<br/>• 2. Info Leak Checker<br/>• 3. Character Checker<br/>• 4. Pace Checker<br/>• 5. Style Checker<br/>• 生成 Review Report"]
+    Check{"判决?"}
+    Pass["🟢 通过 → StateManager"]
+    LocalFix["🟡 局部修复 → Writer → 再回 Critic"]
+    StructureFail["🔴 骨架失效 → ScenePlanner"]
+    Output["📤 OUTPUT<br/>Review Report"]
 
-CRITIC 动作:
-  1. Logic Checker（因果与连续性）
-  2. Info Leak Checker（信息泄漏）
-  3. Character Checker（人物一致性）
-  4. Pace Checker（节奏）
-  5. Style Checker（文风/AI味）
-  6. 生成 Review Report
-
-ORCHESTRATOR 检查:
-  - 5 个 Checker 是否全部执行？
-  - Review Report 判决是否明确？
-
-流转:
-  - 通过 → StateManager
-  - 局部修复 → Writer（限制修改范围，只修标记项）→ 再回 Critic
-  - 骨架失效 → ScenePlanner（重设计，不重跑 Director）
-
-OUTPUT: Review Report（YAML 格式）
+    Input --> Critic
+    Critic --> Output
+    Output --> Check
+    Check -->|"5 Checker 全过"| Pass
+    Check -->|"硬伤 / >3个问题"| LocalFix
+    Check -->|"骨架级问题"| StructureFail
 ```
 
 ### 步骤 6：State Manager 执行（Critic 通过后）
 
-```
-INPUT: Review Report（通过）+ state_delta + 当前状态文件
+```mermaid
+flowchart TD
+    Input["📥 INPUT<br/>StateManagerBrief<br/>（Review Report + state_delta）"]
+    Validate{"校验<br/>Review Report.verdict<br/>== 通过?"}
+    Reject["⛔ 拒绝执行<br/>状态不更新"]
+    Load["读取 4 个状态文件"]
+    Update["逐项更新<br/>• author.yaml<br/>• reader.yaml<br/>• character.yaml<br/>• foreshadow.yaml<br/>• progress.yaml<br/>• agent-log"]
+    Compress{"需要压缩?<br/>每5章 / 卷末 / >50KB"}
+    ExecCompress["执行压缩协议"]
+    Done["📤 OUTPUT<br/>更新后的状态文件<br/>→ Orchestrator 报告用户"]
 
-STATE MANAGER 动作:
-  1. 校验 Review Report.verdict == 通过
-  2. 更新 author.yaml / reader.yaml / character.yaml / foreshadow.yaml
-  3. 更新 progress.yaml（chapter+1, status=COMPLETED）
-  4. 写入 agent-log
-  5. 检查是否需要压缩（每5章/卷末/超50KB）
-
-流转:
-  - 完成 → Orchestrator 报告用户「第X章已完成」
-  - 需要压缩 → 执行压缩后再报告
-
-OUTPUT: 更新后的状态文件
+    Input --> Validate
+    Validate -->|"✗ 未通过"| Reject
+    Validate -->|"✓ 通过"| Load
+    Load --> Update
+    Update --> Compress
+    Compress -->|"是"| ExecCompress
+    Compress -->|"否"| Done
+    ExecCompress --> Done
 ```
 
 ## 错误处理矩阵
@@ -206,14 +186,32 @@ OUTPUT: 更新后的状态文件
 
 当 Orchestrator 启动时检测到 `chapter_state.status` 不是 COMPLETED：
 
-```
-读取 agent-log.yaml → 找到最后一条 in_progress 或 completed 记录
-  ↓
-如果最后一条是 'to_agent: Director, status: in_progress'
-  → NEED_PLAN，重新调用 Director
-如果最后一条是 'to_agent: Writer, status: in_progress'
-  → NEED_DRAFT，重新调用 Writer
-...
+```mermaid
+flowchart TD
+    Start["读取 agent-log.yaml 最后一条"]
+    Check{"最后一条状态?"}
+    InProgress["status: in_progress"]
+    Completed2["status: completed"]
+
+    Resume{"从哪个 Agent 继续?"}
+
+    Resume_Director["NEED_PLAN<br/>→ 重新调用 Director"]
+    Resume_ScenePlanner["NEED_SCENE<br/>→ 重新调用 ScenePlanner"]
+    Resume_Writer["NEED_DRAFT<br/>→ 重新调用 Writer"]
+    Resume_Critic["NEED_REVIEW<br/>→ 重新调用 Critic"]
+    Verify["检查 progress.yaml<br/>确认状态一致性"]
+    Fresh["从头开始意图识别<br/>（agent-log 不存在）"]
+
+    Start --> Check
+    Check -->|"有 in_progress"| InProgress
+    Check -->|"最后一条 completed"| Completed2
+    Check -->|"不存在"| Fresh
+    InProgress --> Resume
+    Resume -->|"to_agent: Director"| Resume_Director
+    Resume -->|"to_agent: ScenePlanner"| Resume_ScenePlanner
+    Resume -->|"to_agent: Writer"| Resume_Writer
+    Resume -->|"to_agent: Critic"| Resume_Critic
+    Completed2 --> Verify
 ```
 
 ## 用户可见的输出

@@ -9,18 +9,16 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 ## 在流水线中的位置
 
 ```
-Critic → StateManager → Orchestrator
+详见 workflows/pipeline.md。StateManager 出现在写章节、初始化、修订和世界观构建四条流水线中。它是唯一被授权修改 state/ 的 Agent。
 ```
-
-State Manager 是唯一被授权修改 `state/` 的 Agent。它在 Critic 验收通过后执行。如果 Critic 未通过，State Manager 不启动。
 
 ## 角色定义
 
 | 属性 | 值 |
 |------|-----|
 | 所有权 | `state/`（全部状态文件） |
-| 上下文预算 | ~3K tokens |
-| 必须加载 | Review Report + Writer 的状态增量标记 + 当前全部状态文件 |
+| 上下文预算 | ~2.5K tokens |
+| 必须加载 | StateManagerBrief 交接包（按 `runtime/handoff-schema.md` 第五节）。包含 Review Report + state_delta + 全部状态文件路径 |
 | 按需加载 | 卷记忆摘要模板（压缩时） |
 | 绝不加载 | 正文、大纲、canon |
 | 决策权 | 状态更新方式、压缩时机、归档策略 |
@@ -98,25 +96,32 @@ state/archive/
 
 ## 状态更新协议
 
-```
-输入：
-  - Review Report（必须 verdict: 通过）
-  - Writer state_delta（状态增量标记）
+```mermaid
+flowchart TD
+    Input["📥 输入<br/>Review Report（必须 verdict: 通过）<br/>Writer state_delta"]
 
-处理流程：
-  1. 校验：Review Report.verdict == "通过" → 继续；否则拒绝执行
-  2. 读取当前 4 个状态文件（author/reader/character/foreshadow）
-  3. 按 state_delta 逐项更新
-  4. 更新 progress.yaml（chapter+1，状态重置为 COMPLETED）
-  5. 写入 agent-log
-  6. 检查是否需要压缩（每5章/卷末/超50KB）
-  7. 如需要 → 执行压缩协议
+    Validate{"校验<br/>Review Report.verdict<br/>== 通过?"}
+    Reject["⛔ 拒绝执行"]
 
-输出：
-  - 更新后的 4 个状态文件
-  - 更新后的 progress.yaml
-  - 新增 agent-log 条目
-  - 如有压缩 → 归档文件 + 卷摘要
+    Read["读取当前 4 个状态文件"]
+    Update["按 state_delta 逐项更新<br/>• author.yaml<br/>• reader.yaml<br/>• character.yaml<br/>• foreshadow.yaml"]
+    Progress["更新 progress.yaml<br/>chapter+1, status=COMPLETED"]
+    Log["写入 agent-log"]
+
+    Compress{"需要压缩?<br/>每5章 / 卷末 / >50KB"}
+    RunCompress["执行压缩协议"]
+    Done["📤 输出<br/>更新后的状态文件<br/>progress.yaml<br/>agent-log 条目<br/>（如有压缩）归档 + 卷摘要"]
+
+    Input --> Validate
+    Validate -->|"✗ 未通过"| Reject
+    Validate -->|"✓ 通过"| Read
+    Read --> Update
+    Update --> Progress
+    Progress --> Log
+    Log --> Compress
+    Compress -->|"是"| RunCompress
+    Compress -->|"否"| Done
+    RunCompress --> Done
 ```
 
 ## 状态一致性校验

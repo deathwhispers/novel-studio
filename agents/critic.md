@@ -9,22 +9,18 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 ## 在流水线中的位置
 
 ```
-Writer → Critic → StateManager（通过时）
-                → Writer（局部修复时）
-                → ScenePlanner（骨架失效时）
+详见 workflows/pipeline.md。Critic 出现在写章节、修订和质量检查三条流水线中。它是正文交付前的最后一道质量门禁。
 ```
-
-Critic 是正文交付前的最后一道门。它不是润色工具，是硬约束和品类质量的验证者。
 
 ## 角色定义
 
 | 属性 | 值 |
 |------|-----|
 | 所有权 | 验收标准 |
-| 上下文预算 | ~5K tokens |
-| 必须加载 | 当前章正文全文 + Scene Contract + Story Contract 约束部分 + AI 味目录 |
-| 按需加载 | 硬设定摘要、POV 角色认知、品类配方禁忌 |
-| 绝不加载 | 完整 canon、完整大纲、其他章节正文、完整状态文件 |
+| 上下文预算 | ~3.5K tokens |
+| 必须加载 | CriticBrief 交接包（按 `runtime/handoff-schema.md` 第四节）。包含合并检查清单（forbid_touch + hard_canon_checklist + pov_constraints） + 正文路径 + AI 味目录路径 |
+| 按需加载 | 硬设定摘要、POV 角色认知、品类配方禁忌（均已合并到 CriticBrief 中，无需额外加载） |
+| 绝不加载 | 完整 canon、完整大纲、其他章节正文、完整状态文件、完整 Scene Contract、完整 Story Contract |
 | 决策权 | 通过/局部修复/骨架失效判定 |
 | 禁止行为 | 修改正文（只标注问题）、自行决定剧情方向、重写章节 |
 

@@ -17,24 +17,26 @@
 
 ## 架构总览
 
-```
-User
-  │
-  ▼
-Orchestrator（入口 + 意图识别 + 多轮对话 + 调度）
-  │
-  ▼
-Workflow Engine（状态机自动流转）
-  │
-  ├── Director ──→ Story Contract
-  │       ▼
-  ├── ScenePlanner ──→ Scene Contract
-  │       ▼
-  ├── Writer ──→ 正文 + 状态增量
-  │       ▼
-  ├── Critic ──→ Review Report（5 Checker）
-  │       ▼
-  └── StateManager ──→ 状态更新 + 记忆压缩
+```mermaid
+flowchart TD
+    User["👤 User"]
+    Orchestrator["🎯 Orchestrator<br/>入口 + 意图识别 + 多轮对话 + 调度"]
+
+    User --> Orchestrator
+
+    subgraph Pipeline["Workflow Engine（状态机自动流转）"]
+        Director["📋 Director<br/>产出: Story Contract"]
+        ScenePlanner["🎬 ScenePlanner<br/>产出: Scene Contract"]
+        Writer["✍️ Writer<br/>产出: 正文 + 状态增量"]
+        Critic["🔍 Critic<br/>产出: Review Report<br/>（5 Checker）"]
+        StateManager["📋 StateManager<br/>状态更新 + 记忆压缩"]
+    end
+
+    Orchestrator --> Director
+    Director --> ScenePlanner
+    ScenePlanner --> Writer
+    Writer --> Critic
+    Critic --> StateManager
 ```
 
 ## 目录结构

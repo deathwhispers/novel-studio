@@ -9,10 +9,8 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 ## 在系统中的位置
 
 ```
-User → Orchestrator → Workflow Engine → [Director → ScenePlanner → Writer → Critic → StateManager]
+详见 workflows/pipeline.md。Orchestrator 是全部五条流水线的统一入口。
 ```
-
-Orchestrator 是用户的唯一接触面。用户只需表达意图，Orchestrator 负责澄清、调度、监控全流程。
 
 ## 角色定义
 
@@ -21,7 +19,7 @@ Orchestrator 是用户的唯一接触面。用户只需表达意图，Orchestrat
 | 所有权 | `state/progress.yaml`、`state/agent-log.yaml` |
 | 上下文预算 | ~2K tokens |
 | 必须加载 | `state/progress.yaml` + `state/agent-log.yaml`（最后 5 条） |
-| 按需加载 | Workflow 文件、品类配方索引 |
+| 按需加载 | Workflow 文件、品类配方索引、`runtime/handoff-schema.md`（裁剪交接包时参考） |
 | 绝不加载 | 正文、大纲、设定、canon、状态文件详细内容 |
 | 决策权 | 意图判断、多轮对话、Workflow 选择、异常处理 |
 | 禁止行为 | 创作正文、检查质量、修改状态文件 |
@@ -66,12 +64,13 @@ Orchestrator 是用户的唯一接触面。用户只需表达意图，Orchestrat
 
 读取对应 Workflow 文件，按状态机规则调度：
 
-```
-NEED_PLAN → 调度 Director
-NEED_SCENE → 调度 ScenePlanner
-NEED_DRAFT → 调度 Writer
-NEED_REVIEW → 调度 Critic
-COMPLETED → 报告用户
+```mermaid
+flowchart LR
+    NEED_PLAN["NEED_PLAN"] -->|"调度"| Director
+    NEED_SCENE["NEED_SCENE"] -->|"调度"| ScenePlanner
+    NEED_DRAFT["NEED_DRAFT"] -->|"调度"| Writer
+    NEED_REVIEW["NEED_REVIEW"] -->|"调度"| Critic
+    COMPLETED["COMPLETED"] -->|"报告"| User["用户"]
 ```
 
 **调度协议**：
@@ -100,33 +99,36 @@ COMPLETED → 报告用户
 - `state/progress.yaml` 是否存在 → 判断是否有运行状态
 - `chapters/` 最新章节 → 判断进度
 
-## 交接包格式
+## 交接包与信息裁剪
 
-每次向下游 Agent 传递时使用：
+Orchestrator 不仅是路由器，也是**信息经纪人**——从上游完整输出中裁剪出下游 Agent 真正需要的字段。
 
-```yaml
-handoff:
-  from: Orchestrator
-  to: <下游Agent>
-  chapter: <章节号>
-  mode: <写作模式>
+### 裁剪流程
 
-  # 下游需要的上下文
-  context:
-    user_intent: <用户确认后的意图摘要>
-    genre: <品类标识，如适用>
-    previous_output: <上游Agent的输出路径>
+1. 接收上游 Agent 完整输出
+2. 查阅 `runtime/handoff-schema.md`，找到下游 Agent 对应的 Brief 格式
+3. 从上游输出中提取 Brief 要求的字段，其余字段一律移除
+4. 大文件（正文、voice 样本）传递路径而非内容
+5. 合并来自不同来源的信息（如 CriticBrief 合并了 Story Contract 的 forbid_touch + setting 的 hard_canon + character 的 pov_constraints）
 
-  # 变化增量
-  decision_delta:
-    open_questions: <当前未解决的问题>
+### 交接包格式
 
-  # 下游启动指令
-  downstream:
-    must_read: <必须加载的文件路径列表>
-    must_not_read: <禁止加载的文件类别>
-    budget: <token 预算>
-```
+不再使用通用 handoff 格式。每种下游 Agent 使用专属 Brief，定义见 `runtime/handoff-schema.md`：
+
+| 下游 Agent | Brief 格式 | 预估大小 |
+|-----------|-----------|---------|
+| Director | DirectorBrief（状态摘要，非完整状态文件） | ~2.5K |
+| ScenePlanner | ScenePlannerBrief（完整 Story Contract + 结构） | ~1.5K |
+| Writer | WriterBrief（scenes + 约束 + 章尾落点） | ~1.5K |
+| Critic | CriticBrief（合并检查清单） | ~1K |
+| StateManager | StateManagerBrief（Review Report + state_delta） | ~0.5K |
+
+### 裁剪原则
+
+- **下游不需要的字段一律移除**：Scene Contract 的 `pace_check`/`transition_to_next` 不传给 Writer
+- **合并而非分发**：Critic 需要来自多个来源的信息 → 合并为一份 CriticBrief
+- **摘要而非全文**：Director 需要状态信息但不需完整文件 → 提取摘要
+- **路径而非内容**：正文等大文件 → 传递路径，由目标 Agent 自行读取
 
 ## 断点恢复
 

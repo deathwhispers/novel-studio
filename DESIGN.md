@@ -265,31 +265,43 @@ my-novel/
 
 ### write-chapter（核心流程）
 
-```
-用户: /novel write 10
-        │
-        ▼
-Orchestrator: 识别意图 → 多轮确认 → 读取 progress.yaml
-        │
-        ▼
-┌─────────────────────────────────────────────┐
-│  状态机自动流转（Agent 不自选后继）            │
-│                                              │
-│  NEED_PLAN ──→ Director ──→ Story Contract   │
-│       │                                      │
-│       ▼                                      │
-│  NEED_SCENE ──→ ScenePlanner ──→ Scene Contract │
-│       │                                      │
-│       ▼                                      │
-│  NEED_DRAFT ──→ Writer ──→ 正文 + 增量标记    │
-│       │                                      │
-│       ▼                                      │
-│  NEED_REVIEW ──→ Critic ──→ Review Report     │
-│       │                                      │
-│       ├── 通过 ──→ StateManager ──→ COMPLETED │
-│       ├── 局部修复 ──→ Writer(修复) ──→ Critic │
-│       └── 骨架失效 ──→ ScenePlanner(重设计)    │
-└─────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    User["👤 User: /novel write 10"]
+    Orchestrator["🎯 Orchestrator<br/>识别意图 → 多轮确认 → 读取 progress.yaml"]
+
+    User --> Orchestrator
+
+    subgraph StateMachine["状态机自动流转（Agent 不自选后继）"]
+        NEED_PLAN["🔵 NEED_PLAN"]
+        Director["📋 Director"]
+        StoryContract["📄 Story Contract"]
+
+        NEED_SCENE["🔵 NEED_SCENE"]
+        ScenePlanner["🎬 ScenePlanner"]
+        SceneContract["📄 Scene Contract"]
+
+        NEED_DRAFT["🔵 NEED_DRAFT"]
+        Writer["✍️ Writer"]
+        Draft["📄 正文 + 增量标记"]
+
+        NEED_REVIEW["🔵 NEED_REVIEW"]
+        Critic["🔍 Critic"]
+        ReviewReport["📄 Review Report"]
+
+        StateManager["📋 StateManager"]
+        Completed(["✅ COMPLETED"])
+
+        NEED_PLAN --> Director --> StoryContract --> NEED_SCENE
+        NEED_SCENE --> ScenePlanner --> SceneContract --> NEED_DRAFT
+        NEED_DRAFT --> Writer --> Draft --> NEED_REVIEW
+        NEED_REVIEW --> Critic --> ReviewReport
+        ReviewReport -->|"通过"| StateManager --> Completed
+        ReviewReport -->|"局部修复"| Writer
+        ReviewReport -->|"骨架失效"| ScenePlanner
+    end
+
+    Orchestrator --> NEED_PLAN
 ```
 
 状态枚举：
