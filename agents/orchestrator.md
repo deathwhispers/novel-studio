@@ -36,7 +36,8 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 | 「修改第X章」「重写第X章」「润色」 | 修订章节 | revise-chapter |
 | 「开新书」「初始化」「新建项目」 | 初始化项目 | init-project |
 | 「补设定」「世界观」「角色设计」 | 世界观构建 | worldbuilding |
-| 「检查第X章」「体检」「审稿」 | 质量检查 | revise-chapter（仅 Critic 阶段） |
+| 「检查第X章」「体检」「审稿」 | 质量检查 | novel-check |
+| 「迁移」「导入已有章节」「利旧」 | 项目迁移 | migrate-project |
 
 ### 2. 多轮对话
 
@@ -98,6 +99,7 @@ flowchart LR
 - `core/作品总表.md` 是否存在 → 判断是否已完成初始化
 - `state/progress.yaml` 是否存在 → 判断是否有运行状态
 - `chapters/` 最新章节 → 判断进度
+- **迁移检测**：当前目录不包含 `core/作品总表.md` 和 `state/progress.yaml`，但存在 `.md`/`.txt` 正文文件 → 判定为「脏目录」，建议用户执行 `/novel migrate`
 
 ## 交接包与信息裁剪
 
@@ -122,6 +124,8 @@ Orchestrator 不仅是路由器，也是**信息经纪人**——从上游完整
 | Writer | WriterBrief（scenes + 约束 + 章尾落点） | ~1.5K |
 | Critic | CriticBrief（合并检查清单） | ~1K |
 | StateManager | StateManagerBrief（Review Report + state_delta） | ~0.5K |
+| Archivist | MigrationBrief（批次章节列表 + 前批摘要） | ~1K |
+| Architect（迁移合成） | ArchitectMigrationBrief（N 份提取结果路径列表） | ~0.5K |
 
 ### 裁剪原则
 

@@ -146,8 +146,9 @@ sceneplanner_brief:
 ## 三、WriterBrief
 
 **方向**：Orchestrator → Writer
-**预估**：~1.5K tokens（交接包自身）+ 正文路径（Writer 自行读取）
+**预估**：~1K tokens（交接包自身）+ 正文路径（Writer 自行读取）
 **用途**：Writer 据此起草正文。不加载完整 Scene Contract——只拿到 scenes/five_beats/writer_constraints/chapter_end。
+**连续性**：chapter N-1 全文（自行读取）+ chapter N-2 结构摘要（交接包内），跨章连续性由 Critic Logic Checker 补充检查。
 
 ```yaml
 writer_brief:
@@ -210,16 +211,26 @@ writer_brief:
     hook: "主角接受了一个不知深浅的条件，而对方提到的地点让他意识到——系统从一开始就在布局"
     reader_question: "系统和这个神秘组织到底是什么关系？"
 
+  # 连续性上下文
+  last_chapter_path: "chapters/第010章-章节名.md"    # chapter N-1 全文（Writer 自行读取，连续性必需）
+
+  previous_chapter_summary:                            # chapter N-2 摘要（交接包内，不读全文）
+    chapter: 9
+    scene_count: 3
+    word_count: 2400
+    chapter_function: "揭示"
+    ending_hook: "新线索指向XX地点——主角决定前往调查"
+    key_events: "主角发现XX秘密；XX角色首次登场并暗示认识主角"
+    ending_state: "主角位于训练场，情绪警觉，等级炼气三层，右手轻伤"
+
   # 需自行读取的文件
   must_read:
-    last_two_chapters:           # Writer 自行读取正文全文（这是最大的 token 消耗项）
-      - "chapters/第009章-章节名.md"
-      - "chapters/第010章-章节名.md"
     voice_samples:               # Writer 自行读取
       - "snippets/主角-voice.md"
 
   # 明确禁止加载
   must_not_read:
+    - "chapters/第009章 正文全文（摘要已在上方 previous_chapter_summary 中）"
     - "Scene Contract 完整文件（已在上方 scenes 中提取所需字段）"
     - "outline/ 任何文件"
     - "state/ 任何文件"
@@ -231,8 +242,8 @@ writer_brief:
 ## 四、CriticBrief
 
 **方向**：Orchestrator → Critic
-**预估**：~1K tokens（交接包自身）+ 正文全文（Critic 自行读取）
-**用途**：Critic 据此执行 5 个 Checker。不从多个文件拼凑——收到一份合并的检查清单。
+**预估**：~0.8K tokens（交接包自身）+ 正文全文（Critic 自行读取）
+**用途**：Critic 据此执行 5 个 Checker。不从多个文件拼凑——收到一份合并的检查清单。AI 味检测使用精简版 `ai-flavor-checklist.md`（~250 tokens）替代完整目录。
 
 ```yaml
 critic_brief:
@@ -242,7 +253,7 @@ critic_brief:
 
   # 需自行读取
   chapter_text: "chapters/第011章-章节名.md"
-  ai_flavor_catalog: "references/ai-flavor-catalog.md"
+  ai_flavor_checklist: "references/ai-flavor-checklist.md"
 
   # 信息泄漏检查清单（从 Story Contract 提取）
   forbid_touch:
@@ -352,6 +363,68 @@ statemanager_brief:
 
 ---
 
+## 六、MigrationBrief
+
+**方向**：Orchestrator → Archivist
+**预估**：~1K tokens（交接包自身）+ 批次章节正文（Archivist 自行读取）
+**用途**：Archivist 据此分批提取已有章节的结构化信息。仅 migrate-project 流水线使用。
+
+```yaml
+migration_brief:
+  from: Orchestrator
+  to: Archivist
+  batch: "3/10"
+  chapters:
+    - path: "chapters/第011章-章节名.md"
+      chapter_number: 11
+    - path: "chapters/第012章-章节名.md"
+      chapter_number: 12
+    - path: "chapters/第013章-章节名.md"
+      chapter_number: 13
+    - path: "chapters/第014章-章节名.md"
+      chapter_number: 14
+    - path: "chapters/第015章-章节名.md"
+      chapter_number: 15
+
+  # 前一批摘要（第一批为空）
+  previous_batch_summary:
+    last_chapter: 10
+    characters_so_far: ["主角", "配角A", "反派B"]
+    active_thread_hints:
+      - "玉佩发烫已在第3、5、8章出现"
+
+  # 明确禁止加载
+  must_not_read:
+    - "本批之外的任何章节文件"
+    - "outline/ 任何文件（迁移时尚未创建）"
+    - "state/ 任何文件（迁移时尚未创建）"
+```
+
+---
+
+## 七、ArchitectMigrationBrief
+
+**方向**：Orchestrator → Architect（迁移合成阶段）
+**预估**：~0.5K tokens
+**用途**：Architect 据此将 N 份 per-batch-extraction.yaml 合成为 migration-extraction.yaml。
+
+```yaml
+architect_migration_brief:
+  from: Orchestrator
+  to: Architect
+  total_batches: 10
+  total_chapters: 50
+  extraction_files:
+    - "per-batch-extraction-batch-01.yaml"
+    - "per-batch-extraction-batch-02.yaml"
+    # ... 全部 N 份
+
+  # 明确禁止加载
+  must_not_read:
+    - "chapters/ 任何文件（Architect 不读正文）"
+    - "state/ 任何文件（迁移时尚未创建）"
+```
+
 ## 交接包流转总图
 
 ```mermaid
@@ -376,6 +449,15 @@ flowchart TD
     ScenePlanner --> Writer
     Writer --> Critic
     Critic --> StateManager
+
+    subgraph MigrateFlow["项目迁移"]
+        Archivist["📖 Archivist<br/>← MigrationBrief<br/>（批次章节 + 前批摘要）"]
+        ArchMigrate["🏗️ Architect<br/>← ArchitectMigrationBrief<br/>（N 份提取结果路径）"]
+    end
+
+    Orchestrator -->|"/novel migrate"| Archivist
+    Archivist -->|"N批完成后"| ArchMigrate
+    ArchMigrate -->|"合成完成"| Orchestrator
 ```
 
 ---

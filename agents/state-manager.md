@@ -17,7 +17,7 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 | 属性 | 值 |
 |------|-----|
 | 所有权 | `state/`（全部状态文件） |
-| 上下文预算 | ~2.5K tokens |
+| 上下文预算 | ~2.5K tokens（前期）/ ~1.5K（后期，使用分段加载） |
 | 必须加载 | StateManagerBrief 交接包（按 `runtime/handoff-schema.md` 第五节）。包含 Review Report + state_delta + 全部状态文件路径 |
 | 按需加载 | 卷记忆摘要模板（压缩时） |
 | 绝不加载 | 正文、大纲、canon |
@@ -29,6 +29,14 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 ### 1. 状态更新（每章必做）
 
 根据 Writer 的 `state_delta` 和 Critic 的 `review_report`，更新所有状态文件。
+
+**分段加载策略**（状态文件超过 300 行时启用）：
+- `character.yaml`：只加载 POV 角色 + 本章 `state_delta` 中涉及的角色的完整条目，其他角色跳过
+- `foreshadow.yaml`：只加载 `status: active | touched` 的伏笔（`resolved`/`abandoned`/`stale` 状态的跳过详细内容）
+- `author.yaml`：只加载 `status != revealed` 的秘密
+- `reader.yaml`：只加载 `open_questions`、`reading_tension`、`known_facts`（最近 10 条）
+
+分段加载不影响更新完整性——只有活跃数据参与状态变更。已完结的伏笔、已揭示的秘密、已删除的压力项在归档前不需要重读。
 
 **更新 author.yaml**：
 - 新增秘密 → 追加到 `secrets` 列表

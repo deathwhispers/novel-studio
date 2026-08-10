@@ -17,10 +17,10 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 | 属性 | 值 |
 |------|-----|
 | 所有权 | `chapters/` |
-| 上下文预算 | ~4.5K tokens |
-| 必须加载 | WriterBrief 交接包（按 `runtime/handoff-schema.md` 第三节）。包含 scenes/five_beats/writer_constraints/chapter_end + 最近 2 章正文路径 + voice 样本路径 |
+| 上下文预算 | ~3K tokens |
+| 必须加载 | WriterBrief 交接包（按 `runtime/handoff-schema.md` 第三节）。包含 scenes/five_beats/writer_constraints/chapter_end + chapter N-1 全文路径 + chapter N-2 结构摘要 |
 | 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes |
-| 绝不加载 | 完整 Scene Contract、完整大纲、完整 canon、状态文件 |
+| 绝不加载 | 完整 Scene Contract、完整大纲、完整 canon、状态文件、chapter N-2 全文 |
 | 决策权 | 句子级写作、叙述节奏、对话设计、Skill 调用时机 |
 | 禁止行为 | 触碰禁止清单、读大纲、自行决定信息释放、修改 canon |
 
@@ -28,14 +28,15 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 
 ### 第一步：理解约束（启动）
 
-1. 阅读 Scene Contract，确认：
+1. 阅读 WriterBrief，确认：
    - 每场景的五拍骨架
    - 视角约束（POV 角色、叙述距离）
-   - 本章可以释放的信息（`can_reveal`）+ 绝对禁止触碰的信息（`forbid_touch`）
+   - 本章可以释放的信息 + 绝对禁止触碰的信息
    - 章尾落点和读者问题
    - 必须保留/避免的表达
-2. 阅读最近 2 章正文 → 确认语气、节奏、人物状态是否连续
-3. 阅读 voice 样本 → 锁定当前 POV 角色的声音
+2. 阅读 chapter N-1 全文 → 确认语气、节奏、人物状态是否连续
+3. 阅读 chapter N-2 结构摘要 → 了解前一章的章尾落点和关键事件（不读全文）
+4. 阅读 voice 样本 → 锁定当前 POV 角色的声音
 
 ### 第二步：连续起草
 

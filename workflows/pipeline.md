@@ -147,17 +147,54 @@ flowchart LR
 
 ---
 
+## 六、项目迁移（migrate-project）
+
+**触发**: `/novel migrate <现有目录路径>`
+
+```mermaid
+flowchart TD
+    User["👤 User: /novel migrate path"]
+    Orchestrator["🎯 Orchestrator<br/>扫描章节文件 + 工作区重组"]
+
+    User --> Orchestrator
+
+    subgraph BatchAnalysis["步骤2：分批分析（Archivist × N）"]
+        Archivist1["📖 Archivist 批次1<br/>5章 → per-batch-extraction.yaml"]
+        Archivist2["📖 Archivist 批次2<br/>5章 → per-batch-extraction.yaml"]
+        ArchivistN["📖 Archivist 批次N<br/>5章 → per-batch-extraction.yaml"]
+    end
+
+    Orchestrator -->|"重组完成"| Archivist1
+    Archivist1 -->|"前批摘要"| Archivist2
+    Archivist2 -->|"...前批摘要"| ArchivistN
+
+    ArchivistN -->|"N份提取结果"| Architect["🏗️ Architect<br/><b>合成归档</b><br/>• 角色去重合并<br/>• 伏笔候选升级<br/>• 硬设定合并<br/>• 品类确认<br/>→ migration-extraction.yaml"]
+
+    Architect -->|"提取结果"| OrchestratorConfirm["🎯 Orchestrator<br/><b>多轮作者确认</b><br/>• 角色确认+补充<br/>• 伏笔确认<br/>• 秘密收集<br/>• 大纲导入"]
+
+    OrchestratorConfirm -->|"确认完毕"| ArchGen["🏗️ Architect<br/>写入 setting/ 全部文件"]
+    OrchestratorConfirm -->|"确认完毕"| StateGen["📋 StateManager<br/>写入 state/ 全部文件"]
+
+    ArchGen --> Done(["✅ 迁移完成<br/>后续可使用 /novel write"])
+    StateGen --> Done
+```
+
+详见 [`workflows/migrate-project.md`](migrate-project.md)。
+
+---
+
 ## Agent ↔ 流水线对应关系
 
 | Agent | 出现在流水线 |
 |-------|-------------|
-| Orchestrator | 全部五条 |
-| Architect | 初始化、世界观构建 |
+| Orchestrator | 全部六条 |
+| Architect | 初始化、世界观构建、项目迁移（合成归档） |
+| Archivist | 项目迁移（分批分析）——迁移完成后不再使用 |
 | Director | 写章节（修订-全文重写） |
 | ScenePlanner | 写章节、修订（全文重写/场景重设） |
 | Writer | 写章节、修订（全部四种范围） |
 | Critic | 写章节、修订（全部四种范围）、质量检查 |
-| StateManager | 写章节、初始化、修订、世界观构建 |
+| StateManager | 写章节、初始化、修订、世界观构建、项目迁移（文件生成） |
 
 ---
 
@@ -183,5 +220,7 @@ flowchart LR
 | Orchestrator → Critic | CriticBrief | 合并检查清单（forbid_touch + canon + pov） |
 | Orchestrator → StateManager | StateManagerBrief | Review Report + state_delta |
 | Orchestrator → Architect | 直接传递用户构想 | 不使用 Brief 格式（仅 init/worldbuilding） |
+| Orchestrator → Archivist | MigrationBrief | 批次章节列表 + 前批摘要 |
+| Orchestrator → Architect（迁移合成） | ArchitectMigrationBrief | N 份 per-batch-extraction.yaml 路径列表 |
 
 完整字段定义见 `runtime/handoff-schema.md`。
