@@ -63,7 +63,7 @@ voice_report:
 
 ## Voice 样本管理
 
-每个 POV 角色在 `35-参考片段/` 或 `10-设定/角色/` 中应有至少一段 voice 样本：
+每个 POV 角色在 `snippets/` 或 `setting/characters/` 中应有至少一段 voice 样本：
 
 ```
 Voice 样本格式：

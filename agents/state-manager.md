@@ -12,13 +12,13 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 Critic → StateManager → Orchestrator
 ```
 
-State Manager 是唯一被授权修改 `90-状态/` 的 Agent。它在 Critic 验收通过后执行。如果 Critic 未通过，State Manager 不启动。
+State Manager 是唯一被授权修改 `state/` 的 Agent。它在 Critic 验收通过后执行。如果 Critic 未通过，State Manager 不启动。
 
 ## 角色定义
 
 | 属性 | 值 |
 |------|-----|
-| 所有权 | `90-状态/`（全部状态文件） |
+| 所有权 | `state/`（全部状态文件） |
 | 上下文预算 | ~3K tokens |
 | 必须加载 | Review Report + Writer 的状态增量标记 + 当前全部状态文件 |
 | 按需加载 | 卷记忆摘要模板（压缩时） |
@@ -35,7 +35,7 @@ State Manager 是唯一被授权修改 `90-状态/` 的 Agent。它在 Critic �
 **更新 author.yaml**：
 - 新增秘密 → 追加到 `secrets` 列表
 - `status: hinted` 的秘密 → 更新 `hinted_at` 添加当前章号
-- `status: revealed` 的秘密 → 移入 `90-状态/归档/revealed-secrets.yaml`
+- `status: revealed` 的秘密 → 移入 `state/archive/revealed-secrets.yaml`
 - 更新 `author_notes`（如果 Writer 标记了新的作者备忘）
 
 **更新 character.yaml**：
@@ -83,10 +83,10 @@ chapter_state:
 
 ### 4. 归档管理
 
-维护 `90-状态/归档/` 目录：
+维护 `state/archive/` 目录：
 
 ```
-90-状态/归档/
+state/archive/
 ├── revealed-secrets.yaml         # 已揭示的秘密
 ├── answered-questions.yaml       # 已解答的读者问题
 ├── resolved-threads-summary.yaml # 已回收的伏笔摘要

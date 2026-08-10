@@ -18,7 +18,7 @@ Writer 是唯一产出正文的 Agent。它不知道第 50 章的反转、不知
 
 | 属性 | 值 |
 |------|-----|
-| 所有权 | `30-正文/` |
+| 所有权 | `chapters/` |
 | 上下文预算 | ~6K tokens |
 | 必须加载 | Scene Contract + 最近 2 章正文全文 + voice 样本 + 1-2 参考片段 |
 | 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes |
@@ -100,7 +100,7 @@ Writer 是唯一产出正文的 Agent。它不知道第 50 章的反转、不知
 ```yaml
 writer_output:
   chapter: 11
-  draft_path: "30-正文/第011章-章节名.md"
+  draft_path: "chapters/第011章-章节名.md"
   word_count: 2500
 
   # 状态增量标记（State Manager 消费）

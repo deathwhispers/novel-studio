@@ -23,8 +23,8 @@
 ### Orchestrator（~2K tokens）
 
 **必须加载**：
-- `90-状态/progress.yaml`（约200 tokens）
-- `90-状态/agent-log.yaml`（最后5条，约300 tokens）
+- `state/progress.yaml`（约200 tokens）
+- `state/agent-log.yaml`（最后5条，约300 tokens）
 
 **按需加载**（确认意图后）：
 - 对应的 Workflow 文件（约500 tokens）
@@ -42,7 +42,7 @@
 
 **必须加载**：
 - 用户构想摘要（从 Orchestrator 交接包，约300 tokens）
-- 已有 canon 文件（`10-设定/` 下全部，约3-5K tokens）
+- 已有 canon 文件（`setting/` 下全部，约3-5K tokens）
 - 品类配方 recipe.md（如适用，约1K tokens）
 
 **按需加载**：
@@ -51,9 +51,9 @@
 - 力量体系文件（约1K tokens）
 
 **绝不加载**：
-- `30-正文/` 任何文件
-- `20-大纲/` 任何文件
-- `90-状态/` 任何文件
+- `chapters/` 任何文件
+- `outline/` 任何文件
+- `state/` 任何文件
 
 **超预算处理**：
 - 角色超过 8 个时，只加载 POV 角色的完整档案，其他角色仅加载 ID + 当前状态摘要
@@ -65,17 +65,17 @@
 **必须加载**：
 - Canon 摘要（从 Architect 产出，约500 tokens）
 - 当前卷纲（约1K tokens）
-- `90-状态/author.yaml`（约500 tokens）
-- `90-状态/reader.yaml`（约500 tokens）
-- `90-状态/character.yaml`（仅 POV 角色，约1K tokens）
-- `90-状态/foreshadow.yaml`（仅活跃伏笔，约500 tokens）
+- `state/author.yaml`（约500 tokens）
+- `state/reader.yaml`（约500 tokens）
+- `state/character.yaml`（仅 POV 角色，约1K tokens）
+- `state/foreshadow.yaml`（仅活跃伏笔，约500 tokens）
 
 **按需加载**：
 - 品类配方 rhythm.md（约500 tokens）
 - 节拍卡模板（约300 tokens）
 
 **绝不加载**：
-- `30-正文/` 任何文件（Director 不读正文，通过状态文件了解故事进展）
+- `chapters/` 任何文件（Director 不读正文，通过状态文件了解故事进展）
 
 **超预算处理**：
 - 活跃伏笔超过 10 条时，只加载 high priority
@@ -110,7 +110,7 @@
 - Scene Contract（从 Scene Planner 产出，约400 tokens）
 - 最近 2 章正文**全文**（约3-4K tokens）
 - voice 样本（角色的具体对话和叙述片段，约500 tokens）
-- 1-2 份参考片段（从 `35-参考片段/` 匹配，约300 tokens）
+- 1-2 份参考片段（从 `snippets/` 匹配，约300 tokens）
 
 **按需加载**（写中调用，不预加载）：
 - 单个 narrative skill（dialogue/scene-render/emotion-payoff/pov-control，每次只加载 1 个，约500 tokens）
@@ -154,15 +154,15 @@
 **必须加载**：
 - Review Report（从 Critic 产出，约300 tokens）
 - 正文状态增量标记（从 Writer 产出，约200 tokens）
-- 当前 `90-状态/` 下全部 4 个文件（author/reader/character/foreshadow，约1.5-2K tokens）
+- 当前 `state/` 下全部 4 个文件（author/reader/character/foreshadow，约1.5-2K tokens）
 
 **按需加载**（每 5 章压缩时）：
 - 卷记忆摘要模板（约200 tokens）
 
 **绝不加载**：
-- `30-正文/` 任何文件
-- `20-大纲/` 任何文件
-- `10-设定/` 任何文件
+- `chapters/` 任何文件
+- `outline/` 任何文件
+- `setting/` 任何文件
 
 ---
 

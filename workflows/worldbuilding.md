@@ -42,8 +42,8 @@ Orchestrator 确认用户意图后调度：
 1. 逐项填写角色档案（id/name/role/archetype/surface/depth/arc/constraints）
 2. 如果是 POV 角色 → 额外填写 knowledge 块
 3. 检查与已有角色的关系 → 在已有角色档案中补 relationships
-4. 写入 10-设定/角色/<角色名>.md
-5. 更新 10-设定/硬设定.md（如果新角色引入了新约束）
+4. 写入 setting/characters/<角色名>.yaml
+5. 更新 setting/硬设定.yaml（如果新角色引入了新约束）
 ```
 
 ### 完善力量体系
@@ -76,7 +76,7 @@ Orchestrator 确认用户意图后调度：
 ## State Manager 同步
 
 Architect 修改角色档案后：
-- 同步 `character.yaml` 中的角色状态（新增角色/更新已有角色）
+- 同步 `character.yaml` 中的角色状态（新增characters/更新已有角色）
 - 如果修改了硬设定 → 记录变更
 
 ## 渐进原则

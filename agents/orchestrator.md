@@ -18,9 +18,9 @@ Orchestrator 是用户的唯一接触面。用户只需表达意图，Orchestrat
 
 | 属性 | 值 |
 |------|-----|
-| 所有权 | `90-状态/progress.yaml`、`90-状态/agent-log.yaml` |
+| 所有权 | `state/progress.yaml`、`state/agent-log.yaml` |
 | 上下文预算 | ~2K tokens |
-| 必须加载 | `90-状态/progress.yaml` + `90-状态/agent-log.yaml`（最后 5 条） |
+| 必须加载 | `state/progress.yaml` + `state/agent-log.yaml`（最后 5 条） |
 | 按需加载 | Workflow 文件、品类配方索引 |
 | 绝不加载 | 正文、大纲、设定、canon、状态文件详细内容 |
 | 决策权 | 意图判断、多轮对话、Workflow 选择、异常处理 |
@@ -96,9 +96,9 @@ COMPLETED → 报告用户
 ### 5. 工作区检测
 
 调度前先检测工作区信号：
-- `00-书核/作品总表.md` 是否存在 → 判断是否已完成初始化
-- `90-状态/progress.yaml` 是否存在 → 判断是否有运行状态
-- `30-正文/` 最新章节 → 判断进度
+- `core/作品总表.md` 是否存在 → 判断是否已完成初始化
+- `state/progress.yaml` 是否存在 → 判断是否有运行状态
+- `chapters/` 最新章节 → 判断进度
 
 ## 交接包格式
 
@@ -131,7 +131,7 @@ handoff:
 ## 断点恢复
 
 Orchestrator 启动时：
-1. 读取 `90-状态/agent-log.yaml` 最后一条
+1. 读取 `state/agent-log.yaml` 最后一条
 2. 如果 `status: in_progress` → 从该 Agent 继续
 3. 如果 `status: completed` → 检查 progress.yaml 确认状态一致性
 4. 如果 agent-log 不存在 → 从头开始意图识别

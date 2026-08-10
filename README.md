@@ -40,20 +40,31 @@ Workflow Engine（状态机自动流转）
 ## 目录结构
 
 ```
-novel-engine/
+novel-studio/
 ├── agents/              # 7 个 Agent 定义（角色 + 决策逻辑）
+├── commands/            # 5 个用户入口（slash command）
 ├── skills/              # 13 个纯能力 Skill（Agent 的工具箱）
 │   ├── narrative/       # 对话/场景渲染/情绪兑现/视角控制
 │   ├── analysis/        # AI味检测/信息泄漏/因果/节奏/人物/伏笔
 │   └── craft/           # 文风校准/钩子设计/角色声音
 ├── workflows/           # 4 个 Workflow 状态机
-├── commands/            # 5 个用户入口（slash command）
 ├── genres/              # 品类配方（番茄系统爽文 + 模板）
 ├── runtime/             # 状态 Schema + 上下文预算 + 记忆压缩协议
 ├── references/          # AI 味目录 + 失败案例库
+├── install.sh           # 全局安装脚本
 ├── DESIGN.md            # 完整架构设计文档
-└── skills/              # [待清理] v1 旧版 skill 文件
+└── README.md
 ```
+
+## 安装
+
+一行命令全局安装：
+
+```
+sh https://raw.githubusercontent.com/deathwhispers/novel-studio/main/install.sh
+```
+
+安装后，在任意项目中使用 `/novel` 系列命令。
 
 ## 快速开始
 
@@ -102,23 +113,23 @@ novel-engine/
 | Agent | 角色 | 所有权 |
 |-------|------|--------|
 | Orchestrator | 入口 + 意图识别 + 调度 | progress.yaml, agent-log.yaml |
-| Architect | Canon 唯一所有者 | 00-书核/, 10-设定/ |
-| Director | 故事状态 + 信息释放策略 | 20-大纲/ |
+| Architect | Canon 唯一所有者 | core/, setting/ |
+| Director | 故事状态 + 信息释放策略 | outline/ |
 | ScenePlanner | 场景级节拍设计（五拍骨架） | 场景节拍 |
-| Writer | 正文唯一执行者 | 30-正文/ |
+| Writer | 正文唯一执行者 | chapters/ |
 | Critic | 5 Checker 质量门禁 | 验收标准 |
-| StateManager | 状态更新 + 记忆压缩（唯一写入口） | 90-状态/ |
+| StateManager | 状态更新 + 记忆压缩（唯一写入口） | state/ |
 
 ## 工作区结构（Agent 操作的目标）
 
 ```
 my-novel/
-├── 00-书核/作品总表.md
-├── 10-设定/（硬设定 + 角色 + 世界观 + 力量体系）
-├── 20-大纲/（全书总纲 + 分卷 + 伏笔账本）
-├── 30-正文/（第X章.md）
-├── 35-参考片段/
-└── 90-状态/（author.yaml + reader.yaml + character.yaml + foreshadow.yaml + progress.yaml + agent-log.yaml）
+├── core/作品总表.md
+├── setting/（硬设定.yaml + characters/ + world/ + power-system/）
+├── outline/（全书总纲 + volumes/）
+├── chapters/（第X章.md）
+├── snippets/
+└── state/（author.yaml + reader.yaml + character.yaml + foreshadow.yaml + progress.yaml + agent-log.yaml）
 ```
 
 ## 许可证

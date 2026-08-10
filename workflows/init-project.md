@@ -20,14 +20,14 @@ description: "小说项目初始化流程。Orchestrator 多轮确认 → Archit
             └── 模式（商业连载/类型长篇/文学叙事/短篇/探索起草）
             │
             ▼
-    Architect: 创建 00-书核/ + 10-设定/ 骨架
+    Architect: 创建 core/ + setting/ 骨架
             │
             ├── 读取品类配方 recipe.md（如选择了品类）
-            ├── 生成 作品总表.md + 硬设定.md + 主角档案
+            ├── 生成 作品总表.md + 硬设定.yaml + 主角档案
             └── （可选）按品类骨架初始化力量体系/世界观
             │
             ▼
-    StateManager: 初始化 90-状态/
+    StateManager: 初始化 state/
             │
             ├── 创建 progress.yaml（chapter=0, status=COMPLETED）
             ├── 创建 author.yaml（空模板）
@@ -73,19 +73,19 @@ description: "小说项目初始化流程。Orchestrator 多轮确认 → Archit
 ```
 创建目录结构:
   my-novel/
-  ├── 00-书核/
-  ├── 10-设定/
-  │   ├── 角色/
-  │   ├── 世界观/
-  │   └── 力量体系/
-  ├── 20-大纲/
-  │   └── 分卷/
-  ├── 30-正文/
-  ├── 35-参考片段/
-  └── 90-状态/
+  ├── core/
+  ├── setting/
+  │   ├── characters/
+  │   ├── world/
+  │   └── power-system/
+  ├── outline/
+  │   └── volumes/
+  ├── chapters/
+  ├── snippets/
+  └── state/
 
 创建文件:
-  1. 00-书核/作品总表.md:
+  1. core/作品总表.md:
      - 书名：（由用户后续确定或 Architect 建议）
      - 品类：（用户选择）
      - 模式：（用户选择）
@@ -93,29 +93,29 @@ description: "小说项目初始化流程。Orchestrator 多轮确认 → Archit
      - 一句话概括：（根据 Architec 理解生成）
      - 读者承诺：（品类配方提供的核心体验承诺）
 
-  2. 10-设定/硬设定.md:
+  2. setting/硬设定.yaml:
      - 从品类配方提取不可破坏规则
      - 从用户输入提取核心约束
 
-  3. 10-设定/角色/主角.md:
+  3. setting/characters/主角.yaml:
      - 按角色档案模板创建主角初始档案
 
-  4. 10-设定/力量体系/:
+  4. setting/power-system/:
      - 如果选择品类 → 按品类配方预设
      - 否则 → 创建空模板
 
-  5. 10-设定/世界观/:
+  5. setting/world/:
      - 初始范围（品类配方或用户指定）
 ```
 
 ### 步骤 3：StateManager 初始化状态
 
 ```
-创建 90-状态/ 下所有文件:
+创建 state/ 下所有文件:
   - progress.yaml: chapter=0, chapter_state.status=COMPLETED
   - author.yaml: 空模板
   - reader.yaml: 空模板
-  - character.yaml: 从 10-设定/角色/ 导入
+  - character.yaml: 从 setting/characters/ 导入
   - foreshadow.yaml: 空模板（stats全部=0）
   - agent-log.yaml: 首条记录 "project initialized"
 ```
@@ -126,11 +126,11 @@ description: "小说项目初始化流程。Orchestrator 多轮确认 → Archit
 ✅ 项目初始化完成！
 
 📁 工作区已创建：
-    - 00-书核/作品总表.md
-    - 10-设定/（硬设定 + 主角档案 + 世界观 + 力量体系）
-    - 20-大纲/（待填充）
-    - 30-正文/（待写作）
-    - 90-状态/（运行时状态就绪）
+    - core/作品总表.md
+    - setting/（硬设定 + 主角档案 + 世界观 + 力量体系）
+    - outline/（待填充）
+    - chapters/（待写作）
+    - state/（运行时状态就绪）
 
 🎯 下一步：
     /novel world  — 继续完善世界观和角色设定

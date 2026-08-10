@@ -1,4 +1,4 @@
-# novel-engine: 小说智能运行时 — 架构设计
+# novel-studio: 小说智能运行时 — 架构设计
 
 ## 一、背景与目标
 
@@ -36,7 +36,7 @@
 ## 三、目录结构
 
 ```
-novel-engine/
+novel-studio/
 │
 ├── agents/                        # Agent 定义（角色 + 决策逻辑）
 │   ├── orchestrator.md            # 入口 + 意图识别 + 多轮对话 + 流程调度
@@ -46,6 +46,13 @@ novel-engine/
 │   ├── writer.md                  # 正文唯一执行者
 │   ├── critic.md                  # 5 Checker 质量门禁
 │   └── state-manager.md           # 状态更新 + 记忆压缩（唯一写入口）
+│
+├── commands/                      # 用户入口（slash command）
+│   ├── novel-init.md
+│   ├── novel-write.md
+│   ├── novel-revise.md
+│   ├── novel-check.md
+│   └── novel-world.md
 │
 ├── skills/                        # 纯能力库（Agent 的工具箱）
 │   ├── narrative/                 # 叙事能力
@@ -71,13 +78,6 @@ novel-engine/
 │   ├── init-project.md            # 初始化项目流程
 │   └── worldbuilding.md           # 世界观构建流程
 │
-├── commands/                      # 用户入口（slash command）
-│   ├── novel-init.md
-│   ├── novel-write.md
-│   ├── novel-revise.md
-│   ├── novel-check.md
-│   └── novel-world.md
-│
 ├── genres/                        # 品类配方
 │   ├── 番茄系统爽文/
 │   │   ├── recipe.md              # 核心公式：任务→奖励→打脸→升级 循环
@@ -91,35 +91,38 @@ novel-engine/
 │   ├── context-budget.md          # 各 Agent 的 token 预算表
 │   └── memory-compress.md         # 记忆压缩协议
 │
-└── references/                    # 共享参考资料
-    ├── failure-cases.md           # 50 失败模式（从旧项目迁移）
-    ├── ai-flavor-catalog.md       # AI 味检测目录（从旧项目迁移）
-    └── writing-glossary.md        # 写作术语表
+├── references/                    # 共享参考资料
+│   ├── failure-cases.md           # 50 失败模式
+│   ├── ai-flavor-catalog.md       # AI 味检测目录
+│   └── writing-glossary.md        # 写作术语表
+│
+├── install.sh                     # 全局安装脚本
+├── DESIGN.md
+└── README.md
 ```
 
 ---
 
 ## 四、用户工作区结构（运行时生成）
 
-Agent 操作的工作区，与 `novel-engine` 本身分离：
+Agent 操作的工作区，与 `novel-studio` 本身分离：
 
 ```
 my-novel/
-├── 00-书核/
+├── core/
 │   └── 作品总表.md
-├── 10-设定/
-│   ├── 硬设定.md
-│   ├── 角色/
-│   ├── 世界观/
-│   └── 力量体系/
-├── 20-大纲/
+├── setting/
+│   ├── 硬设定.yaml
+│   ├── characters/
+│   ├── world/
+│   └── power-system/
+├── outline/
 │   ├── 全书总纲.md
-│   ├── 分卷/
-│   └── 伏笔账本.md
-├── 30-正文/
+│   ├── volumes/
+├── chapters/
 │   └── 第X章-章节名.md
-├── 35-参考片段/                   # 用户自填的段落素材
-└── 90-状态/                       # 运行时状态（Agent 读写）
+├── snippets/                   # 用户自填的段落素材
+└── state/                       # 运行时状态（Agent 读写）
     ├── author.yaml                # 作者已知的秘密/计划
     ├── reader.yaml                # 读者已知/猜测的状态
     ├── character.yaml             # 各 POV 角色的认知状态
@@ -136,7 +139,7 @@ my-novel/
 
 | 属性 | 值 |
 |------|-----|
-| 所有权 | `90-状态/progress.yaml`、`90-状态/agent-log.yaml` |
+| 所有权 | `state/progress.yaml`、`state/agent-log.yaml` |
 | 上下文预算 | ~2K tokens |
 | 加载 | progress.yaml + agent-log.yaml |
 | 绝不加载 | 正文/大纲/设定/canon |
@@ -158,7 +161,7 @@ my-novel/
 
 | 属性 | 值 |
 |------|-----|
-| 所有权 | `00-书核/`、`10-设定/` |
+| 所有权 | `core/`、`setting/` |
 | 上下文预算 | ~8K tokens |
 | 加载 | 用户构想 + 已有 canon + 品类配方（如适用） |
 | 绝不加载 | 正文/大纲/状态文件 |
@@ -173,7 +176,7 @@ my-novel/
 
 | 属性 | 值 |
 |------|-----|
-| 所有权 | `20-大纲/` |
+| 所有权 | `outline/` |
 | 上下文预算 | ~6K tokens |
 | 加载 | Canon 摘要 + 当前卷纲 + author.yaml + reader.yaml + character.yaml + foreshadow.yaml |
 | 绝不加载 | 完整正文 |
@@ -207,7 +210,7 @@ my-novel/
 
 | 属性 | 值 |
 |------|-----|
-| 所有权 | `30-正文/` |
+| 所有权 | `chapters/` |
 | 上下文预算 | ~6K tokens |
 | 加载 | Scene Contract + 最近 2 章正文 + voice 样本 + 1-2 参考片段 |
 | 绝不加载 | 完整大纲/完整 canon/状态文件 |
@@ -242,7 +245,7 @@ my-novel/
 
 | 属性 | 值 |
 |------|-----|
-| 所有权 | `90-状态/`（所有状态文件） |
+| 所有权 | `state/`（所有状态文件） |
 | 上下文预算 | ~3K tokens |
 | 加载 | Review Report + 正文状态增量标记 + 当前状态文件 |
 | 绝不加载 | 正文/大纲/canon |
@@ -311,7 +314,7 @@ Orchestrator: 识别意图 → 多轮确认 → 读取 progress.yaml
 Orchestrator: 多轮确认（品类/题材/主角/篇幅）
         │
         ▼
-Architect: 创建 00-书核/ + 10-设定/ 骨架
+Architect: 创建 core/ + setting/ 骨架
         │
         ▼
 （品类配方可选）Architect 按 genre recipe 初始化设定模板
@@ -439,8 +442,8 @@ handoff:
   # 下游启动指令
   downstream:
     must_read:
-      - 20-大纲/分卷/volume-01.md
-      - 90-状态/character.yaml
+      - outline/volumes/volume-01.md
+      - state/character.yaml
     must_not_read:
       - 完整正文
       - 后续章节大纲

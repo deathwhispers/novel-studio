@@ -1,6 +1,6 @@
 # 记忆压缩协议
 
-> State Manager 每 5 章或卷末执行的记忆压缩操作规范。目标：控制 `90-状态/` 总大小在可加载范围内，同时保留足够上下文供 Director 决策。
+> State Manager 每 5 章或卷末执行的记忆压缩操作规范。目标：控制 `state/` 总大小在可加载范围内，同时保留足够上下文供 Director 决策。
 
 ---
 
@@ -10,7 +10,7 @@
 |------|---------|
 | `current.chapter % 5 == 0` | 第 5/10/15/20... 章完成后 |
 | 卷末 | 当前卷最后一章完成后（无论是否 5 的倍数） |
-| `90-状态/` 总大小 > 50KB | 紧急压缩（任意章节完成后） |
+| `state/` 总大小 > 50KB | 紧急压缩（任意章节完成后） |
 
 ---
 
@@ -20,7 +20,7 @@
 
 **操作**：
 1. `status: resolved` 的伏笔保留一行摘要（id + content + resolved_chapter + resolution），删除 `touched_chapters` 详细列表和 `links_to`
-2. `status: abandoned` 的伏笔移到 `90-状态/归档/abandoned-threads.yaml`
+2. `status: abandoned` 的伏笔移到 `state/archive/abandoned-threads.yaml`
 3. 超过 30 章未触碰的 `active` 伏笔 → 标记为 `stale`，在文件中加注释提醒 Director
 
 **压缩后格式**：
@@ -52,7 +52,7 @@ resolved_summary:
 **操作**：
 1. `suspicions` 中 `confidence > 70` 的猜测 → 移到 `known_facts`
 2. `suspicions` 中 `confidence < 20` 且超过 10 章未更新 → 删除
-3. `open_questions` 中已被正文解答的问题 → 移到 `90-状态/归档/answered-questions.yaml`
+3. `open_questions` 中已被正文解答的问题 → 移到 `state/archive/answered-questions.yaml`
 4. 将 `known_facts` 中超过 20 章的事实合并为一段摘要
 
 **压缩后新增**：
@@ -66,15 +66,15 @@ reading_summary: |
 ### 2.4 author.yaml 压缩
 
 **操作**：
-1. `status: revealed` 的秘密 → 移到 `90-状态/归档/revealed-secrets.yaml`
+1. `status: revealed` 的秘密 → 移到 `state/archive/revealed-secrets.yaml`
 2. `planned_reveal_chapter` 已过的秘密 → 更新计划或标记延期
-3. `author_notes` 超过 500 字 → 提取摘要，详细内容移到 `90-状态/归档/author-notes-archive.md`
+3. `author_notes` 超过 500 字 → 提取摘要，详细内容移到 `state/archive/author-notes-archive.yaml`
 
 ---
 
 ## 三、卷记忆生成
 
-每卷结束时生成 `90-状态/卷记忆/第X卷-摘要.md`：
+每卷结束时生成 `state/卷记忆/第X卷-摘要.md`：
 
 ```markdown
 # 第X卷摘要
@@ -115,9 +115,9 @@ reading_summary: |
 每次压缩后执行：
 
 1. `foreshadow.yaml` 中 `resolved_summary` 超过 10 条 → 最旧的移入归档
-2. `character.yaml` 非 POV 角色摘要超过 15 个 → 超过 30 章未出场的角色移入 `90-状态/归档/inactive-characters.yaml`
+2. `character.yaml` 非 POV 角色摘要超过 15 个 → 超过 30 章未出场的角色移入 `state/archive/inactive-characters.yaml`
 3. 所有 YAML 文件的总行数控制在 500 行以内（含卷记忆摘要引用）
-4. 超出部分移入 `90-状态/归档/`，在状态文件中保留引用路径
+4. 超出部分移入 `state/archive/`，在状态文件中保留引用路径
 
 ---
 
@@ -125,8 +125,8 @@ reading_summary: |
 
 State Manager 完成压缩后执行：
 
-- [ ] `90-状态/` 下所有文件总大小 < 50KB
+- [ ] `state/` 下所有文件总大小 < 50KB
 - [ ] 每个 YAML 文件可正常解析
 - [ ] 所有文件间的引用路径有效（不指向已删除文件）
 - [ ] agent-log.yaml 记录本次压缩操作
-- [ ] 归档目录 `90-状态/归档/` 创建完成（如首次）
+- [ ] 归档目录 `state/archive/` 创建完成（如首次）

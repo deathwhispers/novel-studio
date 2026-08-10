@@ -1,6 +1,6 @@
 # 状态文件 Schema
 
-> 定义工作区 `90-状态/` 下所有 YAML 文件的结构和字段约束。State Manager 是本文件定义的唯一实现者。
+> 定义工作区 `state/` 下所有 YAML 文件的结构和字段约束。State Manager 是本文件定义的唯一实现者。
 
 ---
 
@@ -32,12 +32,12 @@ chapter_state:                  # 当前正在写的章节状态（write-chapter
   review_report: ""             # 文件路径，NEED_REVIEW 之后填充
 
 files:
-  book_core: "00-书核/作品总表.md"
-  hard_canon: "10-设定/硬设定.md"
-  outline: "20-大纲/全书总纲.md"
+  book_core: "core/作品总表.md"
+  hard_canon: "setting/硬设定.yaml"
+  outline: "outline/全书总纲.md"
   volumes:
-    - "20-大纲/分卷/volume-01.md"
-  chapters_dir: "30-正文/"
+    - "outline/volumes/volume-01.yaml"
+  chapters_dir: "chapters/"
 
 next_milestone:
   type: "卷末"                  # 卷末 | 中段审视 | 完本
@@ -82,7 +82,7 @@ author_notes: |                 # 自由备注
 
 **约束**：
 - `secrets[].status` 只能取 `hidden | hinted | revealed`
-- State Manager 在每章后将 `status: revealed` 的秘密归档到 `90-状态/归档/`
+- State Manager 在每章后将 `status: revealed` 的秘密归档到 `state/archive/`
 
 ---
 
@@ -248,7 +248,7 @@ entries:
     to_agent: "Director"
     status: "completed"
     output: "Story Contract 已生成"
-    file: "20-大纲/分卷/chapter-11-contract.md"
+    file: "outline/volumes/chapter-11-contract.yaml"
 
   - timestamp: "2026-01-15T10:05:00"
     workflow: "write-chapter"
