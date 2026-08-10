@@ -1,78 +1,125 @@
-# novel-skills
+# novel-studio — 小说智能运行时
 
-面向中文小说创作的写作 skill 套件。核心目标是帮助作者更稳定地完成正文、保持人物与连续性，并用原文证据提升写作质量。
+面向中文长篇小说的 AI 写作 Agent 系统。
 
-## 安装
+**核心理念**：用户只需表达意图（「写第10章」），系统自动编排 7 个 Agent 完成完整流水线——从章节规划、场景设计、正文起草到质量验收和状态更新，全程无需手动干预。
 
-这是一个标准 skills 项目，不需要安装脚本或插件。
+## 与旧版 novel-skills 的区别
 
-1. 下载或克隆本项目。
-2. 把 `skills/` 下的每个技能目录放进你的 agent 的 skills 目录，例如 `~/.codex/skills/`。
-3. 刷新技能列表后即可按技能名调用。
+| | novel-skills (v1) | novel-studio (v2) |
+|---|---|---|
+| 定位 | Skill 集合（工具箱） | Agent Runtime（操作系统） |
+| 调用方式 | 用户手动依次调用各个 skill | 用户一个命令，自动流转全流程 |
+| Agent/Skill 关系 | 混合在一起，边界模糊 | 严格分离：Agent=角色+决策，Skill=纯能力 |
+| 大纲→正文 | 直接跨越，缺少中间层 | Scene Planner 做场景级节拍设计 |
+| 品类支持 | 无品类区分 | 内置品类配方（番茄系统爽文），可扩展 |
+| 状态管理 | 各 skill 各自修改 | State Manager 唯一写入口 |
 
-项目不生成可执行安装器，也不要求把仓库放进特定路径。技能目录本身自包含，复制到目标 skills 目录即可加载。
+## 架构总览
 
-## 核心原则
+```
+User
+  │
+  ▼
+Orchestrator（入口 + 意图识别 + 多轮对话 + 调度）
+  │
+  ▼
+Workflow Engine（状态机自动流转）
+  │
+  ├── Director ──→ Story Contract
+  │       ▼
+  ├── ScenePlanner ──→ Scene Contract
+  │       ▼
+  ├── Writer ──→ 正文 + 状态增量
+  │       ▼
+  ├── Critic ──→ Review Report（5 Checker）
+  │       ▼
+  └── StateManager ──→ 状态更新 + 记忆压缩
+```
 
-- **正文优先**：信息足够时先写，不让资料完整度阻止可逆试写。
-- **模式适配**：支持商业连载、类型长篇、文学叙事、短篇和探索起草。
-- **人物与因果优先**：连续性、动机、因果、hard canon 和非预期视角漂移是硬门禁。
-- **审美目标可选择**：钩子、高潮、字数、对话比例和技法不作为通用质量分数。
-- **渐进披露**：只加载当前任务需要的 skill 与参考资料。
-- **状态增量**：逐章记录真实变化，周期性合并总账，减少维护对创作的打断。
+## 目录结构
 
-## 八个核心技能
+```
+novel-engine/
+├── agents/              # 7 个 Agent 定义（角色 + 决策逻辑）
+├── skills/              # 13 个纯能力 Skill（Agent 的工具箱）
+│   ├── narrative/       # 对话/场景渲染/情绪兑现/视角控制
+│   ├── analysis/        # AI味检测/信息泄漏/因果/节奏/人物/伏笔
+│   └── craft/           # 文风校准/钩子设计/角色声音
+├── workflows/           # 4 个 Workflow 状态机
+├── commands/            # 5 个用户入口（slash command）
+├── genres/              # 品类配方（番茄系统爽文 + 模板）
+├── runtime/             # 状态 Schema + 上下文预算 + 记忆压缩协议
+├── references/          # AI 味目录 + 失败案例库
+├── DESIGN.md            # 完整架构设计文档
+└── skills/              # [待清理] v1 旧版 skill 文件
+```
 
-| 技能 | 职责 |
-|---|---|
-| novel-studio | 根据当前意图选择最短工作路径 |
-| novel-market | 市场研究、对标拆解与商业化包装 |
-| novel-project | 最小书核、项目初始化、篇幅与发布约束 |
-| novel-worldbuilding | 人物、世界规则、设定与连续性资产 |
-| novel-outline | 按模式规划作品、阶段、场景与线索结构 |
-| novel-writing | 正文起稿、轻量硬伤检查与状态增量 |
-| novel-quality | 证据型体检、最小修订与语言形式校准 |
-| novel-feedback | 反馈追踪、假设形成与调整验证 |
+## 快速开始
 
-## 按意图使用
+### 初始化项目
 
-- 只有一个人物或场景火花：直接使用 `novel-writing` 探索起草。
-- 需要规划短篇或长篇结构：使用 `novel-outline` 选择相应深度。
-- 续写长篇：先手写或复用最小上下文包，再进入 `novel-writing`。
-- 只想审查：使用 `novel-quality`，默认不修改正文。
-- 明确需要市场与平台适配：再使用 `novel-market`。
+```
+/novel init
+```
 
-不存在必须完整走完的固定流水线。
+系统会通过多轮对话确认品类、主角定位、篇幅和写作模式，然后自动创建工作区骨架。
 
-## 项目结构参考
+### 写章节
 
-```text
+```
+/novel write 1
+```
+
+自动运行完整流水线：Director → ScenePlanner → Writer → Critic → StateManager。
+
+### 修订章节
+
+```
+/novel revise 5
+```
+
+根据修订范围自动选择最优路径（全文重写/场景重设/局部修复/仅去味）。
+
+### 质量检查
+
+```
+/novel check 5
+```
+
+只输出 Review Report，不修改正文。
+
+### 世界观构建
+
+```
+/novel world
+```
+
+添加角色、完善力量体系、扩展世界观。
+
+## 7 个 Agent
+
+| Agent | 角色 | 所有权 |
+|-------|------|--------|
+| Orchestrator | 入口 + 意图识别 + 调度 | progress.yaml, agent-log.yaml |
+| Architect | Canon 唯一所有者 | 00-书核/, 10-设定/ |
+| Director | 故事状态 + 信息释放策略 | 20-大纲/ |
+| ScenePlanner | 场景级节拍设计（五拍骨架） | 场景节拍 |
+| Writer | 正文唯一执行者 | 30-正文/ |
+| Critic | 5 Checker 质量门禁 | 验收标准 |
+| StateManager | 状态更新 + 记忆压缩（唯一写入口） | 90-状态/ |
+
+## 工作区结构（Agent 操作的目标）
+
+```
 my-novel/
 ├── 00-书核/作品总表.md
-├── 05-市场/（按需，仅商业分析时创建）
-├── 10-设定/
-├── 20-大纲/
-├── 30-正文/
+├── 10-设定/（硬设定 + 角色 + 世界观 + 力量体系）
+├── 20-大纲/（全书总纲 + 分卷 + 伏笔账本）
+├── 30-正文/（第X章.md）
 ├── 35-参考片段/
-└── 90-运行/当前进度.md
+└── 90-状态/（author.yaml + reader.yaml + character.yaml + foreshadow.yaml + progress.yaml + agent-log.yaml）
 ```
-
-这是最小参考，不是必须逐项复制的模板。`05-市场/` 只在用户做市场扫描、拆解或商业化包装时由 `novel-market` 按需创建，不作为新项目默认结构。详细目录约定、创建原则与关联见 `skills/novel-project/references/工作区规范.md`。`skills/novel-project/assets/examples/` 提供片段级范例，用来理解每个文件应该承载什么信息，而不是完整工作区脚手架。`35-参考片段/` 是用户自填的段落素材目录，使用规则见 `skills/novel-writing/references/段落参考使用卡.md`。
-
-`00-书核/` 默认只保留 `作品总表.md`，立项、读者承诺和续集衔接按需作为其中的分区，不单独建文件。
-
-## 验证
-
-```bash
-python3 scripts/validate_skills.py
-```
-
-## 参考来源
-
-- [modoojunko/awesome-novel-skill](https://github.com/modoojunko/awesome-novel-skill)
-- [leenbj/novel-creator-skill](https://github.com/leenbj/novel-creator-skill)
-- [PenglongHuang/chinese-novelist-skill](https://github.com/PenglongHuang/chinese-novelist-skill)
-- [worldwonderer/oh-story-claudecode](https://github.com/worldwonderer/oh-story-claudecode)
 
 ## 许可证
 
