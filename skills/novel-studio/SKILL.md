@@ -1,9 +1,37 @@
 ---
+role: orchestrator
 name: novel-studio
 description: "中文小说工作台路由 skill。用于用户想写小说但任务还不够明确，或需要在开书、导入旧稿、补设定、列大纲、写章节、重写润色之间自动分流时。检查当前工作区是否已有 `00-书核/`, `10-设定/`, `20-大纲/`, `30-正文/` 等小说工程文件，再把任务路由到具体的子 skill。"
 ---
 
+## 在流水线中的位置
+
+本 Agent 是创作流水线的入口。详见 `references/多Agent协作协议.md`。
+
+**角色**：Orchestrator — 会话管理 + 流转控制。不创作，不检查，不更新状态。
+
+**上下游**：用户输入 → Orchestrator → 判断意图 → 生成交接包 → 路由到下游 Agent
+
+**上下文预算**：~2K tokens。加载进度文件 + 运行日志 + 工作区信号。不加载正文/大纲/设定。
+
 # 小说工作台
+
+## 在流水线中的位置
+
+本 Agent 是创作流水线的 **Orchestrator**。详见 `references/多Agent协作协议.md`。
+
+**角色**：会话入口 + 流转控制。不创作，不检查，不更新状态。
+
+**上下游**：用户输入 → Orchestrator → 判断意图 → 生成交接包 → 路由到下游 Agent
+
+**上下文预算**：~2K tokens。加载进度文件 + Agent 运行日志 + 工作区信号。
+
+**核心职责**：
+- 读取 `90-运行/Agent运行日志.md`，判断上次流水线停在哪个 Agent
+- 根据用户意图选择入口 Agent
+- 生成交接包（≤500 tokens），传递给下游
+- 下游 Agent 返回后检查状态，决定继续流转或暂停
+- 不在路由层做任何创作、检查或状态修改
 
 ## 功能定位
 
@@ -13,15 +41,16 @@ description: "中文小说工作台路由 skill。用于用户想写小说但任
 
 本项目包含 8 个核心技能：
 
-| 技能 | 职责 |
-|------|------|
-| novel-studio | 工作台路由，根据意图分流到具体技能 |
-| novel-market | 市场研究、拆解爆款、商业化包装 |
-| novel-project | 项目初始化、立项定核、篇幅规划 |
-| novel-worldbuilding | 构建人物、世界规则、设定圣经 |
-| novel-outline | 大纲规划、卷纲建设、章节节拍卡 |
-| novel-writing | 模式化正文起草、轻量检查、状态增量 |
-| novel-quality | 证据型体检、最小修订、语言与形式校准 |
+| Agent | skill 目录 | 角色 |
+|-------|-----------|------|
+| Orchestrator | novel-studio | 入口 + 流转控制 |
+| Architect | novel-project + novel-worldbuilding | Canon 唯一所有者 |
+| Story Director | novel-outline | 故事状态 + 信息释放策略 |
+| Scene Planner | novel-scene-planner | 场景执行设计 |
+| Writer | novel-writing | 正文唯一执行者 |
+| Critic | novel-quality | 5 Checker 质量验收 |
+| State Manager | novel-state-manager | 状态更新 + 记忆压缩 |
+| （独立） | novel-market | 市场研究，不进入流水线 |
 
 ## 路由顺序
 
@@ -32,33 +61,33 @@ description: "中文小说工作台路由 skill。用于用户想写小说但任
    - 保留硬门禁，软目标和文档产物按任务裁剪
 
 1. 用户想知道什么题材火、哪个平台适合、长短篇怎么选
-   - 路由到 `novel-market`
+   - 路由到 `novel-market`（独立，不进流水线）
 2. 用户想拆解爆款、分析样章、研究对标书
-   - 路由到 `novel-market`
+   - 路由到 `novel-market`（独立，不进流水线）
 3. 用户想做书名、简介、开篇、追读、平台适配或商业化改造
-   - 路由到 `novel-market`
+   - 路由到 `novel-market`（独立，不进流水线）
 4. 用户重点是减少模板感、校准人物声音、改善语言与节奏
-   - 路由到 `novel-quality`
+   - 路由到 Critic（`novel-quality`）
 5. 用户提到"读者反馈""追读率跌了""评论说""根据反馈调整""分析读者反应"
-   - 路由到 `novel-quality`（由 novel-quality 的反馈驱动修订流程处理）
+   - 路由到 Critic（`novel-quality`）（由 novel-quality 的反馈驱动修订流程处理）
 6. 工作区里不存在 `00-书核/作品总表.md`
-   - 路由到 `novel-project`
+   - 路由到 Architect（`novel-project`）
 7. 用户只有点子、题材、角色火花，尚未形成清晰故事核、读者承诺和题材定位
-   - 路由到 `novel-project`
+   - 路由到 Architect（`novel-project`）
 8. 用户重点在人物、设定、门派势力、时间线、世界规则、人物状态或连续性
-   - 路由到 `novel-worldbuilding`
+   - 路由到 Architect（`novel-worldbuilding`）
 9. 用户重点在主线、分卷、主副线、章节节拍、埋线和回收
-   - 路由到 `novel-outline`
+   - 路由到 Story Director（`novel-outline`）
 10. 用户重点是"这一章写得通不通""前后照应有没有丢""人物状态有没有断""需要做章节体检"
-   - 路由到 `novel-quality`
+   - 路由到 Critic（`novel-quality`）
 11. 用户重点在"逐卷细化卷纲""调整某一卷的卷纲""从总纲拆出卷纲"——已有全书总纲和升级阶梯，需要逐卷细化
-    - 路由到 `novel-outline`
+    - 路由到 Story Director（`novel-outline`）
 12. 用户想写下一章、下一场、短篇片段或探索人物声音；即使没有完整节拍卡，也可根据模式保守起草
-    - 路由到 `novel-writing`
+    - 路由到 Writer（`novel-writing`）
 13. 用户已经有正文，想重写、查错、润色、修结构
-    - 路由到 `novel-quality`
+    - 路由到 Critic（`novel-quality`）
 14. 用户明确要求"让 AI 帮我写一节对话/战斗/感情戏""让 AI 扮演角色对戏""让 AI 帮我做体检""让 AI 帮我批量生成"
-    - 路由到 `novel-writing`（调用其 `references/AI-prompts/` 下的对应 prompt 模板）
+    - 路由到 Writer（`novel-writing`）（调用其 `references/AI-prompts/` 下的对应 prompt 模板）
 
 ## 状态同步校验
 
@@ -74,7 +103,7 @@ description: "中文小说工作台路由 skill。用于用户想写小说但任
 - 如果一个请求同时跨多个阶段，按链路顺序拆开处理。
   - 例如"先扫榜再帮我做一本能卖的玄幻书"，先 `novel-market`，再 `novel-project`。
   - 例如"我这章写完了，帮我看有没有前后打架，再顺一下文"，先 `novel-quality`，再 `novel-quality`。
-- **正文优先但先共创**：写新章节或连续场景时路由到 `novel-writing`，由其按章节共创协议先确认剧情运动和执行重点，再起稿；用户已给出完整方案、明确要求直接写，或只是短片段/探索起草时走快速通道。
+- **正文优先但先共创**：写新章节或连续场景时路由到 Writer（`novel-writing`），由其按章节共创协议先确认剧情运动和执行重点，再起稿；用户已给出完整方案、明确要求直接写，或只是短片段/探索起草时走快速通道。
 - **新项目最小确认**：只确认会改变当前写作方向的信息。商业连载可补篇幅、分卷和更新预算；短篇、文学叙事或探索起草不因这些数字未定而阻止试写。
 - 最多只为路由追问一个窄问题。
   - 例如"你现在是想先看市场，还是已经有题材要直接开书？"
@@ -98,6 +127,7 @@ description: "中文小说工作台路由 skill。用于用户想写小说但任
 
 ## 资源
 
+- **多 Agent 协作协议**：`references/多Agent协作协议.md`——7 Agent 定义 + 交接包 + 上下文预算 + 记忆架构 + 渐进纰漏规则（**Orchestrator 启动时必读**）
 - **技能速查与路由**：`references/技能速查与路由.md`——各 skill 能力边界 + 按写作意图的最短路径
 - **重构流程**：`references/重构流程.md`——含可选立项阶段的可裁剪端到端写作流程
 - 
@@ -108,7 +138,7 @@ description: "中文小说工作台路由 skill。用于用户想写小说但任
 |------|------|----------|
 | **忽略用户新需求** | 工作区有旧文件，用户说"我想看看市场"，但路由到旧阶段 | 优先用户当前意图，旧文件只作参考 |
 | **用规划阻止试写** | 用户想试写第一章，却被要求先填完整项目 | 判断为探索起草，先写可逆片段，再决定是否立项 |
-| **重复路由** | "先体检再修订"→两次都路由到 `novel-quality` | 合并为一次 `novel-quality` 调用，内部处理体检+修订 |
+| **重复路由** | "先体检再修订"→两次都路由到 Critic（`novel-quality`） | 合并为一次 `novel-quality` 调用，内部处理体检+修订 |
 | **在路由层写作** | 路由时忍不住写了一大段正文 | 只路由，不写正文——正文在目标 skill 里写 |
 | **不检查工作区** | 用户说"继续写"，但不知道写到哪了 | 先读 `90-运行/当前进度.md` 和 `30-正文/` 目录 |
 | **漏掉多步链路** | 用户说"从头做一本"，只路由到第一步 | 给出完整链路：market→project→worldbuilding→outline→writing→quality |

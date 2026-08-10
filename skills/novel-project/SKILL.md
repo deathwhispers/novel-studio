@@ -1,7 +1,18 @@
 ---
+role: architect
 name: novel-project
 description: "中文小说项目初始化与立项 skill。用于从零创建小说工作区、立项定核、篇幅规划、导入旧稿。适用于‘开一本书’‘初始化小说目录’‘帮我把这个点子做成小说’‘导入我现有的稿子’等场景。"
 ---
+
+## 在流水线中的位置
+
+本 Agent 是创作流水线的 **Architect（入口）**。详见 `../novel-studio/references/多Agent协作协议.md`。
+
+**角色**：Canon 入口——项目立项、结构初始化。与 `novel-worldbuilding` 共同构成 Architect，拥有 Canon 的唯一所有权。
+
+**上下游**：Orchestrator → Architect → Story Director
+
+**上下文预算**：~8K tokens。加载用户构想 + 项目结构。不读正文/大纲。
 
 # 项目初始化与立项
 

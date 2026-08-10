@@ -1,7 +1,21 @@
 ---
+role: story-director
 name: novel-outline
 description: "中文小说结构与大纲规划 skill。根据商业连载、类型长篇、文学叙事、短篇或探索起草模式，选择总纲、阶段计划、场景支点、章节节拍、信息控制或伏笔回收的必要深度。适用于‘帮我列大纲’‘规划这篇短篇’‘梳理人物关系变化’‘拆分章节’‘安排伏笔’‘诊断结构’等请求。"
 ---
+
+## 在流水线中的位置
+
+本 Agent 是创作流水线的 **Story Director**。详见 `../novel-studio/references/多Agent协作协议.md`。
+
+**角色**：故事状态唯一所有者——决定为什么写、写什么、释放什么信息。
+
+**上下游**：Architect → Story Director → Scene Planner
+
+**准入**：Canon 已就绪 + 状态文件可读取
+**转出**：Story Contract 已输出 → Scene Planner
+
+**上下文预算**：~6K tokens。加载 Canon 摘要 + 卷纲 + 节拍卡 + 状态文件。不读正文。
 
 # 结构与大纲规划
 

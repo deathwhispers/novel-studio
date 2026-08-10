@@ -1,23 +1,25 @@
 ---
+role: writer
 name: novel-writing
 description: "中文小说正文写作 skill。根据商业连载、类型长篇、文学叙事、短篇或探索起草模式，优先产出正文，再做必要的连续性检查、最小修订和状态增量。适用于‘写下一章’‘续写这个场景’‘按大纲继续写’‘试写一段人物声音’‘帮我写对话/战斗/感情戏’等场景。"
 ---
 
 # 写作流程
 
-## 在重构流程中的位置
+## 在流水线中的位置
 
-本 skill 承担重构流程的 **Step 4 和 Step 7**（见 `../novel-studio/references/重构流程.md`）：
+本 Agent 是创作流水线的 **Writer**。详见 `../novel-studio/references/多Agent协作协议.md`。
 
-| 步骤 | 在本 skill 的位置 | 转入下步条件 |
-|------|------------------|--------------|
-| Step 4 章节写作 | 第一步到第五步（上下文→共创确认→起稿→交付→自检） | 硬门禁通过 + 章节功能完成；字数和 voice 作为需解释的软信号 |
-| Step 7 状态与学习 | 第五步（状态回写）+ 训练目标更新 | 章节增量已记录；需要时更新唯一训练目标 |
+**角色**：正文唯一执行者——在 Scene Contract 约束内写出可读的句子。
 
-**前后衔接**：
-- 准入：商业连载和类型长篇优先读取节拍卡；文学、短篇或探索起草允许根据用户意图和现有文本直接起稿
-- 转出：Step 4 通过后进 `novel-quality` 的 Step 5（质量检测）
-- 转入：Step 6（最小修订）完成后回到本 skill 记录状态增量；篇幅只按项目硬约束校验
+**上下游**：Scene Planner → Writer → Critic
+
+**准入**：Scene Contract 已就绪（从 Scene Planner 接收）
+**转出**：正文已交付 + 写后自检通过 → Critic
+
+**上下文预算**：~6K tokens。加载 Scene Contract(~400 tokens) + 最近 2 章正文 + voice 样本 + 1-2 份参考片段。不读完整大纲/完整 canon/状态文件。
+
+**关键约束**：Writer 不知道第 50 章的反转或第 80 章的真相。只知道 Scene Contract 说「本章禁止触碰 X、可以释放 Y」，不知道 X 和 Y 的背后原因。
 
 ## 功能定位
 
@@ -36,7 +38,7 @@ description: "中文小说正文写作 skill。根据商业连载、类型长篇
 ```
 连载状态（跨章持久化 — 三态追踪 + 线索表）
      ↕
-novel-outline ──→ Director（本章约束生成）←── novel-worldbuilding
+novel-outline ──→ Story Director → Scene Planner ←── novel-worldbuilding
      ↓
 Writer（novel-writing，本文）
      ↓
@@ -49,12 +51,13 @@ Critic（novel-quality）
 
 | 从 | 到 | 触发条件 |
 |----|----|---------|
-| novel-outline | Director | 节拍卡已有，状态文件已更新 |
-| Director | Writer | 约束已生成并确认 |
+| Story Director | Scene Planner | Story Contract 已生成 |
+| Scene Planner | Writer | Scene Contract 已生成并确认 |
 | Writer | Critic | 正文已交付 + 写后自检已通过 |
 | Critic | Writer | 硬门禁失败，需要局部修复 |
-| Critic | Director | 骨架失效，需要重新生成约束 |
-| Critic | 结束 | 验收通过 + 状态已回写 |
+| Critic | Scene Planner | 骨架失效，需要重新设计场景 |
+| Critic | State Manager | 验收通过（仅通过时） |
+| State Manager | Orchestrator | 状态已更新 + 压缩完成 |
 
 每个切换点必须满足转入条件；未满足时停在当前 agent，不跳步。
 
@@ -79,16 +82,15 @@ Critic（novel-quality）
 
 短片段、角色试声和探索起草不强制完整三轮；探索起草只确认不可违反的事实、探索目标和允许变化的边界。
 
-### 第二步半：Director 导演约束生成（章节类必做）
+### 第二步半：接收 Scene Contract，确认约束（章节类必做）
 
-> 在进入正文写作前，必须生成「创作约束」。这不是节拍卡（节拍卡管剧情「发生什么」），而是导演指令——管信息释放节奏、禁止触碰边界、旧线触碰策略。Writer 在约束内写作，Critic 按约束验收。
+> Scene Planner 已生成 Scene Contract。Writer 不重新设计约束——只阅读、理解、确认，然后在此约束内写作。
 
 **输入来源**：
-- 节拍卡（`../../novel-outline/references/节拍卡模板.md`）—— 本章剧情支点
-- 连载状态（`10-状态/连载状态.md`）—— 三态追踪 + 线索表
-- 本章确认单（上一步产出）—— 用户确认的路径和选择
+- Scene Contract（Scene Planner 输出）—— 五拍骨架 + 视角约束 + 场景序列
+- 本章确认单（上一步产出）—— 用户确认的路径和选择（如有）
 
-**Director 输出**：按 `references/连载状态追踪.md#五本章-director-约束` 模板，生成包含以下项目的约束块：
+**Scene Contract 包含**：
 
 1. 本章功能（推进/揭示/余震/过渡/高潮）
 2. 信息释放计划（可释放 / 可暗示 / 禁止触碰——直接从作者状态提取）
@@ -99,9 +101,9 @@ Critic（novel-quality）
 7. 必须保留/避免（voice 特征 + AI 味高危模式）
 
 **执行规则**：
-- 生成约束后附一句「约束已生成，是否调整？确认后开始正文。」
-- 用户说「直接写」→ 用约束隐式引导写作，不展示完整约束块
-- 短片段和探索起草只生成视角约束 + 最少禁止触碰项
+- 收到 Scene Contract 后，确认理解约束，直接开始写作
+- 如果约束与当前上下文有明显冲突，通过 Orchestrator 回传疑问，不自行修改约束
+- 短片段和探索起草可跳过完整 Scene Contract
 
 ### 第三步：起稿执行
 
@@ -162,7 +164,7 @@ Critic（novel-quality）
 
 - 更新对应章节文件。
 - 按 `references/写后状态与训练.md#一章节状态增量` 生成一份短小 delta。
-- **更新 `10-状态/连载状态.md`**：按 `references/连载状态追踪.md#六状态更新协议` 执行——更新角色状态、读者状态、线索追踪；新秘密加入作者状态；已揭示的秘密归档。
+- **标记状态增量**：Writer 只标记本章实际发生的变化（不直接修改状态文件——那是 State Manager 的事）——更新角色状态、读者状态、线索追踪；新秘密加入作者状态；已揭示的秘密归档。
 - 只有新 hard canon 立即更新硬设定；其余总账每 5 章或卷末合并。
 - 没有变化的文件不更新；状态维护失败不阻止正文交付，但要明确列出未回写项。
 

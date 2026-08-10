@@ -1,7 +1,16 @@
 ---
+role: architect
 name: novel-worldbuilding
 description: "中文小说设定圣经 skill。用于从零构建或修订完整的世界观体系，包括地理、社会、角色、势力、力量、时间线、母题、核心冲突等所有设定维度。尤其适合长篇连载需要稳定连续性的场景。适用于'帮我补世界观''整理角色关系''建立设定圣经''修复设定冲突''给这本书做人物档案'等请求。"
 ---
+
+## 在流水线中的位置
+
+本 Agent 是创作流水线的 **Architect（引擎）**。详见 `../novel-studio/references/多Agent协作协议.md`。
+
+**角色**：Canon 引擎——世界规则、人物设定、硬约束。与 `novel-project` 共同构成 Architect。
+
+**上下文预算**：~8K tokens。加载用户构想 + 已有 canon。不读正文/大纲。
 
 # 设定圣经
 

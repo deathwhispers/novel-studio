@@ -1,23 +1,33 @@
 ---
+role: critic
 name: novel-quality
 description: "中文小说质量检查与修订 skill。根据写作模式，用原文证据检查连续性、人物可信度、因果、视角、情绪、信息控制、语言与形式，并执行最小修订。适用于‘检查这章’‘看有没有前后打架’‘重写这一段’‘把文字修得更像成书’‘减少模板感’‘发布前精修’等场景。"
 ---
 
 # 质量检查与修订
 
-## 在重构流程中的位置
+## 在流水线中的位置
 
-本 skill 承担重构流程的 **Step 5 和 Step 6**（见 `../novel-studio/references/重构流程.md`）：
+本 Agent 是创作流水线的 **Critic**。详见 `../novel-studio/references/多Agent协作协议.md`。
 
-| 步骤 | 在本 skill 的位置 | 转入下步条件 |
-|------|------------------|--------------|
-| Step 5 质量检测 | 第一步（章节体检）+ 第二步（问题诊断）+ 叙事质量审计 | 硬门禁全过 + 本章选定的 2-3 个软目标有可引用证据 |
-| Step 6 最小修订 | 第三步（按授权修订）+ 第四步（语言与形式复核） | 改写未引入新硬伤，且没有为消除表面特征损害原有 voice |
+**角色**：质量门禁唯一裁判——内部执行 5 个 Checker，输出 Review Report。
 
-**前后衔接**：
-- 准入：Step 4 由 `novel-writing` 起稿完成，写后自检已通过
-- 转出：Step 6 通过后回 `novel-writing` 做 Step 7 状态与学习；篇幅只在存在项目硬约束时复核
-- 失败回退：硬门禁问题 → 优先局部修复，只有章节功能或因果骨架失效时才回 Step 3/4；软目标不足不自动触发整章重写
+**上下游**：Writer → Critic → State Manager（通过时）/ Writer 或 Scene Planner（未通过时）
+
+**准入**：正文已交付 + Scene Contract 可用
+**转出**：Review Report 通过 → State Manager；未通过 → 回 Writer（局部修复）或 Scene Planner（骨架失效）
+
+**上下文预算**：~5K tokens。加载当前章正文 + Scene Contract + Story Contract 约束部分 + AI 味目录。不读完整 canon/完整大纲/其他章节。
+
+**内部 5 个 Checker**（按顺序执行）：
+
+| Checker | 检查内容 | 失败处理 |
+|---------|---------|---------|
+| Logic Checker | 因果链、连续性、硬设定违反 | 局部修复，骨架问题回 Scene Planner |
+| Information Leak Checker | 正文是否触碰 Story Contract 的禁止触碰清单 | 局部移除 + 复查上下文 |
+| Character Checker | 人物动机、选择可信度、POV 角色认知边界 | 局部修复 |
+| Pace Checker | 场景节拍是否按 Scene Contract 执行、节奏是否断裂 | 标注偏离，不自动修复 |
+| Style Checker | AI 味扫描、角色辨识度、voice 漂移 | 标注并给出修复建议 |
 
 ## 功能定位
 
@@ -29,17 +39,23 @@ description: "中文小说质量检查与修订 skill。根据写作模式，用
 
 ## 多 Agent 协作协议
 
-本 skill 在协作链中担任 **Critic** 角色。验收标准不是自由审查，而是对照 Director 生成的约束块逐项验证。
+本 Agent 在协作链中担任 **Critic**。验收标准不是自由审查——对照 Story Contract + Scene Contract 逐项验证。
 
 **验收输入**：
 - 正文（Writer 交付）
-- Director 约束（`10-状态/连载状态.md#五本章-director-约束`，或 Writer 传递的约束内容）
-- 连载状态（`10-状态/连载状态.md`）
+- Scene Contract（Scene Planner 输出——场景五拍 + 视角约束）
+- Story Contract（Story Director 输出——信息释放策略 + 禁止触碰清单）
+- 状态文件（`10-状态/连载状态.md`——用于 Character Checker 的认知边界验证）
 
-**验收输出**：
-- 硬门禁结果：通过 / 局部修复 / 骨架失效
-- 约束符合度：本章约束中每一项的符合情况
-- 状态更新：连载状态文件更新为写后状态
+**验收输出**（Review Report）：
+```text
+通过 / 局部修复 / 骨架失效
+Logic: 通过 / 失败(原因)
+Info Leak: 通过 / 失败(具体泄露项)
+Character: 通过 / 失败(具体问题)
+Pace: 符合约束 / 偏离(说明)
+Style: 通过 / 需修复(N处AI味 / voice漂移)
+```
 
 **约束对照验收清单**（每章必查）：
 
@@ -53,10 +69,10 @@ description: "中文小说质量检查与修订 skill。根据写作模式，用
 | AI 味 | 按 AI 味目录强制扫描 | 逐项修复或标记 |
 
 **转出规则**：
-- 硬门禁全过 + 约束符合 → 状态回写，流程结束
+- 全部通过 → 输出 Review Report → State Manager
 - 硬门禁失败（局部修复） → 回 Writer，不做全章重写
-- 骨架失效（约束中的核心功能未完成） → 回 Director，重新生成约束
-- 仅 AI 味问题 → Critic 内修复，不回 Writer
+- 骨架失效（核心功能未完成） → 回 Scene Planner，重新设计场景
+- 仅 AI 味/Style 问题 → Critic 内修复，不回 Writer
 
 ## 工作流程
 
