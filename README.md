@@ -34,7 +34,7 @@ flowchart TD
 ## 安装
 
 ```bash
-sh https://raw.githubusercontent.com/deathwhispers/novel-studio/main/install.sh
+curl -fsSL https://raw.githubusercontent.com/deathwhispers/novel-studio/main/install.sh | sh
 ```
 
 安装后，任意目录下可用 `/novel` 系列命令。
