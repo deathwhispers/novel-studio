@@ -56,7 +56,7 @@ claude plugin install novel-studio@novel-studio
 ## 架构：Agent 流水线
 
 ```mermaid
-flowchart LR
+flowchart TB
     classDef entry fill:#4f46e5,stroke:#3730a3,color:#fff,stroke-width:2px
     classDef plan fill:#0ea5e9,stroke:#0284c7,color:#fff,stroke-width:2px
     classDef draft fill:#8b5cf6,stroke:#7c3aed,color:#fff,stroke-width:2px
@@ -65,15 +65,33 @@ flowchart LR
     classDef done fill:#6b7280,stroke:#4b5563,color:#fff,stroke-width:2px
 
     User(["👤 用户指令"]):::entry
+    Orch["🎯 Orchestrator<br/>意图识别 + 信息裁剪"]:::entry
 
-    User -->|"write N"| Orch["🎯 Orchestrator<br/>意图识别 + 信息裁剪"]:::entry
+    User -->|"/novel-studio:write N"| Orch
 
-    Orch -->|"DirectorBrief ~2.5K"| Dir["📋 Director<br/>Story Contract<br/>信息释放策略"]:::plan
-    Dir -->|"ScenePlannerBrief ~1.5K"| SP["🎬 ScenePlanner<br/>场景五拍骨架<br/>因果链设计"]:::plan
-    SP -->|"WriterBrief ~1.5K"| W["✍️ Writer<br/>正文起草<br/>4 项硬门禁"]:::draft
-    W -->|"CriticBrief ~1K"| C["🔍 Critic<br/>5 Checker<br/>质量门禁"]:::review
+    subgraph Plan[" 规划阶段 "]
+        direction LR
+        Dir["📋 Director<br/>Story Contract<br/>信息释放策略"]:::plan
+        SP["🎬 ScenePlanner<br/>场景五拍骨架<br/>因果链设计"]:::plan
+        Dir -->|"ScenePlannerBrief ~1.5K"| SP
+    end
 
-    C -->|"通过"| SM["📋 StateManager<br/>状态更新<br/>记忆压缩"]:::persist
+    subgraph Execute[" 执行阶段 "]
+        W["✍️ Writer<br/>连续起草正文<br/>4 项场景硬门禁"]:::draft
+    end
+
+    subgraph Verify[" 验收阶段 "]
+        C["🔍 Critic<br/>5 Checker 并行检查<br/>逻辑 · 信息泄漏 · 人物 · 节奏 · 文风"]:::review
+    end
+
+    subgraph Commit[" 持久化阶段 "]
+        SM["📋 StateManager<br/>状态更新 · 记忆压缩<br/>state/ 唯一写入口"]:::persist
+    end
+
+    Orch -->|"DirectorBrief ~2.5K"| Dir
+    SP -->|"WriterBrief ~1.5K"| W
+    W -->|"CriticBrief ~1K"| C
+    C -->|"通过"| SM
     C -.->|"局部修复"| W
     C -.->|"骨架失效"| SP
 
