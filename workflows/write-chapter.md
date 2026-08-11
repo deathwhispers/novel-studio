@@ -64,11 +64,19 @@ INPUT: 用户指令 "/novel-studio:write 11"
 
 ORCHESTRATOR 动作:
   1. 读取 progress.yaml
-  2. 如果 chapter_state 已有状态（断点恢复）→ 从该状态继续
+  2. 如果 chapter_state 已有状态（断点恢复）→ 从该状态继续，先报告当前进度
   3. 如果是新章节:
-     - 计算下一章号（current.chapter + 1）
-     - 多轮确认本章方向（1-2个问题）
-     - 写入 progress.yaml: chapter_state = NEED_PLAN
+     a. 读取上一章正文全文 + 最近 2-3 章结构摘要
+     b. 读取当前活跃伏笔（status: active|touched）、角色压力项、读者待解答问题
+     c. 根据当前叙事状态 + 品类节奏要求，生成 2-3 个发展方向选项:
+        每个选项包含：
+        - 方向: 本章核心功能（推进 / 揭示 / 高潮 / 过渡 / 余震）
+        - 一句话梗概: 这一章讲什么
+        - 关键事件: 2-3 个主要情节节点  
+        - 章尾落点: 这一章结束时读者最想知道什么
+        - 优劣: 这个方向的优势与风险
+     d. 展示选项，等待用户选择（用户可单选、混合、或提出自己的方向）
+     e. 用户确认 → 写入 progress.yaml: chapter_state = NEED_PLAN
   4. 生成交接包 → 传递给 Director
 ```
 
