@@ -1,150 +1,158 @@
-# novel-studio
+<p align="center">
+  <h1 align="center">Novel Studio</h1>
+  <p align="center">
+    <b>面向中文长篇小说的 AI 写作多智能体系统</b>
+    <br/>
+    一个命令，自动编排 8 个 Agent 完成从大纲到成稿的完整流水线
+  </p>
+</p>
 
-面向中文长篇小说的 AI 写作多 Agent 系统。一个命令，自动编排 7 个 Agent 完成完整流水线。
+<p align="center">
+  <img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License" />
+  <img src="https://img.shields.io/badge/version-1.0.0-green" alt="Version" />
+  <img src="https://img.shields.io/badge/platform-Claude%20Code-orange" alt="Platform" />
+</p>
 
-**核心理念**：用户表达意图，系统自动流转——从章节规划、场景设计、正文起草到质量验收和状态更新。Agent 之间通过渐进式披露传递信息，每个 Agent 只看到任务所需的最小上下文。
+---
 
-## 架构总览
+## 为什么选择 Novel Studio
 
-```mermaid
-flowchart TD
-    User["👤 User /novel-studio:write N"]
-    Orchestrator["🎯 Orchestrator<br/>意图识别 + 信息裁剪"]
+用 AI 写长篇小说最痛苦的不是文笔——是**失控**。
 
-    User --> Orchestrator
+写到第 50 章忘了第 3 章埋的伏笔、角色性格悄然漂移、信息释放节奏混乱、上下文越写越长直到模型崩溃。  
+Novel Studio 把这套复杂度拆成 **8 个各司其职的 Agent**，每个 Agent 只看到任务所需的最小上下文，通过状态机自动流转。
 
-    subgraph Pipeline["状态机自动流转"]
-        Director["📋 Director<br/>Story Contract"]
-        ScenePlanner["🎬 ScenePlanner<br/>Scene Contract"]
-        Writer["✍️ Writer<br/>正文 + state_delta"]
-        Critic["🔍 Critic<br/>Review Report"]
-        StateManager["📋 StateManager<br/>状态更新 + 记忆压缩"]
-    end
+> **你表达意图，系统自动流转。中间不需要人工干预。**
 
-    Orchestrator -->|"DirectorBrief"| Director
-    Director -->|"ScenePlannerBrief"| ScenePlanner
-    ScenePlanner -->|"WriterBrief"| Writer
-    Writer -->|"CriticBrief"| Critic
-    Critic -->|"🟢 通过"| StateManager
-    Critic -.->|"🟡 局部修复"| Writer
-    Critic -.->|"🔴 骨架失效"| ScenePlanner
-    StateManager --> Done(["✅ 完成"])
-```
-
-## 安装
+## 快速安装
 
 ```bash
 claude plugin marketplace add deathwhispers/novel-studio
 claude plugin install novel-studio@novel-studio
 ```
 
-安装后即可使用 `/novel-studio:write`、`/novel-studio:init` 等命令。
-
-## 快速开始
+## 一条命令写完一章
 
 ```bash
-/novel-studio:init          # 初始化项目（多轮对话：品类/主角/篇幅/模式）
-/novel-studio:world         # 完善世界观、添加角色
-/novel-studio:write 1       # 写第1章（自动流转完整流水线）
-/novel-studio:check 5       # 只读质量检查（不修改正文）
-/novel-studio:revise 5      # 修订章节（自动选择最优路径）
-/novel-studio:migrate path  # 导入已有章节（分批分析 → 合成 → 确认）
+/novel-studio:write 10
 ```
 
-## 6 条流水线
+从确认方向 → 故事合约 → 场景五拍 → 正文起草 → 五重质量检查 → 状态更新，**全自动流转**：
 
-| 命令 | 流水线 | 说明 |
-|------|--------|------|
-| `/novel-studio:init` | init-project | 多轮确认 → Architect 创建骨架 → StateManager 初始化状态 |
-| `/novel-studio:world` | worldbuilding | 添加角色/完善力量体系/扩展世界观 |
-| `/novel-studio:write N` | write-chapter | 完整流转：Director → ScenePlanner → Writer → Critic → StateManager |
-| `/novel-studio:revise N` | revise-chapter | 自动选择范围：全文重写/场景重设/局部修复/仅去味 |
-| `/novel-studio:check N` | novel-check | Critic 只读扫描，仅输出 Review Report |
-| `/novel-studio:migrate` | migrate-project | 存量导入：分批分析 → 合成归档 → 作者确认 → 文件生成 |
+```
+✍️ 正在确认第 10 章方向…
+   ✅ 本章功能：推进（主角首次使用新能力）
+   章尾钩子：系统弹出前所未有的任务类型
 
-完整流转细节见 [`workflows/pipeline.md`](workflows/pipeline.md)。
+🎬 正在设计场景结构…
+   ✅ 3 个场景已编排（钩子 → 主体冲突 → 收束）
+
+📝 正在写作中…
+   ✅ 第 10 章完成（2800 字）
+
+🔍 正在质量检查…
+   ✅ 通过（AI 味 2 处已修复，无硬伤）
+
+📋 状态已更新 → 第 10 章完结
+```
+
+## 命令一览
+
+| 命令 | 用途 |
+|------|------|
+| `/novel-studio:init` | 初始化新项目 — 多轮对话确定品类、主角、篇幅、模式 |
+| `/novel-studio:world` | 世界观构建 — 添加角色、完善力量体系、扩展设定 |
+| `/novel-studio:write <N>` | 写章节 — Director → ScenePlanner → Writer → Critic → StateManager |
+| `/novel-studio:check <N>` | 只读质量检查 — 5 个 Checker 扫描，不修改正文 |
+| `/novel-studio:revise <N>` | 修订章节 — 自动选择最优修复路径 |
+| `/novel-studio:migrate <path>` | 存量项目导入 — 已有章节逆向提取为结构化状态 |
+
+## 架构：Agent 流水线
+
+```mermaid
+flowchart TD
+    User["User: /novel-studio:write N"]
+    Orchestrator["Orchestrator<br/>意图识别 + 信息裁剪"]
+
+    User --> Orchestrator
+
+    subgraph Pipeline["状态机自动流转"]
+        Director["Director<br/>Story Contract"]
+        ScenePlanner["ScenePlanner<br/>Scene Contract"]
+        Writer["Writer<br/>正文 + state_delta"]
+        Critic["Critic<br/>Review Report"]
+        StateManager["StateManager<br/>状态更新 + 记忆压缩"]
+    end
+
+    Orchestrator -->|"DirectorBrief"| Director
+    Director -->|"ScenePlannerBrief"| ScenePlanner
+    ScenePlanner -->|"WriterBrief"| Writer
+    Writer -->|"CriticBrief"| Critic
+    Critic -->|"通过"| StateManager
+    Critic -.->|"局部修复"| Writer
+    Critic -.->|"骨架失效"| ScenePlanner
+    StateManager --> Done(["完成"])
+```
 
 ## 8 个 Agent
 
-| Agent | 角色 | 预算 | 输入 |
-|-------|------|------|------|
-| Orchestrator | 入口 + 意图识别 + 信息裁剪 | ~2K | progress.yaml + agent-log |
-| Architect | Canon 唯一所有者（世界观/设定） | ~8K | 用户构想 + canon + 品类配方 |
-| Archivist | 正文逆向归档（仅迁移） | ~8K/批 | MigrationBrief + 批次章节 |
-| Director | 信息释放策略 + Story Contract | ~4K | DirectorBrief（状态摘要） |
-| ScenePlanner | 场景五拍骨架设计 | ~3K | ScenePlannerBrief（Story Contract + 结构） |
-| Writer | 正文唯一执行者 | ~3K | WriterBrief + chapter N-1 全文 |
-| Critic | 5 Checker 质量门禁 | ~3K | CriticBrief + 正文 + AI 味检测清单 |
-| StateManager | 状态更新 + 记忆压缩（唯一写入口） | ~2.5K | StateManagerBrief + 状态文件 |
+每个 Agent 只掌握自己职责范围内的信息，通过 Orchestrator 裁剪的**交接包**通信。
 
-## 渐进式披露
+| Agent | 职责 | 所有权 | 关键约束 |
+|-------|------|--------|----------|
+| **Orchestrator** | 入口 + 意图识别 + 信息裁剪 | progress.yaml, agent-log | 不创作、不检查、不修改状态 |
+| **Architect** | Canon 唯一所有者 | core/, setting/ | 不读正文、不写大纲 |
+| **Archivist** | 正文逆向归档（仅迁移） | 迁移期间的临时分析 | 不编造正文中没有的信息 |
+| **Director** | 信息释放策略 + Story Contract | outline/ | 不读正文、不写正文 |
+| **ScenePlanner** | 场景五拍骨架设计 | 场景节拍 | 不写正文、不决定信息释放 |
+| **Writer** | 正文唯一执行者 | chapters/ | 不知道第 50 章的反转 |
+| **Critic** | 5 Checker 质量门禁 | 质量报告 | 不修改正文 |
+| **StateManager** | 状态更新 + 记忆压缩 | state/（唯一写入口） | Critic 未通过不执行 |
 
-每个 Agent 不直接加载文件，而是接收 Orchestrator 裁剪后的**交接包**：
+### 渐进式披露：信息裁剪
 
-| 交接包 | 方向 | 内容 |
-|--------|------|------|
-| DirectorBrief | → Director | 状态摘要（非完整文件）+ 卷纲 + 硬设定 |
-| ScenePlannerBrief | → ScenePlanner | 完整 Story Contract + POV 角色摘要 + 最近章节结构 |
-| WriterBrief | → Writer | scenes/five_beats + 约束 + chapter N-2 摘要 |
-| CriticBrief | → Critic | 合并检查清单（forbid_touch + canon + pov） |
-| StateManagerBrief | → StateManager | Review Report + state_delta |
+每个 Agent 不是直接加载文件，而是接收 Orchestrator 裁剪后的专属 Brief。累计上下文预算从 ~34K 降至 ~25K。
 
-累计上下文预算从 ~34K 降至 ~25K。详细定义见 [`runtime/handoff-schema.md`](runtime/handoff-schema.md)。
+| 交接包 | 接收方 | 预估大小 | 核心内容 |
+|--------|--------|----------|----------|
+| DirectorBrief | Director | ~2.5K | 状态摘要 + 卷纲 + 硬设定 |
+| ScenePlannerBrief | ScenePlanner | ~1.5K | 完整 Story Contract + POV 角色摘要 |
+| WriterBrief | Writer | ~1.5K | 五拍骨架 + 约束 + 章尾落点 |
+| CriticBrief | Critic | ~1K | 合并检查清单（forbid + canon + pov） |
+| StateManagerBrief | StateManager | ~0.5K | Review Report + state_delta |
 
 ## 工作区结构
 
+一个典型项目的工作目录：
+
 ```
 my-novel/
-├── core/
-│   └── 作品总表.md
-├── setting/
-│   ├── 硬设定.yaml
-│   ├── characters/
-│   ├── world/
-│   └── power-system/
-├── outline/
-│   ├── 全书总纲.md
-│   └── volumes/
-├── chapters/
-│   └── 第X章-章节名.md
-├── snippets/
-└── state/
-    ├── author.yaml          # 作者秘密/计划
-    ├── reader.yaml          # 读者已知/猜测
+├── core/                    # 作品总表
+├── setting/                 # 角色、世界、力量体系
+├── outline/                 # 全书总纲 + 分卷大纲
+├── chapters/                # 已完成的章节正文
+├── snippets/                # 灵感片段
+└── state/                   # 运行时状态（系统维护）
+    ├── author.yaml          # 秘密、计划、备忘
+    ├── reader.yaml          # 读者已知/猜测/疑问
     ├── character.yaml       # 角色认知状态
     ├── foreshadow.yaml      # 伏笔追踪
-    ├── progress.yaml        # 进度
-    └── agent-log.yaml       # 运行日志
+    ├── progress.yaml        # 写作进度
+    └── agent-log.yaml       # Agent 运行日志
 ```
 
-## 项目结构
+## 5 大关键设计
 
-```
-novel-studio/
-├── agents/                  # 8 个 Agent 定义
-├── commands/                # 6 个用户入口
-├── skills/                  # 13 个纯能力 Skill
-│   ├── narrative/           # 对话/场景渲染/情绪兑现/视角控制
-│   ├── analysis/            # AI味检测/信息泄漏/因果/节奏/人物/伏笔
-│   └── craft/               # 文风校准/钩子设计/角色声音
-├── workflows/               # 工作流 + 统一流水线定义
-├── genres/                  # 品类配方（番茄系统爽文 + 模板）
-├── runtime/                 # 交接包 Schema + 上下文预算 + 记忆压缩协议
-├── references/              # AI 味检测清单 + 完整目录 + 失败案例库
-├── .claude-plugin/
-│   └── plugin.json          # Claude Code Plugin 定义
-├── DESIGN.md                # 完整架构设计文档
-└── README.md
-```
+> **Agent 不自选后继。** 下一步永远由状态机决定：NEED_PLAN → NEED_SCENE → NEED_DRAFT → NEED_REVIEW → COMPLETED。
 
-## 关键设计决策
+> **StateManager 是唯一写入口。** 其他 Agent 只标记增量（state_delta），不直接写 `state/`。
 
-- **Agent 不自选后继**：下一步由状态机决定（NEED_PLAN → NEED_SCENE → NEED_DRAFT → NEED_REVIEW → COMPLETED）
-- **StateManager 是唯一写入口**：其他 Agent 只标记增量，不直接写 `state/`
-- **Writer 不读大纲**：只知道 Scene Contract 和禁止触碰清单，不知道第 50 章的反转
-- **Critic 最后一道门禁**：5 Checker（逻辑/信息泄漏/人物/节奏/文风），通过后才更新状态
-- **修复回路**：局部修复 → 回 Writer，骨架失效 → 回 ScenePlanner，大面积信息泄漏 → 回 Director
+> **Writer 不知道第 50 章的反转。** 只知道 Scene Contract 说了「可以写 X，禁止碰 Y」，避免无意识剧透。
 
-## 许可证
+> **Critic 是最后一道门禁。** 5 个 Checker（逻辑 / 信息泄漏 / 人物 / 节奏 / 文风），全部通过后才更新状态。
 
-Apache-2.0
+> **修复回路精准回退。** 局部修复 → 回 Writer；骨架失效 → 回 ScenePlanner；大面积信息泄漏 → 回 Director。
+
+## 许可
+
+[Apache-2.0](LICENSE)
