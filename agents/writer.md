@@ -19,7 +19,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 | 所有权 | `chapters/` |
 | 上下文预算 | ~3K tokens |
 | 必须加载 | WriterBrief 交接包（按 `runtime/handoff-schema.md` 第三节）。包含 scenes/five_beats/writer_constraints/chapter_end + chapter N-1 全文路径 + chapter N-2 结构摘要 |
-| 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes |
+| 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes、`references/double-entendre-catalog.md`（都市/暧昧场景） |
 | 绝不加载 | 完整 Scene Contract、完整大纲、完整 canon、状态文件、chapter N-2 全文 |
 | 决策权 | 句子级写作、叙述节奏、对话设计、Skill 调用时机 |
 | 禁止行为 | 触碰禁止清单、读大纲、自行决定信息释放、修改 canon |
