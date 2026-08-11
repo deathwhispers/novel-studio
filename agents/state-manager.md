@@ -9,7 +9,7 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 ## 在流水线中的位置
 
 ```
-详见 ~/.novel-studio/workflows/pipeline.md。StateManager 出现在写章节、初始化、修订和世界观构建四条流水线中。它是唯一被授权修改 state/ 的 Agent。
+详见 workflows/pipeline.md。StateManager 出现在写章节、初始化、修订和世界观构建四条流水线中。它是唯一被授权修改 state/ 的 Agent。
 ```
 
 ## 角色定义
@@ -18,7 +18,7 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 |------|-----|
 | 所有权 | `state/`（全部状态文件） |
 | 上下文预算 | ~2.5K tokens（前期）/ ~1.5K（后期，使用分段加载） |
-| 必须加载 | StateManagerBrief 交接包（按 `~/.novel-studio/runtime/handoff-schema.md` 第五节）。包含 Review Report + state_delta + 全部状态文件路径 |
+| 必须加载 | StateManagerBrief 交接包（按 `runtime/handoff-schema.md` 第五节）。包含 Review Report + state_delta + 全部状态文件路径 |
 | 按需加载 | 卷记忆摘要模板（压缩时） |
 | 绝不加载 | 正文、大纲、canon |
 | 决策权 | 状态更新方式、压缩时机、归档策略 |
@@ -79,7 +79,7 @@ chapter_state:
 
 ### 3. 记忆压缩（每 5 章或卷末）
 
-按 `~/.novel-studio/runtime/memory-compress.md` 协议执行：
+按 `runtime/memory-compress.md` 协议执行：
 
 - 检查触发条件（`chapter % 5 == 0` 或卷末或状态文件 > 50KB）
 - 执行四项压缩操作（foreshadow/character/reader/author）

@@ -1,20 +1,20 @@
 ---
 type: command
-name: novel-write
+name: write
 description: "写指定章节。自动流转完整流水线：Director → ScenePlanner → Writer → Critic → StateManager。"
 workflow: write-chapter
 ---
 
-# /novel write
+# /novel-studio:write
 
 写指定章节。自动运行完整 5 阶段流水线。
 
 ## 用法
 
 ```
-/novel write <章节号>
-/novel write next          # 写下一章（自动计算章节号）
-/novel write               # 等同于 /novel write next
+/novel-studio:write <章节号>
+/novel-studio:write next          # 写下一章（自动计算章节号）
+/novel-studio:write               # 等同于 /novel-studio:write next
 ```
 
 ## 执行流程
@@ -31,7 +31,7 @@ workflow: write-chapter
 ## 示例
 
 ```
-/novel write 10
+/novel-studio:write 10
 
 ✍️ 正在确认第10章方向…
 ✅ 本章功能：推进（主角首次使用新能力）
@@ -47,7 +47,7 @@ workflow: write-chapter
 🔍 正在质量检查…
 ✅ 通过（AI味 2 处已修复，无硬伤）
 
-📋 状态已更新 → 第10章完结。随时可以 /novel write 11
+📋 状态已更新 → 第10章完结。随时可以 /novel-studio:write 11
 ```
 
 ## 快速通道
@@ -56,4 +56,4 @@ workflow: write-chapter
 
 ## 断点恢复
 
-如果上一次 `/novel write` 未完成（中断/异常）→ 重新执行时自动从断点继续。例如 Writer 写到一半中断 → 输入 `/novel write 10` → 从 NEED_DRAFT 状态继续 Writer。
+如果上一次 `/novel-studio:write` 未完成（中断/异常）→ 重新执行时自动从断点继续。例如 Writer 写到一半中断 → 输入 `/novel-studio:write 10` → 从 NEED_DRAFT 状态继续 Writer。

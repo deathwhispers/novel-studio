@@ -10,7 +10,7 @@ description: "世界观构建流程。扩展设定、添加角色、完善力量
 
 ```mermaid
 flowchart TD
-    User["👤 User: /novel world"]
+    User["👤 User: /novel-studio:world"]
     Orchestrator["🎯 Orchestrator<br/>确认构建范围"]
 
     User --> Orchestrator
@@ -111,5 +111,5 @@ Architect 修改角色档案后：
    - XX角色的能力等级（金丹期）高于主角（筑基期），但描述中说「XX不如主角」
    → 建议：降低XX等级到筑基后期，或修改描述为「XX隐藏了真实实力」
 
-📋 下一步：/novel write 1 — 开始写第一章
+📋 下一步：/novel-studio:write 1 — 开始写第一章
 ```

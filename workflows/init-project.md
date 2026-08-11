@@ -10,7 +10,7 @@ description: "小说项目初始化流程。Orchestrator 多轮确认 → Archit
 
 ```mermaid
 flowchart TD
-    User["👤 User: /novel init"]
+    User["👤 User: /novel-studio:init"]
     Orchestrator["🎯 Orchestrator<br/>多轮确认"]
 
     User --> Orchestrator
@@ -124,6 +124,6 @@ flowchart TD
     - state/（运行时状态就绪）
 
 🎯 下一步：
-    /novel world  — 继续完善世界观和角色设定
-    /novel write 1 — 直接开始写第一章
+    /novel-studio:world  — 继续完善世界观和角色设定
+    /novel-studio:write 1 — 直接开始写第一章
 ```

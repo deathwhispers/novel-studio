@@ -1,18 +1,18 @@
 ---
 type: command
-name: novel-world
+name: world
 description: "打开世界观构建会话。添加角色、完善力量体系、扩展世界观、修复设定冲突。"
 workflow: worldbuilding
 ---
 
-# /novel world
+# /novel-studio:world
 
 打开世界观构建会话。适用于任何需要扩展或修订设定的场景。
 
 ## 用法
 
 ```
-/novel world
+/novel-studio:world
 ```
 
 ## 支持的操作
@@ -30,7 +30,7 @@ Orchestrator 会确认你的意图：
 ## 示例
 
 ```
-/novel world
+/novel-studio:world
 
 [Orchestrator] 你想做什么？
 → 添加一个新角色
@@ -52,7 +52,7 @@ Orchestrator 会确认你的意图：
    - XX的等级（金丹中期）高于主角（筑基后期），但大纲第15章计划让主角战胜他
    → 建议：在战胜前铺垫主角的隐藏优势（系统辅助/环境利用/XX的弱点），或调整XX等级到筑基巅峰
 
-📋 角色已就绪。随时 /novel write N 继续写作。
+📋 角色已就绪。随时 /novel-studio:write N 继续写作。
 ```
 
 ## 渐进原则

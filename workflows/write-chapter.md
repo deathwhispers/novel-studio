@@ -10,7 +10,7 @@ description: "章节写作全流程。状态机自动流转 Director → ScenePl
 
 ```mermaid
 flowchart TD
-    User["👤 User: /novel write N"]
+    User["👤 User: /novel-studio:write N"]
     Orchestrator["🎯 Orchestrator<br/>意图确认 + 多轮对话"]
 
     User --> Orchestrator
@@ -60,7 +60,7 @@ flowchart TD
 ### 步骤 1：Orchestrator 入口
 
 ```
-INPUT: 用户指令 "/novel write 11"
+INPUT: 用户指令 "/novel-studio:write 11"
 
 ORCHESTRATOR 动作:
   1. 读取 progress.yaml

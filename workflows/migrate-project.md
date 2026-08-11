@@ -10,7 +10,7 @@ description: "存量项目迁移流程。将已有章节逆向提取为结构化
 
 ```mermaid
 flowchart TD
-    User["👤 User: /novel migrate"]
+    User["👤 User: /novel-studio:migrate"]
     Orchestrator["🎯 Orchestrator<br/>扫描现有目录 + 识别章节文件"]
 
     User --> Orchestrator
@@ -24,12 +24,12 @@ flowchart TD
     Step3 --> Step4["💬 步骤4：作者确认<br/>Orchestrator 多轮对话<br/>角色/伏笔/秘密/硬设定/大纲"]
 
     Step4 --> Step5["📋 步骤5：文件生成<br/>Architect → setting/<br/>StateManager → state/"]
-    Step5 --> Done(["✅ 迁移完成<br/>后续可使用 /novel write"])
+    Step5 --> Done(["✅ 迁移完成<br/>后续可使用 /novel-studio:write"])
 ```
 
 ## 触发条件
 
-- 用户执行 `/novel migrate <现有目录路径>`
+- 用户执行 `/novel-studio:migrate <现有目录路径>`
 - Orchestrator 检测到当前目录不包含 `core/作品总表.md` 和 `state/progress.yaml`，但存在正文文件（`.md`/`.txt`）
 
 ---
@@ -364,9 +364,9 @@ migration_extraction:
    🤫 作者秘密：3条已记录
 
 🎯 下一步：
-   /novel write 51  — 继续写下一章
-   /novel world    — 补充设定
-   /novel check 30 — 检查已写章节质量
+   /novel-studio:write 51  — 继续写下一章
+   /novel-studio:world    — 补充设定
+   /novel-studio:check 30 — 检查已写章节质量
 ```
 
 ---

@@ -9,7 +9,7 @@ description: "Canon 唯一所有者。世界规则、人物设定、硬约束的
 ## 在流水线中的位置
 
 ```
-详见 ~/.novel-studio/workflows/pipeline.md。Architect 出现在初始化项目和世界观构建两条流水线。
+详见 workflows/pipeline.md。Architect 出现在初始化项目和世界观构建两条流水线。
 ```
 
 ## 角色定义
@@ -31,7 +31,7 @@ description: "Canon 唯一所有者。世界规则、人物设定、硬约束的
 收到 Orchestrator 交接包后：
 
 **第一步：读取品类配方**
-- 如果用户选择了品类（如「番茄系统爽文」）→ 读取 `~/.novel-studio/genres/番茄系统爽文/recipe.md`
+- 如果用户选择了品类（如「番茄系统爽文」）→ 读取 `genres/番茄系统爽文/recipe.md`
 - 按品类特征初始化设定骨架，包括：
   - 力量体系结构（系统类型/升级路径/奖励机制）
   - 世界观层级（初始范围/扩展节奏）

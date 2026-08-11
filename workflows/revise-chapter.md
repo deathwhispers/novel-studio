@@ -10,7 +10,7 @@ description: "章节修订流程。根据修订范围跳过部分阶段，目标
 
 ```mermaid
 flowchart TD
-    User["👤 User: /novel revise N"]
+    User["👤 User: /novel-studio:revise N"]
     Orchestrator["🎯 Orchestrator<br/>确认修订范围"]
 
     User --> Orchestrator

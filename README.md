@@ -8,7 +8,7 @@
 
 ```mermaid
 flowchart TD
-    User["👤 User /novel write N"]
+    User["👤 User /novel-studio:write N"]
     Orchestrator["🎯 Orchestrator<br/>意图识别 + 信息裁剪"]
 
     User --> Orchestrator
@@ -34,37 +34,30 @@ flowchart TD
 ## 安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/deathwhispers/novel-studio/main/install.sh | sh
-```
-
-安装后，任意目录下可用 `/novel` 系列命令。
-
-卸载：
-```bash
-curl -fsSL https://raw.githubusercontent.com/deathwhispers/novel-studio/main/uninstall.sh | sh
+claude plugin install deathwhispers/novel-studio
 ```
 
 ## 快速开始
 
 ```bash
-/novel init          # 初始化项目（多轮对话：品类/主角/篇幅/模式）
-/novel world         # 完善世界观、添加角色
-/novel write 1       # 写第1章（自动流转完整流水线）
-/novel check 5       # 只读质量检查（不修改正文）
-/novel revise 5      # 修订章节（自动选择最优路径）
-/novel migrate path  # 导入已有章节（分批分析 → 合成 → 确认）
+/novel-studio:init          # 初始化项目（多轮对话：品类/主角/篇幅/模式）
+/novel-studio:world         # 完善世界观、添加角色
+/novel-studio:write 1       # 写第1章（自动流转完整流水线）
+/novel-studio:check 5       # 只读质量检查（不修改正文）
+/novel-studio:revise 5      # 修订章节（自动选择最优路径）
+/novel-studio:migrate path  # 导入已有章节（分批分析 → 合成 → 确认）
 ```
 
 ## 6 条流水线
 
 | 命令 | 流水线 | 说明 |
 |------|--------|------|
-| `/novel init` | init-project | 多轮确认 → Architect 创建骨架 → StateManager 初始化状态 |
-| `/novel world` | worldbuilding | 添加角色/完善力量体系/扩展世界观 |
-| `/novel write N` | write-chapter | 完整流转：Director → ScenePlanner → Writer → Critic → StateManager |
-| `/novel revise N` | revise-chapter | 自动选择范围：全文重写/场景重设/局部修复/仅去味 |
-| `/novel check N` | novel-check | Critic 只读扫描，仅输出 Review Report |
-| `/novel migrate` | migrate-project | 存量导入：分批分析 → 合成归档 → 作者确认 → 文件生成 |
+| `/novel-studio:init` | init-project | 多轮确认 → Architect 创建骨架 → StateManager 初始化状态 |
+| `/novel-studio:world` | worldbuilding | 添加角色/完善力量体系/扩展世界观 |
+| `/novel-studio:write N` | write-chapter | 完整流转：Director → ScenePlanner → Writer → Critic → StateManager |
+| `/novel-studio:revise N` | revise-chapter | 自动选择范围：全文重写/场景重设/局部修复/仅去味 |
+| `/novel-studio:check N` | novel-check | Critic 只读扫描，仅输出 Review Report |
+| `/novel-studio:migrate` | migrate-project | 存量导入：分批分析 → 合成归档 → 作者确认 → 文件生成 |
 
 完整流转细节见 [`workflows/pipeline.md`](workflows/pipeline.md)。
 
@@ -135,7 +128,8 @@ novel-studio/
 ├── genres/                  # 品类配方（番茄系统爽文 + 模板）
 ├── runtime/                 # 交接包 Schema + 上下文预算 + 记忆压缩协议
 ├── references/              # AI 味检测清单 + 完整目录 + 失败案例库
-├── install.sh               # 全局安装脚本
+├── .claude-plugin/
+│   └── plugin.json          # Claude Code Plugin 定义
 ├── DESIGN.md                # 完整架构设计文档
 └── README.md
 ```

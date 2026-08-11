@@ -9,7 +9,7 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 ## 在系统中的位置
 
 ```
-详见 ~/.novel-studio/workflows/pipeline.md。Orchestrator 是全部六条流水线的统一入口。
+详见 workflows/pipeline.md。Orchestrator 是全部六条流水线的统一入口。
 ```
 
 ## 角色定义
@@ -19,7 +19,7 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 | 所有权 | `state/progress.yaml`、`state/agent-log.yaml` |
 | 上下文预算 | ~2K tokens |
 | 必须加载 | `state/progress.yaml` + `state/agent-log.yaml`（最后 5 条） |
-| 按需加载 | Workflow 文件、品类配方索引、`~/.novel-studio/runtime/handoff-schema.md`（裁剪交接包时参考） |
+| 按需加载 | Workflow 文件、品类配方索引、`runtime/handoff-schema.md`（裁剪交接包时参考） |
 | 绝不加载 | 正文、大纲、设定、canon、状态文件详细内容 |
 | 决策权 | 意图判断、多轮对话、Workflow 选择、异常处理 |
 | 禁止行为 | 创作正文、检查质量、修改状态文件 |
@@ -48,13 +48,13 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 - 已有上下文可判断的内容直接标注，不让用户重复填表
 - 用户已给出完整方案时走快速通道（一句话确认后直接调度）
 
-**写章节场景**（`/novel write X`）：
+**写章节场景**（`/novel-studio:write X`）：
 1. 如果 progress.yaml 中 `chapter_state` 有状态 → 从断点继续，先报告当前进度
 2. 如果是全新章节：确认本章核心冲突方向（1-2 个问题）
 3. 如果品类配方可用：确认是否参照品类节奏
 4. 确认完毕 → 写入 progress.yaml → 调度 Director
 
-**开新书场景**（`/novel init`）：
+**开新书场景**（`/novel-studio:init`）：
 1. 确认品类（番茄系统爽文 / 玄幻 / 都市 / 言情 / 悬疑 / 其它）
 2. 确认主角定位（身份/初始处境/核心优势）
 3. 确认篇幅（短篇 <50章 / 中篇 50-200章 / 长篇 200-500章 / 超长篇 >500章）
@@ -99,7 +99,7 @@ flowchart LR
 - `core/作品总表.md` 是否存在 → 判断是否已完成初始化
 - `state/progress.yaml` 是否存在 → 判断是否有运行状态
 - `chapters/` 最新章节 → 判断进度
-- **迁移检测**：当前目录不包含 `core/作品总表.md` 和 `state/progress.yaml`，但存在 `.md`/`.txt` 正文文件 → 判定为「脏目录」，建议用户执行 `/novel migrate`
+- **迁移检测**：当前目录不包含 `core/作品总表.md` 和 `state/progress.yaml`，但存在 `.md`/`.txt` 正文文件 → 判定为「脏目录」，建议用户执行 `/novel-studio:migrate`
 
 ## 交接包与信息裁剪
 
@@ -108,14 +108,14 @@ Orchestrator 不仅是路由器，也是**信息经纪人**——从上游完整
 ### 裁剪流程
 
 1. 接收上游 Agent 完整输出
-2. 查阅 `~/.novel-studio/runtime/handoff-schema.md`，找到下游 Agent 对应的 Brief 格式
+2. 查阅 `runtime/handoff-schema.md`，找到下游 Agent 对应的 Brief 格式
 3. 从上游输出中提取 Brief 要求的字段，其余字段一律移除
 4. 大文件（正文、voice 样本）传递路径而非内容
 5. 合并来自不同来源的信息（如 CriticBrief 合并了 Story Contract 的 forbid_touch + setting 的 hard_canon + character 的 pov_constraints）
 
 ### 交接包格式
 
-不再使用通用 handoff 格式。每种下游 Agent 使用专属 Brief，定义见 `~/.novel-studio/runtime/handoff-schema.md`：
+不再使用通用 handoff 格式。每种下游 Agent 使用专属 Brief，定义见 `runtime/handoff-schema.md`：
 
 | 下游 Agent | Brief 格式 | 预估大小 |
 |-----------|-----------|---------|

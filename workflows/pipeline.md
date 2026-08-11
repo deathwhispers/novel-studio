@@ -7,7 +7,7 @@
 
 ## 一、写章节（write-chapter）
 
-**触发**: `/novel write <N>` | `/novel write next`
+**触发**: `/novel-studio:write <N>` | `/novel-studio:write next`
 
 ```mermaid
 flowchart TD
@@ -57,11 +57,11 @@ flowchart TD
 
 ## 二、初始化项目（init-project）
 
-**触发**: `/novel init`
+**触发**: `/novel-studio:init`
 
 ```mermaid
 flowchart TD
-    User["👤 User: /novel init"]
+    User["👤 User: /novel-studio:init"]
     Orchestrator["🎯 Orchestrator<br/>多轮确认"]
     Architect["🏗️ Architect<br/><b>创建骨架</b><br/>• core/ + setting/<br/>• 按品类配方初始化设定<br/>• 生成硬设定 + 角色档案"]
     StateManager["📋 StateManager<br/><b>初始化状态</b><br/>• progress.yaml (chapter=0)<br/>• author / reader / character<br/>• foreshadow / agent-log"]
@@ -77,11 +77,11 @@ flowchart TD
 
 ## 三、修订章节（revise-chapter）
 
-**触发**: `/novel revise <N>`
+**触发**: `/novel-studio:revise <N>`
 
 ```mermaid
 flowchart TD
-    User["👤 User: /novel revise N"]
+    User["👤 User: /novel-studio:revise N"]
     Orchestrator["🎯 Orchestrator<br/>确认修订范围"]
 
     User --> Orchestrator
@@ -111,11 +111,11 @@ flowchart TD
 
 ## 四、世界观构建（worldbuilding）
 
-**触发**: `/novel world`
+**触发**: `/novel-studio:world`
 
 ```mermaid
 flowchart TD
-    User["👤 User: /novel world"]
+    User["👤 User: /novel-studio:world"]
     Orchestrator["🎯 Orchestrator<br/>确认构建范围"]
     Architect["🏗️ Architect<br/><b>创建/更新 canon</b><br/>• 新增角色档案<br/>• 扩展世界观/力量体系<br/>• 更新硬设定清单"]
     StateManager["📋 StateManager<br/>同步 character.yaml<br/>更新 agent-log"]
@@ -131,11 +131,11 @@ flowchart TD
 
 ## 五、质量检查（novel-check）
 
-**触发**: `/novel check <N>`
+**触发**: `/novel-studio:check <N>`
 
 ```mermaid
 flowchart LR
-    User["👤 User: /novel check N"]
+    User["👤 User: /novel-studio:check N"]
     Orchestrator["🎯 Orchestrator<br/>加载章节路径"]
     Critic["🔍 Critic<br/><b>5 Checker 只读扫描</b><br/>• 产出 Review Report<br/>• 不触发修复<br/>• 不更新状态"]
     Done(["📊 仅报告，不修改任何文件"])
@@ -149,11 +149,11 @@ flowchart LR
 
 ## 六、项目迁移（migrate-project）
 
-**触发**: `/novel migrate <现有目录路径>`
+**触发**: `/novel-studio:migrate <现有目录路径>`
 
 ```mermaid
 flowchart TD
-    User["👤 User: /novel migrate path"]
+    User["👤 User: /novel-studio:migrate path"]
     Orchestrator["🎯 Orchestrator<br/>扫描章节文件 + 工作区重组"]
 
     User --> Orchestrator
@@ -175,7 +175,7 @@ flowchart TD
     OrchestratorConfirm -->|"确认完毕"| ArchGen["🏗️ Architect<br/>写入 setting/ 全部文件"]
     OrchestratorConfirm -->|"确认完毕"| StateGen["📋 StateManager<br/>写入 state/ 全部文件"]
 
-    ArchGen --> Done(["✅ 迁移完成<br/>后续可使用 /novel write"])
+    ArchGen --> Done(["✅ 迁移完成<br/>后续可使用 /novel-studio:write"])
     StateGen --> Done
 ```
 

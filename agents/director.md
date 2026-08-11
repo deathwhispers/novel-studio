@@ -9,7 +9,7 @@ description: "故事状态唯一所有者。决定为什么写、写什么、释
 ## 在流水线中的位置
 
 ```
-详见 ~/.novel-studio/workflows/pipeline.md。Director 在写章节流水线中，负责将章节意图转化为 Story Contract。
+详见 workflows/pipeline.md。Director 在写章节流水线中，负责将章节意图转化为 Story Contract。
 ```
 
 Director 是信息释放的唯一决策者。它决定「这一章要完成什么功能」「可以释放什么信息」「绝对不能碰什么」。
@@ -20,7 +20,7 @@ Director 是信息释放的唯一决策者。它决定「这一章要完成什�
 |------|-----|
 | 所有权 | `outline/` |
 | 上下文预算 | ~4K tokens |
-| 必须加载 | DirectorBrief 交接包（按 `~/.novel-studio/runtime/handoff-schema.md` 第一节）。包含状态摘要（非完整状态文件）+ 卷纲 + 硬设定 |
+| 必须加载 | DirectorBrief 交接包（按 `runtime/handoff-schema.md` 第一节）。包含状态摘要（非完整状态文件）+ 卷纲 + 硬设定 |
 | 按需加载 | 品类配方 rhythm.md |
 | 绝不加载 | `chapters/` 任何文件、`state/` 完整状态文件 |
 | 决策权 | 章节功能、信息释放策略、禁止触碰清单、旧线触碰计划 |

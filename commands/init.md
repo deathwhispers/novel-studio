@@ -1,18 +1,18 @@
 ---
 type: command
-name: novel-init
+name: init
 description: "初始化一个新的小说项目。Orchestrator 多轮确认 → Architect 创建工作区骨架。"
 workflow: init-project
 ---
 
-# /novel init
+# /novel-studio:init
 
 初始化一个新的小说项目。调用 `workflows/init-project.md`。
 
 ## 用法
 
 ```
-/novel init
+/novel-studio:init
 ```
 
 ## 执行流程
@@ -34,7 +34,7 @@ workflow: init-project
 ## 示例
 
 ```
-/novel init
+/novel-studio:init
 
 [Orchestrator] 你想写什么品类？
 → 番茄系统爽文
@@ -48,5 +48,5 @@ workflow: init-project
 [Orchestrator] 写作模式？（默认：商业连载）
 → 商业连载
 
-✅ 项目初始化完成！下一步：/novel world 继续完善设定，或 /novel write 1 直接开始写。
+✅ 项目初始化完成！下一步：/novel-studio:world 继续完善设定，或 /novel-studio:write 1 直接开始写。
 ```

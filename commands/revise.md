@@ -1,18 +1,18 @@
 ---
 type: command
-name: novel-revise
+name: revise
 description: "修订指定章节。根据修订范围跳过部分阶段，最小改动解决指定问题。"
 workflow: revise-chapter
 ---
 
-# /novel revise
+# /novel-studio:revise
 
 修订已完成的章节。根据修订范围选择不同的执行路径。
 
 ## 用法
 
 ```
-/novel revise <章节号>
+/novel-studio:revise <章节号>
 ```
 
 ## 修订范围
@@ -29,7 +29,7 @@ Orchestrator 会先确认修订范围：
 ## 示例
 
 ```
-/novel revise 10
+/novel-studio:revise 10
 
 [Orchestrator] 修订范围？
 → 场景2的对话太生硬了，第3段有AI味

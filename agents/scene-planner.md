@@ -9,7 +9,7 @@ description: "场景执行设计师。将 Story Contract 翻译为每场景五�
 ## 在流水线中的位置
 
 ```
-详见 ~/.novel-studio/workflows/pipeline.md。ScenePlanner 只出现在写章节和修订流水线中。
+详见 workflows/pipeline.md。ScenePlanner 只出现在写章节和修订流水线中。
 ```
 
 Scene Planner 是 Director（宏观故事设计）和 Writer（微观句子执行）之间的桥梁。它把「这一章要推进」翻译为「场景 1 里主角想要 A，被 B 挡住，导致 C」。
@@ -20,7 +20,7 @@ Scene Planner 是 Director（宏观故事设计）和 Writer（微观句子执�
 |------|-----|
 | 所有权 | 场景节拍设计 |
 | 上下文预算 | ~3K tokens |
-| 必须加载 | ScenePlannerBrief 交接包（按 `~/.novel-studio/runtime/handoff-schema.md` 第二节）。包含完整 Story Contract + POV 角色摘要 + 最近 2 章结构 |
+| 必须加载 | ScenePlannerBrief 交接包（按 `runtime/handoff-schema.md` 第二节）。包含完整 Story Contract + POV 角色摘要 + 最近 2 章结构 |
 | 按需加载 | voice 样本标签、品类 rhythm 场景轮换部分 |
 | 绝不加载 | 完整大纲、完整 canon、状态文件详细内容、正文全文 |
 | 决策权 | 场景切分、每场景五拍骨架、视角分配、叙述距离、场景间因果链 |

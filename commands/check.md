@@ -1,19 +1,19 @@
 ---
 type: command
-name: novel-check
+name: check
 description: "对指定章节做质量检查（Critic only），不修改正文。"
 workflow: revise-chapter
 ---
 
-# /novel check
+# /novel-studio:check
 
 对已完成的章节做质量检查，只输出 Review Report，不修改正文。
 
 ## 用法
 
 ```
-/novel check <章节号>
-/novel check               # 检查最新完成的章节
+/novel-studio:check <章节号>
+/novel-studio:check               # 检查最新完成的章节
 ```
 
 ## 执行流程
@@ -28,7 +28,7 @@ workflow: revise-chapter
 ## 示例
 
 ```
-/novel check 10
+/novel-studio:check 10
 
 🔍 第10章质量检查：
 
@@ -40,10 +40,10 @@ workflow: revise-chapter
 
 📊 总体：局部修复（3个Checker有软问题，无硬伤）
 
-需要修复吗？使用 /novel revise 10
+需要修复吗？使用 /novel-studio:revise 10
 ```
 
-## 与 /novel revise 的区别
+## 与 /novel-studio:revise 的区别
 
-- `/novel check` = 只检查不修改
-- `/novel revise` = 检查 + 自动修复
+- `/novel-studio:check` = 只检查不修改
+- `/novel-studio:revise` = 检查 + 自动修复

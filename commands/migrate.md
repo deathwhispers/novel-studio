@@ -1,20 +1,20 @@
 ---
 type: command
-name: novel-migrate
+name: migrate
 description: "存量项目迁移。将已有章节逆向提取为结构化状态文件和工作区骨架。"
 workflow: migrate-project
 ---
 
-# /novel migrate
+# /novel-studio:migrate
 
 将已有章节的小说项目导入 novel-studio 工作区。自动识别章节文件、分批提取角色/规则/伏笔、多轮作者确认、生成完整状态文件。
 
 ## 用法
 
 ```
-/novel migrate <现有目录路径>
-/novel migrate .                  # 当前目录
-/novel migrate ~/my-novel         # 指定目录
+/novel-studio:migrate <现有目录路径>
+/novel-studio:migrate .                  # 当前目录
+/novel-studio:migrate ~/my-novel         # 指定目录
 ```
 
 ## 执行流程
@@ -28,7 +28,7 @@ workflow: migrate-project
 ## 示例
 
 ```
-/novel migrate ~/my-old-novel
+/novel-studio:migrate ~/my-old-novel
 
 📊 扫描完成：50章 / 125,000字
    识别章节：第1章 ~ 第50章
@@ -49,11 +49,11 @@ workflow: migrate-project
    伏笔是否准确？→ 确认/删除/新增
    …
 
-✅ 迁移完成！下一步：/novel write 51
+✅ 迁移完成！下一步：/novel-studio:write 51
 ```
 
 ## 注意事项
 
-- 迁移是一次性操作，完成后工作区正常使用 `/novel write` 继续写作
-- 确认环节可随时中断，下次执行 `/novel migrate` 会从断点继续
+- 迁移是一次性操作，完成后工作区正常使用 `/novel-studio:write` 继续写作
+- 确认环节可随时中断，下次执行 `/novel-studio:migrate` 会从断点继续
 - 正文文件不会被修改，只会移动/复制到 `chapters/` 下统一命名

@@ -9,7 +9,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 ## 在流水线中的位置
 
 ```
-详见 ~/.novel-studio/workflows/pipeline.md。Writer 出现在写章节和修订流水线中。它是唯一产出正文的 Agent，不知道第 50 章的反转——只知道 Scene Contract 说「本章可以写 Y，禁止碰 X」。
+详见 workflows/pipeline.md。Writer 出现在写章节和修订流水线中。它是唯一产出正文的 Agent，不知道第 50 章的反转——只知道 Scene Contract 说「本章可以写 Y，禁止碰 X」。
 ```
 
 ## 角色定义
@@ -18,7 +18,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 |------|-----|
 | 所有权 | `chapters/` |
 | 上下文预算 | ~3K tokens |
-| 必须加载 | WriterBrief 交接包（按 `~/.novel-studio/runtime/handoff-schema.md` 第三节）。包含 scenes/five_beats/writer_constraints/chapter_end + chapter N-1 全文路径 + chapter N-2 结构摘要 |
+| 必须加载 | WriterBrief 交接包（按 `runtime/handoff-schema.md` 第三节）。包含 scenes/five_beats/writer_constraints/chapter_end + chapter N-1 全文路径 + chapter N-2 结构摘要 |
 | 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes |
 | 绝不加载 | 完整 Scene Contract、完整大纲、完整 canon、状态文件、chapter N-2 全文 |
 | 决策权 | 句子级写作、叙述节奏、对话设计、Skill 调用时机 |

@@ -455,7 +455,7 @@ flowchart TD
         ArchMigrate["🏗️ Architect<br/>← ArchitectMigrationBrief<br/>（N 份提取结果路径）"]
     end
 
-    Orchestrator -->|"/novel migrate"| Archivist
+    Orchestrator -->|"/novel-studio:migrate"| Archivist
     Archivist -->|"N批完成后"| ArchMigrate
     ArchMigrate -->|"合成完成"| Orchestrator
 ```
