@@ -34,8 +34,11 @@ flowchart TD
 ## 安装
 
 ```bash
-claude plugin install deathwhispers/novel-studio
+claude plugin marketplace add deathwhispers/novel-studio
+claude plugin install novel-studio@novel-studio
 ```
+
+安装后即可使用 `/novel-studio:write`、`/novel-studio:init` 等命令。
 
 ## 快速开始
 
