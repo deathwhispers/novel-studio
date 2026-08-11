@@ -9,7 +9,7 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md。Critic 出现在写章节、修订和质量检查三条流水线中。它是正文交付前的最后一道质量门禁。
+详见 ~/.novel-studio/workflows/pipeline.md。Critic 出现在写章节、修订和质量检查三条流水线中。它是正文交付前的最后一道质量门禁。
 ```
 
 ## 角色定义
@@ -18,7 +18,7 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 |------|-----|
 | 所有权 | 验收标准 |
 | 上下文预算 | ~3K tokens |
-| 必须加载 | CriticBrief 交接包（按 `runtime/handoff-schema.md` 第四节）。包含合并检查清单（forbid_touch + hard_canon_checklist + pov_constraints） + 正文路径 + AI 味检测清单路径 |
+| 必须加载 | CriticBrief 交接包（按 `~/.novel-studio/runtime/handoff-schema.md` 第四节）。包含合并检查清单（forbid_touch + hard_canon_checklist + pov_constraints） + 正文路径 + AI 味检测清单路径 |
 | 按需加载 | 硬设定摘要、POV 角色认知、品类配方禁忌（均已合并到 CriticBrief 中，无需额外加载） |
 | 绝不加载 | 完整 canon、完整大纲、其他章节正文、完整状态文件、完整 Scene Contract、完整 Story Contract |
 | 决策权 | 通过/局部修复/骨架失效判定 |
@@ -153,7 +153,7 @@ pace_check:
 ### Checker 5: Style Checker（文风）
 
 **检查内容**：
-- [ ] AI 味扫描（按 `references/ai-flavor-catalog.md` 全目录）
+- [ ] AI 味扫描（按 `~/.novel-studio/references/ai-flavor-catalog.md` 全目录）
 - [ ] 角色辨识度——去掉对话标签后能否分清楚谁在说话？
 - [ ] Voice 是否与前 2 章一致？
 - [ ] 是否存在品类禁忌（如番茄系统爽文的奖励无代价）？

@@ -9,7 +9,7 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 ## 在系统中的位置
 
 ```
-详见 workflows/pipeline.md。Orchestrator 是全部五条流水线的统一入口。
+详见 ~/.novel-studio/workflows/pipeline.md。Orchestrator 是全部六条流水线的统一入口。
 ```
 
 ## 角色定义
@@ -19,7 +19,7 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 | 所有权 | `state/progress.yaml`、`state/agent-log.yaml` |
 | 上下文预算 | ~2K tokens |
 | 必须加载 | `state/progress.yaml` + `state/agent-log.yaml`（最后 5 条） |
-| 按需加载 | Workflow 文件、品类配方索引、`runtime/handoff-schema.md`（裁剪交接包时参考） |
+| 按需加载 | Workflow 文件、品类配方索引、`~/.novel-studio/runtime/handoff-schema.md`（裁剪交接包时参考） |
 | 绝不加载 | 正文、大纲、设定、canon、状态文件详细内容 |
 | 决策权 | 意图判断、多轮对话、Workflow 选择、异常处理 |
 | 禁止行为 | 创作正文、检查质量、修改状态文件 |
@@ -108,14 +108,14 @@ Orchestrator 不仅是路由器，也是**信息经纪人**——从上游完整
 ### 裁剪流程
 
 1. 接收上游 Agent 完整输出
-2. 查阅 `runtime/handoff-schema.md`，找到下游 Agent 对应的 Brief 格式
+2. 查阅 `~/.novel-studio/runtime/handoff-schema.md`，找到下游 Agent 对应的 Brief 格式
 3. 从上游输出中提取 Brief 要求的字段，其余字段一律移除
 4. 大文件（正文、voice 样本）传递路径而非内容
 5. 合并来自不同来源的信息（如 CriticBrief 合并了 Story Contract 的 forbid_touch + setting 的 hard_canon + character 的 pov_constraints）
 
 ### 交接包格式
 
-不再使用通用 handoff 格式。每种下游 Agent 使用专属 Brief，定义见 `runtime/handoff-schema.md`：
+不再使用通用 handoff 格式。每种下游 Agent 使用专属 Brief，定义见 `~/.novel-studio/runtime/handoff-schema.md`：
 
 | 下游 Agent | Brief 格式 | 预估大小 |
 |-----------|-----------|---------|

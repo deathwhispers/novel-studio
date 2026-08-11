@@ -9,7 +9,7 @@ description: "正文逆向归档。分批读取已有章节，提取角色/规�
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md。Archivist 仅出现在迁移（migrate-project）流水线中。迁移完成后不再使用。
+详见 ~/.novel-studio/workflows/pipeline.md。Archivist 仅出现在迁移（migrate-project）流水线中。迁移完成后不再使用。
 ```
 
 Archivist 是从叙事文本中提取结构化信息的专用 Agent。它不知道大纲和 canon（那些还没创建），只从已有正文中读取和提取。
