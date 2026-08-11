@@ -39,6 +39,11 @@ curl -fsSL https://raw.githubusercontent.com/deathwhispers/novel-studio/main/ins
 
 安装后，任意目录下可用 `/novel` 系列命令。
 
+卸载：
+```bash
+curl -fsSL https://raw.githubusercontent.com/deathwhispers/novel-studio/main/uninstall.sh | sh
+```
+
 ## 快速开始
 
 ```bash
