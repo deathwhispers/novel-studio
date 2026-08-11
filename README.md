@@ -62,22 +62,22 @@ flowchart LR
     classDef draft fill:#8b5cf6,stroke:#7c3aed,color:#fff,stroke-width:2px
     classDef review fill:#f59e0b,stroke:#d97706,color:#fff,stroke-width:2px
     classDef persist fill:#10b981,stroke:#059669,color:#fff,stroke-width:2px
-    classDef end fill:#6b7280,stroke:#4b5563,color:#fff,stroke-width:2px
+    classDef done fill:#6b7280,stroke:#4b5563,color:#fff,stroke-width:2px
 
     User(["👤 用户指令"]):::entry
 
     User -->|"write N"| Orch["🎯 Orchestrator<br/>意图识别 + 信息裁剪"]:::entry
 
-    Orch -->|"DirectorBrief<br/>~2.5K"| Dir["📋 Director<br/>Story Contract<br/>信息释放策略"]:::plan
-    Dir -->|"ScenePlannerBrief<br/>~1.5K"| SP["🎬 ScenePlanner<br/>场景五拍骨架<br/>因果链设计"]:::plan
-    SP -->|"WriterBrief<br/>~1.5K"| W["✍️ Writer<br/>正文起草<br/>4 项硬门禁"]:::draft
-    W -->|"CriticBrief<br/>~1K"| C["🔍 Critic<br/>5 Checker<br/>质量门禁"]:::review
+    Orch -->|"DirectorBrief ~2.5K"| Dir["📋 Director<br/>Story Contract<br/>信息释放策略"]:::plan
+    Dir -->|"ScenePlannerBrief ~1.5K"| SP["🎬 ScenePlanner<br/>场景五拍骨架<br/>因果链设计"]:::plan
+    SP -->|"WriterBrief ~1.5K"| W["✍️ Writer<br/>正文起草<br/>4 项硬门禁"]:::draft
+    W -->|"CriticBrief ~1K"| C["🔍 Critic<br/>5 Checker<br/>质量门禁"]:::review
 
-    C -->|"✅ 通过"| SM["📋 StateManager<br/>状态更新<br/>记忆压缩"]:::persist
-    C -.->|"🟡 局部修复"| W
-    C -.->|"🔴 骨架失效"| SP
+    C -->|"通过"| SM["📋 StateManager<br/>状态更新<br/>记忆压缩"]:::persist
+    C -.->|"局部修复"| W
+    C -.->|"骨架失效"| SP
 
-    SM --> Done(["✅"]):::end
+    SM --> Done(["✅ 完成"]):::done
 ```
 
 ## 8 个 Agent
