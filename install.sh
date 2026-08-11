@@ -62,12 +62,8 @@ download() {
     local url="$1"
     local dest="$2"
     mkdir -p "$(dirname "$dest")"
-    if [ -f "$dest" ]; then
-        echo "    跳过（已存在）: ${dest}"
-    else
-        echo "    下载: ${url} → ${dest}"
-        curl -fsSL "${url}" -o "${dest}"
-    fi
+    echo "    下载: ${url} → ${dest}"
+    curl -fsSL "${url}" -o "${dest}"
 }
 
 # ── Agents ──
