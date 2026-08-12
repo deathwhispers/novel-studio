@@ -1,7 +1,7 @@
 ---
 type: workflow
 name: write-chapter
-description: "章节写作全流程。状态机自动流转 Director → ScenePlanner → Writer → Critic → StateManager。"
+description: "章节写作流程。逐段写作+即时纠偏，用户主导每一步。"
 ---
 
 # write-chapter — 章节写作 Workflow
@@ -11,241 +11,127 @@ description: "章节写作全流程。状态机自动流转 Director → ScenePl
 ```mermaid
 flowchart TD
     User["👤 User: /novel-studio:write N"]
-    Orchestrator["🎯 Orchestrator<br/>意图确认 + 多轮对话"]
+    Orchestrator["🎯 Orchestrator<br/>状态回顾 + 方向讨论"]
 
     User --> Orchestrator
 
-    subgraph AutoFlow["状态机自动流转"]
-        direction TB
+    Orchestrator --> Phase1["第一阶段：确认本章方向<br/>讨论大方向→提炼节拍→用户确认"]
 
-        NEED_PLAN["🔵 NEED_PLAN"]
-        Director["📋 Director<br/>产出: Story Contract"]
-        NEED_SCENE["🔵 NEED_SCENE"]
-        ScenePlanner["🎬 ScenePlanner<br/>产出: Scene Contract"]
-        NEED_DRAFT["🔵 NEED_DRAFT"]
-        Writer["✍️ Writer<br/>产出: 正文 + state_delta"]
-        NEED_REVIEW["🔵 NEED_REVIEW"]
-        Critic["🔍 Critic<br/>产出: Review Report"]
-        StateManager["📋 StateManager"]
-        Completed(["✅ COMPLETED"])
+    Phase1 --> Phase2Start["第二阶段开始<br/>准备写第一段"]
 
-        NEED_PLAN --> Director
-        Director -->|"Story Contract ✓"| NEED_SCENE
-        NEED_SCENE --> ScenePlanner
-        ScenePlanner -->|"Scene Contract ✓"| NEED_DRAFT
-        NEED_DRAFT --> Writer
-        Writer -->|"正文 ✓ + 自检 ✓"| NEED_REVIEW
-        NEED_REVIEW --> Critic
-        Critic -->|"🟢 通过"| StateManager
-        StateManager --> Completed
-        Critic -->|"🟡 局部修复"| Writer
-        Critic -->|"🔴 骨架失效"| ScenePlanner
-    end
+    Phase2Start --> AskUser["问用户：这一段从哪切入？"]
 
-    Orchestrator --> NEED_PLAN
+    AskUser --> WriteSegment["✍️ 写这一段<br/>（200-400字/1-2个节拍）"]
+    WriteSegment --> ShowUser["展示给用户"]
+
+    ShowUser --> UserCheck{"用户检查"}
+    UserCheck -->|"「这段不对……」"| FixSegment["修改这一段"]
+    FixSegment --> ShowUser
+    UserCheck -->|"「可以了，继续」"| MoreSegments{"还有更多？"}
+    UserCheck -->|"「换个方向」"| AdjustDirection["调整本章方向"]
+    AdjustDirection --> WriteSegment
+    UserCheck -->|"「这章到此结束」"| Phase3
+
+    MoreSegments -->|"是"| AskUser
+    MoreSegments -->|"用户说「结束」"| Phase3
+
+    Phase3["第三阶段：整章收尾<br/>排版自检→AI味速检→锁定"]
+
+    Phase3 --> Done(["✅ 第 N 章完成"])
 ```
 
-## 状态定义
+## 核心变化（与旧版对比）
 
-| 状态 | 含义 | 触发条件 | 下一个 Agent |
-|------|------|---------|-------------|
-| NEED_PLAN | 缺少本章 Story Contract | progress.yaml chapter_state.status == NEED_PLAN | Director |
-| NEED_SCENE | 缺少 Scene Contract | progress.yaml chapter_state.status == NEED_SCENE | ScenePlanner |
-| NEED_DRAFT | 缺少正文 | progress.yaml chapter_state.status == NEED_DRAFT | Writer |
-| NEED_REVIEW | 正文已有未验收 | progress.yaml chapter_state.status == NEED_REVIEW | Critic |
-| COMPLETED | 验收通过+状态已更新 | progress.yaml chapter_state.status == COMPLETED | — |
+| 维度 | 旧版（自动流转） | 新版（逐段协作） |
+|------|----------------|----------------|
+| Director | 自动生成 Story Contract | 由用户对话替代（方向讨论即 Story Contract） |
+| ScenePlanner | 自动切分场景五拍 | 由用户对话替代（每段前用户描述想看什么） |
+| Writer | 一次性写完整章 | 逐段写，每段 200-400 字，写完就停 |
+| Critic | 写完后的全量检查 | 收尾阶段的轻量排版/格式检查 |
+| 用户参与 | 仅方向选择时参与 | 每段都参与——描述方向、检查、纠偏 |
 
-## 详细流转步骤
+## 详细步骤
 
-### 步骤 1：Orchestrator 入口
+### 第一阶段：确认本章方向（3-5 轮对话）
 
 ```
-INPUT: 用户指令 "/novel-studio:write 11"
+1. Orchestrator 报告当前故事状态：
+   - 上一章发生了什么
+   - 主角处境
+   - 活跃伏笔
+   - 读者最关心的问题
+   - 章尾情绪
 
-ORCHESTRATOR 动作:
-  1. 读取 progress.yaml
-  2. 如果 chapter_state 已有状态（断点恢复）→ 从该状态继续，先报告当前进度
-  3. 如果是新章节:
-     a. 读取上一章正文全文 + 最近 2-3 章结构摘要
-     b. 读取当前活跃伏笔（status: active|touched）、角色压力项、读者待解答问题
-     c. 读取项目字数配置（core/作品总表.md，默认 2000 字/章）
-     d. 向用户报告当前故事状态（上一章梗概/主角处境/活跃伏笔/读者最关心的问题）
-     e. 【不限轮次的方向探索与纠偏】:
-        - 首轮：询问用户「有没有特别想写的东西？」
-          - 有想法 → 基于用户想法生成方向选项
-          - 没有 → 基于当前叙事状态 + 品类节奏生成 2-3 个选项
-        - 用户选择后 → 不启动流水线，进入纠偏循环：
-          - 对关键场景/角色反应/章尾感觉提出 1-2 个具体问题
-          - 根据回答给出细化方案
-          - 每轮结束后问「还有什么要调整的吗？」
-          - 循环直到用户明确说「可以了，写吧」或等价信号
-        - 用户可以在任何一轮提出修改，不限方向不限次数
-     f. 剧情量评估:
-        - 如果最终方向预估 > 3000 字或关键事件 > 5 个
-        - → 建议拆分，标注分章点和每章字数预估
-        - → 用户决定拆分/压缩/自定义
-     g. 用户最终确认 → 写入 progress.yaml: chapter_state = NEED_PLAN
-  4. 生成交接包 → 传递给 Director
+2. 问用户：「这一章有没有特别想写的场景、对话、或感觉？」
+   用户描述 → 基于用户描述提炼本章大方向
+   用户没想法 → 基于故事状态给出 2-3 个方向供选择
+
+3. 提炼为本章大纲：
+   - [本章方向：一句话]
+   - [节拍 1] → [节拍 2] → [节拍 3] → [章尾落点]
+   - 预估字数 + 分段数
+
+4. 用户确认方向（或调整）。
+   确认后，不启动自动流水线——直接进入逐段写作。
 ```
 
-### 步骤 2：Director 执行（NEED_PLAN）
+### 第二阶段：逐段写作（核心流程，每段重复）
 
-```mermaid
-flowchart LR
-    Input["📥 INPUT<br/>DirectorBrief 交接包"]
-    Director["📋 Director<br/>• 加载状态摘要<br/>• 加载卷纲 + 品类配方<br/>• 决策章节功能 + 信息释放<br/>• 生成 Story Contract"]
-    Check{"Orchestrator 检查<br/>必填字段完整?"}
-    Pass["流转: NEED_SCENE"]
-    Fail["重试 1 次<br/>仍失败 → 暂停"]
-    Output["📤 OUTPUT<br/>Story Contract"]
+```
+每段流程（4 步循环）：
 
-    Input --> Director
-    Director --> Output
-    Output --> Check
-    Check -->|"✓"| Pass
-    Check -->|"✗"| Fail
+STEP 1 — 用户触发：
+  - 用户描述这一段想看到什么，或
+  - 用户说「继续」「接着写」「你来定」
+  - 如果是第一段：额外问「从哪切入？」
+
+STEP 2 — 写作：
+  - Writer 写这一段（200-400 字，1-2 个场景节拍）
+  - 写完就停，不往下写
+  - 保持排版规范（每句≤30字，每段≤3句，系统文字用【】包裹）
+
+STEP 3 — 展示：
+  - 展示刚写的段落
+  - 标注这是第几段（第 N 章 · 第 X 段）
+
+STEP 4 — 用户检查：
+  - 用户认可 → 「可以了」「继续」→ 回到 STEP 1
+  - 用户纠偏 → 修改当前段 → 重新展示
+  - 用户换方向 → 更新本章方向 → 回到 STEP 1
+  - 用户结束 → 「这章到此结束」→ 进入第三阶段
 ```
 
-### 步骤 3：Scene Planner 执行（NEED_SCENE）
+### 第三阶段：整章收尾
 
-```mermaid
-flowchart LR
-    Input["📥 INPUT<br/>ScenePlannerBrief<br/>（Story Contract + 结构）"]
-    SP["🎬 ScenePlanner<br/>• 切分场景（1-5个）<br/>• 每场景五拍骨架<br/>• 分配视角/叙述距离<br/>• 检查场景间因果链<br/>• 配置爽点位置"]
-    Check{"Orchestrator 检查<br/>五拍可执行?<br/>因果链完整?"}
-    Pass["流转: NEED_DRAFT"]
-    Fail["重试 1 次<br/>仍失败 → 暂停"]
-    Output["📤 OUTPUT<br/>Scene Contract"]
+```
+用户说「可以了」「结束」后：
 
-    Input --> SP
-    SP --> Output
-    Output --> Check
-    Check -->|"✓"| Pass
-    Check -->|"✗"| Fail
+1. 整章拼接，统计字数
+2. 快速自检：
+   - 排版：超30字句？超3句段？系统文字用【】？对话一人一段？
+   - AI味：感到/觉得/仿佛/在这一刻 等关键词
+   - 对话标签：是否有多余的「XX说」
+3. 如有问题，列出建议让用户确认是否修复
+4. 用户确认 → 锁定章节 → 更新状态
 ```
 
-### 步骤 4：Writer 执行（NEED_DRAFT）
+## 上下文管理
 
-```mermaid
-flowchart LR
-    Input["📥 INPUT<br/>WriterBrief<br/>（scenes + 约束 + 章尾）"]
-    Writer["✍️ Writer<br/>• 读取最近2章正文 + voice 样本<br/>• 按场景顺序连续起草<br/>• 每场景边界硬门禁自检<br/>• AI 味自检<br/>• 生成 state_delta"]
-    Check{"Orchestrator 检查<br/>正文非空?<br/>硬门禁全部通过?"}
-    Pass["流转: NEED_REVIEW"]
-    Fail["重试 1 次<br/>仍失败 → 暂停"]
-    Output["📤 OUTPUT<br/>正文 + state_delta"]
-
-    Input --> Writer
-    Writer --> Output
-    Output --> Check
-    Check -->|"✓"| Pass
-    Check -->|"✗"| Fail
-```
-
-### 步骤 5：Critic 执行（NEED_REVIEW）
-
-```mermaid
-flowchart LR
-    Input["📥 INPUT<br/>CriticBrief<br/>（合并检查清单 + 正文路径）"]
-    Critic["🔍 Critic<br/>• 1. Logic Checker<br/>• 2. Info Leak Checker<br/>• 3. Character Checker<br/>• 4. Pace Checker<br/>• 5. Style Checker<br/>• 生成 Review Report"]
-    Check{"判决?"}
-    Pass["🟢 通过 → StateManager"]
-    LocalFix["🟡 局部修复 → Writer → 再回 Critic"]
-    StructureFail["🔴 骨架失效 → ScenePlanner"]
-    Output["📤 OUTPUT<br/>Review Report"]
-
-    Input --> Critic
-    Critic --> Output
-    Output --> Check
-    Check -->|"5 Checker 全过"| Pass
-    Check -->|"硬伤 / >3个问题"| LocalFix
-    Check -->|"骨架级问题"| StructureFail
-```
-
-### 步骤 6：State Manager 执行（Critic 通过后）
-
-```mermaid
-flowchart TD
-    Input["📥 INPUT<br/>StateManagerBrief<br/>（Review Report + state_delta）"]
-    Validate{"校验<br/>Review Report.verdict<br/>== 通过?"}
-    Reject["⛔ 拒绝执行<br/>状态不更新"]
-    Load["读取 4 个状态文件"]
-    Update["逐项更新<br/>• author.yaml<br/>• reader.yaml<br/>• character.yaml<br/>• foreshadow.yaml<br/>• progress.yaml<br/>• agent-log"]
-    Compress{"需要压缩?<br/>每5章 / 卷末 / >50KB"}
-    ExecCompress["执行压缩协议"]
-    Done["📤 OUTPUT<br/>更新后的状态文件<br/>→ Orchestrator 报告用户"]
-
-    Input --> Validate
-    Validate -->|"✗ 未通过"| Reject
-    Validate -->|"✓ 通过"| Load
-    Load --> Update
-    Update --> Compress
-    Compress -->|"是"| ExecCompress
-    Compress -->|"否"| Done
-    ExecCompress --> Done
-```
-
-## 错误处理矩阵
-
-| 失败位置 | 错误类型 | 处理 |
-|---------|---------|------|
-| Director | Story Contract 不完整 | 重试 1 次，仍失败暂停并报告用户 |
-| ScenePlanner | 五拍骨架不可执行 | 重试 1 次，仍失败暂停并报告用户 |
-| Writer | 硬门禁未通过 | 回 Writer 修复（不重跑 Director/ScenePlanner） |
-| Writer | 卡文无法继续 | 暂停并报告用户 |
-| Critic | 局部修复 | 回 Writer（限制修改范围），修完再回 Critic |
-| Critic | 骨架失效 | 回 ScenePlanner（重设计），不重跑 Director |
-| Critic | 大面积信息泄漏 | 回 Director（重新设计信息释放策略） |
-| StateManager | 状态更新失败 | 重试 1 次，仍失败保留 state_delta 待手动处理 |
+逐段写作模式下，上下文持续增长。每写完一段：
+- 保留：本章方向 + 已写的全部段落 + 用户纠偏记录
+- 不需要保留：中间过程的废稿（用户说「不对」后被替换的段落）
 
 ## 断点恢复
 
-当 Orchestrator 启动时检测到 `chapter_state.status` 不是 COMPLETED：
+如果写作中断（用户离开/异常）：
+- 进度 = 已确认的最新段落
+- 重新 `/novel-studio:write N` 时，先展示已写内容
+- 从最后一个已确认段落的下一段继续
 
-```mermaid
-flowchart TD
-    Start["读取 agent-log.yaml 最后一条"]
-    Check{"最后一条状态?"}
-    InProgress["status: in_progress"]
-    Completed2["status: completed"]
+## 反模式（禁止）
 
-    Resume{"从哪个 Agent 继续?"}
-
-    Resume_Director["NEED_PLAN<br/>→ 重新调用 Director"]
-    Resume_ScenePlanner["NEED_SCENE<br/>→ 重新调用 ScenePlanner"]
-    Resume_Writer["NEED_DRAFT<br/>→ 重新调用 Writer"]
-    Resume_Critic["NEED_REVIEW<br/>→ 重新调用 Critic"]
-    Verify["检查 progress.yaml<br/>确认状态一致性"]
-    Fresh["从头开始意图识别<br/>（agent-log 不存在）"]
-
-    Start --> Check
-    Check -->|"有 in_progress"| InProgress
-    Check -->|"最后一条 completed"| Completed2
-    Check -->|"不存在"| Fresh
-    InProgress --> Resume
-    Resume -->|"to_agent: Director"| Resume_Director
-    Resume -->|"to_agent: ScenePlanner"| Resume_ScenePlanner
-    Resume -->|"to_agent: Writer"| Resume_Writer
-    Resume -->|"to_agent: Critic"| Resume_Critic
-    Completed2 --> Verify
-```
-
-## 用户可见的输出
-
-Orchestrator 在每一步向用户报告进度（不暴露 Agent 名）：
-
-```
-✍️ 正在规划第11章的故事方向…
-✅ 章节方向已确定（推进：主角首次使用新能力）
-
-🎬 正在设计场景结构…
-✅ 3 个场景已编排完成
-
-📝 正在写作中…
-✅ 第11章完成（2500字）
-
-🔍 正在质量检查…
-✅ 检查通过（AI味 2处已自动修复，无硬伤）
-
-📋 状态已更新 → 第11章完结
-```
+- 用户确认方向后一次性写完整章
+- 每段超过 500 字（小段才能精确控制）
+- 用户说「继续」就全自动跑完剩下的所有段落
+- 用户说「不对」但没给方向就自己猜着改
+- 跨过用户确认抢跑写下一段
