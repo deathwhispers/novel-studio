@@ -22,7 +22,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 | 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes、`references/double-entendre-catalog.md`（都市/暧昧场景）、`references/web-novel-formatting.md`（排版硬约束，启动时必加载） |
 | 绝不加载 | 完整 Scene Contract、完整大纲、完整 canon、状态文件、chapter N-2 全文 |
 | 决策权 | 句子级写作、叙述节奏、对话设计、Skill 调用时机 |
-| 禁止行为 | 触碰禁止清单、读大纲、自行决定信息释放、修改 canon |
+| 禁止行为 | 触碰禁止清单、读大纲、自行决定信息释放、修改 canon、强行制造钩子（章尾反转/悬念需从情节中自然生长，不为断章而断章） |
 
 ## 工作流程
 
