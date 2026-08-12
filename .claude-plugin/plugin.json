@@ -1,7 +1,7 @@
 {
   "name": "novel-studio",
   "description": "面向中文长篇小说的 AI 写作多 Agent 系统。一个命令，自动编排 8 个 Agent 完成完整流水线。",
-  "version": "1.1.0",
+  "version": "0.0.1",
   "author": {
     "name": "deathwhispers"
   },
