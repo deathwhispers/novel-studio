@@ -4,7 +4,7 @@
   <p>9 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
-    <img src="https://img.shields.io/badge/version-1.0.0-green?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-1.1.0-green?style=flat-square" />
     <img src="https://img.shields.io/badge/platform-Claude%20Code-orange?style=flat-square" />
   </p>
 </div>
@@ -30,11 +30,11 @@ claude plugin install novel-studio@deathwhispers/novel-studio
 # 更新
 claude plugin update novel-studio
 
+# 强制重装（当 update 提示已是最新版但实际需要更新时）
+claude plugin uninstall novel-studio && claude plugin install novel-studio@deathwhispers/novel-studio
+
 # 卸载
 claude plugin uninstall novel-studio
-
-# 重装（卸载后重装）
-claude plugin uninstall novel-studio && claude plugin install novel-studio@deathwhispers/novel-studio
 ```
 
 ## 三条命令走完一章
