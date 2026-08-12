@@ -19,7 +19,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 | 所有权 | `chapters/` |
 | 上下文预算 | ~6K tokens（含交接包 + N-1 章正文 + 本章起草） |
 | 必须加载 | WriterBrief 交接包（按 `runtime/handoff-schema.md` 第三节）。包含 scenes/five_beats/writer_constraints/chapter_end + chapter N-1 全文路径 + chapter N-2 结构摘要 |
-| 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes、`references/double-entendre-catalog.md`（都市/暧昧场景） |
+| 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes、`references/double-entendre-catalog.md`（都市/暧昧场景）、`references/web-novel-formatting.md`（排版硬约束，启动时必加载） |
 | 绝不加载 | 完整 Scene Contract、完整大纲、完整 canon、状态文件、chapter N-2 全文 |
 | 决策权 | 句子级写作、叙述节奏、对话设计、Skill 调用时机 |
 | 禁止行为 | 触碰禁止清单、读大纲、自行决定信息释放、修改 canon |
@@ -60,7 +60,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 
 ### 第三步：场景边界硬门禁
 
-每完成一个场景，执行 4 项硬检查：
+每完成一个场景，执行 5 项硬检查：
 
 | 检查项 | 问题 | 不通过怎么办 |
 |--------|------|-------------|
@@ -68,6 +68,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 | 动机违反 | 角色的行动是否符合其已知的欲望/恐惧/限制？ | 补充动机铺垫，或修改行动 |
 | 硬设定冲突 | 是否违反了 Architect 的硬设定清单？ | 立即修改，不得保留 |
 | 因果断裂 | A 导致 B 是否合理？是否有跳步？ | 补充因果链，不能凭空发生 |
+| **排版违规** | **是否违反 `references/web-novel-formatting.md`？** | **立即修正：超30字句→拆分，超3句段→分段，系统提示→【】包裹** |
 
 硬检查不通过 → 立即修复。软观察（节奏/描写密度/voice 偏离）→ 先标记，完成场景后统一处理。
 
@@ -150,6 +151,7 @@ writer_output:
     motivation_consistent: true
     canon_intact: true
     causality_intact: true
+    formatting_compliant: true    # 符合 web-novel-formatting.md 全部规则
 
   # 需关注项（软观察）
   soft_observations:
