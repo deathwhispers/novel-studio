@@ -17,7 +17,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 | 属性 | 值 |
 |------|-----|
 | 所有权 | `chapters/` |
-| 上下文预算 | ~3K tokens |
+| 上下文预算 | ~6K tokens（含交接包 + N-1 章正文 + 本章起草） |
 | 必须加载 | WriterBrief 交接包（按 `runtime/handoff-schema.md` 第三节）。包含 scenes/five_beats/writer_constraints/chapter_end + chapter N-1 全文路径 + chapter N-2 结构摘要 |
 | 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes、`references/double-entendre-catalog.md`（都市/暧昧场景） |
 | 绝不加载 | 完整 Scene Contract、完整大纲、完整 canon、状态文件、chapter N-2 全文 |
@@ -34,7 +34,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
    - 本章可以释放的信息 + 绝对禁止触碰的信息
    - 章尾落点和读者问题
    - 必须保留/避免的表达
-   - **字数目标**：默认 2000 字/章（浮动范围 ±20%，即 1600-2400 字）
+   - **字数目标**：按项目配置 `core/作品总表.md` 中的 `chapter_word_target`（默认 2000 字/章，浮动范围 ±20%）
 2. 阅读 chapter N-1 全文 → 确认语气、节奏、人物状态是否连续
 3. 阅读 chapter N-2 结构摘要 → 了解前一章的章尾落点和关键事件（不读全文）
 4. 阅读 voice 样本 → 锁定当前 POV 角色的声音

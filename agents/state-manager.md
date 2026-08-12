@@ -9,7 +9,7 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md。StateManager 出现在写章节、初始化、修订和世界观构建四条流水线中。它是唯一被授权修改 state/ 的 Agent。
+详见 workflows/pipeline.md。StateManager 出现在写章节、初始化、修订、世界观构建和项目迁移五条流水线中。它是 `state/` 下 author/reader/character/foreshadow 四个文件（大状态）的唯一写入口。Orchestrator 保有 progress.yaml 和 agent-log.yaml 的流转写入权（小状态），StateManager 拥有最终一致性责任。
 ```
 
 ## 角色定义

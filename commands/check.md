@@ -2,7 +2,7 @@
 type: command
 name: check
 description: "对指定章节做质量检查。先确认你关心什么，再定向检查，不修改正文。"
-workflow: revise-chapter
+workflow: check
 ---
 
 # /novel-studio:check

@@ -129,7 +129,39 @@ flowchart TD
 
 ---
 
-## 五、质量检查（novel-check）
+## 五、大纲设计（outline）
+
+**触发**: `/novel-studio:outline`
+
+```mermaid
+flowchart TD
+    User["👤 User: /novel-studio:outline"]
+    Orchestrator["🎯 Orchestrator<br/>确认操作类型<br/>创建/调整/检查"]
+
+    User --> Orchestrator
+
+    Orchestrator --> Create["创建大纲<br/>四层递进"]
+    Orchestrator --> Adjust["调整大纲<br/>定位目标层"]
+    Orchestrator --> Review["检查大纲<br/>6项扫描"]
+
+    Create --> Layer1["第一层：全书总纲<br/>核心冲突→故事线→分卷"]
+    Layer1 --> Layer2["第二层：逐卷细化<br/>节拍→交错→节奏"]
+    Layer2 --> Layer3["第三层：伏笔布局<br/>埋设→轻碰→回收"]
+    Layer3 --> Layer4["第四层：角色弧光<br/>状态变化→催化剂事件"]
+    Layer4 --> OutlinerGen["Outliner 写入文件"]
+    Adjust --> OutlinerGen
+    Review --> OutlinerCheck["Outliner 全面检查"]
+    OutlinerCheck --> OutlinerGen
+    OutlinerGen --> Done(["✅ 大纲就绪"])
+```
+
+**输出文件**: `outline/全书总纲.yaml`、`outline/volumes/`、`outline/伏笔地图.yaml`、`outline/角色弧光.yaml`、`outline/故事线交错.yaml`
+
+详见 [`workflows/outline.md`](outline.md)。
+
+---
+
+## 六、质量检查（check）
 
 **触发**: `/novel-studio:check <N>`
 
@@ -147,7 +179,7 @@ flowchart LR
 
 ---
 
-## 六、项目迁移（migrate-project）
+## 七、项目迁移（migrate-project）
 
 **触发**: `/novel-studio:migrate <现有目录路径>`
 
@@ -187,9 +219,10 @@ flowchart TD
 
 | Agent | 出现在流水线 |
 |-------|-------------|
-| Orchestrator | 全部六条 |
+| Orchestrator | 全部七条 |
 | Architect | 初始化、世界观构建、项目迁移（合成归档） |
 | Archivist | 项目迁移（分批分析）——迁移完成后不再使用 |
+| Outliner | 大纲设计 |
 | Director | 写章节（修订-全文重写） |
 | ScenePlanner | 写章节、修订（全文重写/场景重设） |
 | Writer | 写章节、修订（全部四种范围） |

@@ -9,20 +9,20 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 ## 在系统中的位置
 
 ```
-详见 workflows/pipeline.md。Orchestrator 是全部六条流水线的统一入口。
+详见 workflows/pipeline.md。Orchestrator 是全部七条流水线的统一入口。
 ```
 
 ## 角色定义
 
 | 属性 | 值 |
 |------|-----|
-| 所有权 | `state/progress.yaml`、`state/agent-log.yaml` |
+| 所有权 | `state/progress.yaml`、`state/agent-log.yaml`（调度层写入权。StateManager 拥有 `state/` 的最终一致性责任，Orchestrator 只做流转驱动的轻量更新） |
 | 上下文预算 | ~2K tokens |
 | 必须加载 | `state/progress.yaml` + `state/agent-log.yaml`（最后 5 条） |
 | 按需加载 | Workflow 文件、品类配方索引、`runtime/handoff-schema.md`（裁剪交接包时参考） |
 | 绝不加载 | 正文、大纲、设定、canon、状态文件详细内容 |
 | 决策权 | 意图判断、多轮对话、Workflow 选择、异常处理 |
-| 禁止行为 | 创作正文、检查质量、修改状态文件 |
+| 禁止行为 | 创作正文、检查质量、修改 StateManager 管理的状态文件（author/reader/character/foreshadow） |
 
 ## 核心职责
 
@@ -36,7 +36,8 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 | 「修改第X章」「重写第X章」「润色」 | 修订章节 | revise-chapter |
 | 「开新书」「初始化」「新建项目」 | 初始化项目 | init-project |
 | 「补设定」「世界观」「角色设计」 | 世界观构建 | worldbuilding |
-| 「检查第X章」「体检」「审稿」 | 质量检查 | novel-check |
+| 「大纲」「剧情设计」「故事结构」 | 大纲设计 | outline |
+| 「检查第X章」「体检」「审稿」 | 质量检查 | check |
 | 「迁移」「导入已有章节」「利旧」 | 项目迁移 | migrate-project |
 
 ### 2. 多轮对话
@@ -48,43 +49,7 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 - 已有上下文可判断的内容直接标注，不让用户重复填表
 - 用户已给出完整方案时走快速通道（一句话确认后直接调度）
 
-**每章字数约束**：
-	- 默认每章目标 **2000 字**（上下浮动 20%，即 1600-2400 字）
-	- 字数由项目配置 `core/作品总表.md` 中的 `chapter_word_target` 决定
-
-**剧情量评估与自动分章**：
-	- 生成选项或处理用户自定义方向时，需评估剧情量是否能放进一章
-	- 判定标准：一个关键事件节点 ≈ 500-800 字
-	- 如果用户提供的剧情包含 5 个以上关键事件，或预估字数 > 3000 字：
-	  → 主动建议分为 2 章，标注分章点和每章的字数预估
-	  → 用户确认后，当前章节只写前半部分，章尾落点改为分章点
-	  → 自动在 progress.yaml 中标记下一章为 NEED_PLAN
-
-**写章节场景**（`/novel-studio:write X`）：
-1. 如果 progress.yaml 中 `chapter_state` 有状态 → 从断点继续，先报告当前进度
-2. 如果是全新章节，进入**发展方向探索**：
-   a. 读取上一章正文全文 + 最近 2-3 章结构摘要，了解当前叙事状态
-   b. 读取当前活跃伏笔（status: active|touched）、角色压力项、读者待解答问题
-   c. 读取项目字数配置（默认 2000 字/章）
-   d. 生成 **2-3 个发展方向选项**，每个选项包含：
-      - **方向**：本章核心功能（推进 / 揭示 / 高潮 / 过渡 / 余震）
-      - **一句话梗概**：这一章讲什么
-      - **关键事件**：2-3 个主要情节节点（每个节点约 500-800 字）
-      - **预估字数**：基于关键事件数量估算
-      - **章尾落点**：这一章结束时读者最想知道什么
-      - **优劣**：这个方向的优势与风险
-   e. 展示选项给用户选择，用户可直接选、混合方案、或提出自己的方向
-   f. 如果用户提出的剧情预估 > 3000 字或关键事件 > 5 个：
-      → 建议拆分为连续两章，标注分章点和每章预估字数
-      → 用户确认后，当前章节只写前半部分
-   g. 如果品类配方可用：标注品类节奏要求
-
-**开新书场景**（`/novel-studio:init`）：
-1. 确认品类（番茄系统爽文 / 玄幻 / 都市 / 言情 / 悬疑 / 其它）
-2. 确认主角定位（身份/初始处境/核心优势）
-3. 确认篇幅（短篇 <50章 / 中篇 50-200章 / 长篇 200-500章 / 超长篇 >500章）
-4. 确认模式（商业连载 / 类型长篇 / 文学叙事 / 短篇 / 探索起草）
-5. 确认完毕 → 调度 Architect
+**具体对话流程**：见各 command 文件（`commands/*.md`）。Orchestrator 不在此重复定义对话流程——command 文件是对话流程的唯一权威来源。
 
 ### 3. Workflow 调度
 
@@ -101,8 +66,8 @@ flowchart LR
 
 **调度协议**：
 1. 读取 Workflow 文件，确认当前状态对应的下游 Agent
-2. 从上游 Agent 输出中组装交接包（按 `交接包格式` 模板）
-3. 调用下游 Agent 的 SKILL.md，传递交接包
+2. 从上游 Agent 输出中组装交接包（按 `runtime/handoff-schema.md` 模板）
+3. 调用下游 Agent，传递交接包
 4. 下游 Agent 返回后：
    - 检查输出完整性 → 写入 agent-log
    - 状态推进 → 更新 progress.yaml
@@ -140,7 +105,7 @@ Orchestrator 不仅是路由器，也是**信息经纪人**——从上游完整
 
 ### 交接包格式
 
-不再使用通用 handoff 格式。每种下游 Agent 使用专属 Brief，定义见 `runtime/handoff-schema.md`：
+每种下游 Agent 使用专属 Brief，定义见 `runtime/handoff-schema.md`：
 
 | 下游 Agent | Brief 格式 | 预估大小 |
 |-----------|-----------|---------|
@@ -151,6 +116,7 @@ Orchestrator 不仅是路由器，也是**信息经纪人**——从上游完整
 | StateManager | StateManagerBrief（Review Report + state_delta） | ~0.5K |
 | Archivist | MigrationBrief（批次章节列表 + 前批摘要） | ~1K |
 | Architect（迁移合成） | ArchitectMigrationBrief（N 份提取结果路径列表） | ~0.5K |
+| Outliner | 不使用 Brief | Orchestrator 传递用户构想，Outliner 自行加载 canon 摘要 |
 
 ### 裁剪原则
 
@@ -173,3 +139,4 @@ Orchestrator 启动时：
 - **状态机不可跳步**：NEED_PLAN → NEED_SCENE → NEED_DRAFT → NEED_REVIEW → COMPLETED，顺序固定
 - **Agent 不自选后继**：下一步永远由状态机决定，不由 Agent 推荐
 - **用户可见的是进度，不是 Agent 名**：报告「正在设计章节结构…」而不是「正在调用 Director」
+- **对话流程在 command 文件中**：Orchestrator 不重复定义具体的多轮对话流程，command 文件是对话流程的唯一权威来源

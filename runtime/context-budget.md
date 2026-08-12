@@ -15,6 +15,7 @@
 | 层级 | 持有者 | 内容 |
 |------|--------|------|
 | 路由层 | Orchestrator | progress.yaml、agent-log.yaml |
+| 结构层 | Outliner | 大纲、故事线、分卷、伏笔、弧光、节奏 |
 | 决策层 | Director | 状态摘要、卷纲、硬设定摘要 |
 | 执行层 | ScenePlanner/Writer/Critic | 场景级信息、正文 |
 
@@ -39,14 +40,15 @@
 
 | Agent | 预算 | 输入来源 | 核心约束 |
 |-------|------|---------|---------|
-| Orchestrator | ~2K | progress.yaml + agent-log.yaml | 不创作、不检查、不修改状态 |
+| Orchestrator | ~2K | progress.yaml + agent-log.yaml | 不创作、不检查、不修改大状态文件 |
 | Architect | ~8K | 用户构想 + canon + 品类配方 | 不读正文/大纲/状态文件 |
+| Outliner | ~8K | 作品总表 + canon 摘要 + 已有大纲 + 品类配方 | 不读正文/状态文件 |
 | Director | ~4K | DirectorBrief（状态摘要） | 不读正文、不读完整状态文件 |
 | ScenePlanner | ~3K | ScenePlannerBrief（Story Contract + 结构） | 不读完整大纲/完整 canon |
-| Writer | ~3K | WriterBrief（scenes + 约束 + 章尾）+ chapter N-1 全文 + chapter N-2 摘要 | 不读大纲/canon/状态文件/完整 Scene Contract/chapter N-2 全文 |
-| Critic | ~3K | CriticBrief（合并检查清单）+ 当前章正文 + AI 味检测清单 | 不读完整 canon/完整大纲/其他章节/完整 AI 味目录 |
-| StateManager | ~2.5K | StateManagerBrief（Review Report + state_delta）+ 状态文件（分段加载） | 不读正文/大纲/canon |
-| Archivist | ~8K/批 | MigrationBrief（批次章节列表 + 前批摘要）+ 本批 5 章正文 | 不读其他批次/大纲/canon/状态文件 |
+| Writer | ~6K | WriterBrief + chapter N-1 全文 + chapter N-2 摘要 | 不读大纲/canon/状态文件/完整 Scene Contract |
+| Critic | ~6K | CriticBrief + 当前章正文 + AI 味检测清单 | 不读完整 canon/完整大纲/其他章节 |
+| StateManager | ~2.5K | StateManagerBrief + 状态文件（分段加载） | 不读正文/大纲/canon |
+| Archivist | ~8K/批 | MigrationBrief + 本批 5 章正文（顺序处理） | 不读其他批次/大纲/canon/状态文件 |
 
 ---
 
