@@ -16,8 +16,9 @@
 |------|--------|------|
 | 路由层 | Orchestrator | progress.yaml、agent-log.yaml |
 | 结构层 | Outliner | 大纲、故事线、分卷、伏笔、弧光、节奏 |
-| 决策层 | Director | 状态摘要、卷纲、硬设定摘要 |
-| 执行层 | ScenePlanner/Writer/Critic | 场景级信息、正文 |
+| 决策层 | Director（仅修订） | 状态摘要、卷纲、硬设定摘要 |
+| 修订层 | ScenePlanner/Critic（仅修订） | 场景级信息、正文检查 |
+| 执行层 | Writer | 逐段写作（写章节）或受约束重写（修订） |
 
 决策层不加载完整状态文件，执行层不加载上游内部细节。
 
@@ -43,10 +44,10 @@
 | Orchestrator | ~2K | progress.yaml + agent-log.yaml | 不创作、不检查、不修改大状态文件 |
 | Architect | ~8K | 用户构想 + canon + 品类配方 | 不读正文/大纲/状态文件 |
 | Outliner | ~8K | 作品总表 + canon 摘要 + 已有大纲 + 品类配方 | 不读正文/状态文件 |
-| Director | ~4K | DirectorBrief（状态摘要） | 不读正文、不读完整状态文件 |
-| ScenePlanner | ~3K | ScenePlannerBrief（Story Contract + 结构） | 不读完整大纲/完整 canon |
-| Writer | ~6K | WriterBrief + chapter N-1 全文 + chapter N-2 摘要 | 不读大纲/canon/状态文件/完整 Scene Contract |
-| Critic | ~6K | CriticBrief + 当前章正文 + AI 味检测清单 | 不读完整 canon/完整大纲/其他章节 |
+| Director（仅修订） | ~4K | DirectorBrief（状态摘要） | 不读正文、不读完整状态文件 |
+| ScenePlanner（仅修订） | ~3K | ScenePlannerBrief（Story Contract + 结构） | 不读完整大纲/完整 canon |
+| Writer | ~6K | 逐段模式：用户选择的推进方向 + 已写段落<br/>修订模式：WriterBrief + chapter N-1 全文 | 不读大纲/canon/状态文件 |
+| Critic（仅修订/检查） | ~6K | CriticBrief + 当前章正文 + AI 味检测清单 | 不读完整 canon/完整大纲/其他章节 |
 | StateManager | ~2.5K | StateManagerBrief + 状态文件（分段加载） | 不读正文/大纲/canon |
 | Archivist | ~8K/批 | MigrationBrief + 本批 5 章正文（顺序处理） | 不读其他批次/大纲/canon/状态文件 |
 
@@ -102,11 +103,13 @@
 
 ---
 
-### Director（~4K tokens）
+### Director（~4K tokens，仅修订）
+
+Director 仅在修订流程的「全文重写」路径中使用。写章节逐段模式中 Director 不参与——方向确定由用户对话替代。
 
 **输入来源**：`DirectorBrief`（`runtime/handoff-schema.md` 第一节）
 
-Director 不再自行加载完整状态文件。Orchestrator 从状态文件中提取摘要后放入 DirectorBrief。
+Director 不自行加载完整状态文件。Orchestrator 从状态文件中提取摘要后放入 DirectorBrief。
 
 **交接包内容**（~2.5K tokens）：
 - `user_intent` / `chapter_number` / `genre`
@@ -132,7 +135,9 @@ Director 不再自行加载完整状态文件。Orchestrator 从状态文件中�
 
 ---
 
-### ScenePlanner（~3K tokens）
+### ScenePlanner（~3K tokens，仅修订）
+
+ScenePlanner 仅在修订流程（全文重写/场景重设）中使用。写章节逐段模式中 ScenePlanner 不参与——结构设计由用户对话替代。
 
 **输入来源**：`ScenePlannerBrief`（`runtime/handoff-schema.md` 第二节）
 
@@ -157,45 +162,40 @@ ScenePlanner 收到完整 Story Contract + POV 角色摘要 + 最近章节结构
 
 ---
 
-### Writer（~3K tokens）
+### Writer（~6K tokens，逐段模式）/（~4K tokens，修订模式）
 
-**输入来源**：`WriterBrief`（`runtime/handoff-schema.md` 第三节）
+**逐段模式（写章节）**：
+Writer 不使用交接包。Orchestrator 直接传递用户选择的推进方向 + 已写段落上下文。Writer 只写当前段（200-400字），写完就停，等待用户确认。
 
-Writer 不再加载完整 Scene Contract，也不加载 chapter N-2 全文——chapter N-2 改为结构摘要。
+**必须加载**（逐段模式）：
+- 用户选择的推进方向（1-2句话，由 Orchestrator 传递）
+- 已写段落（累积上下文，约1-2K tokens）
+- 整章拼接后的全文（收尾阶段自检用，约4K tokens）
 
-**交接包内容**（~1K tokens）：
+**修订模式**：
+输入来源为 `WriterBrief`（`runtime/handoff-schema.md` 第三节）。交接包 ~1K tokens，Writer 自行加载 chapter N-1 全文 + voice 样本。
+
+**交接包内容**（修订模式，~1K tokens）：
 - `scenes`：每场景的 id/function/pov/narrative_distance/environment/environment_pressure/five_beats
 - `writer_constraints`：must_preserve + must_avoid
 - `chapter_end`：hook + reader_question
 - `last_chapter_path`：chapter N-1 全文路径
-- `previous_chapter_summary`：chapter N-2 的结构摘要（章号/场景数/字数/章节功能/章尾落点/关键事件/结尾状态）
+- `previous_chapter_summary`：chapter N-2 结构摘要
 - `must_read`：voice 样本路径
 
-**交接包外自行加载**（路径由交接包指定）：
-- chapter N-1 正文全文（约1.5-2K tokens）
-- voice 样本（角色的具体对话和叙述片段，约500 tokens）
-- chapter N-2 摘要已在交接包中，不读全文
-
-**按需加载**（写中调用，不预加载）：
-- 单个 narrative skill（每次只加载 1 个，约500 tokens）
-- 品类 tropes 参考（约300 tokens）
-
-**绝不加载**：
-- Scene Contract 完整文件
-- chapter N-2 正文全文（摘要已在交接包中）
+**绝不加载**（两种模式通用）：
 - 完整大纲、完整 canon、状态文件
-
-**超预算处理**：
-- chapter N-1 正文超出 2K tokens 时，只加载其最后 1500 字 + 章尾 500 字
-- 参考片段超过 2 份时，只加载最匹配的 1 份
+- 逐段模式：Scene Contract、WriterBrief、Director 的任何产出
 
 ---
 
-### Critic（~3K tokens）
+### Critic（~6K tokens，仅修订/检查）
+
+Critic 仅在修订流程（revise-chapter）和质量检查（check）中使用。写章节逐段模式中 Critic 不参与——收尾阶段由 Writer 做轻量排版/AI味自检替代。
 
 **输入来源**：`CriticBrief`（`runtime/handoff-schema.md` 第四节）
 
-Critic 不再分别加载 Scene Contract + Story Contract + character.yaml，也不加载完整 AI 味目录——使用精简检测清单。
+Critic 不分别加载 Scene Contract + Story Contract + character.yaml，也不加载完整 AI 味目录——使用精简检测清单。
 
 **交接包内容**（~0.8K tokens）：
 - `chapter_text`：当前章正文路径
@@ -220,7 +220,10 @@ Critic 不再分别加载 Scene Contract + Story Contract + character.yaml，也
 
 **输入来源**：`StateManagerBrief`（`runtime/handoff-schema.md` 第五节）
 
-StateManager 是唯一需要加载状态文件的 Agent。交接包中传递 Review Report 和 state_delta。
+StateManager 是唯一需要加载状态文件的 Agent。支持两种模式：
+
+- **写章节（逐段模式）**：交接包传递 `state_delta`（Writer 全章汇总）+ `user_confirmed: true`（用户锁定确认）。无 Review Report。
+- **修订模式**：交接包传递 `state_delta` + `review_report`（Critic 产出，verdict 必须为"通过"）。
 
 **交接包内容**（~0.5K tokens）：
 - `review_report`：完整 Review Report

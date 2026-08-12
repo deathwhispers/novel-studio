@@ -4,7 +4,7 @@
   <p>9 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
-    <img src="https://img.shields.io/badge/version-0.0.1-green?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-0.0.2-green?style=flat-square" />
     <img src="https://img.shields.io/badge/platform-Claude%20Code-orange?style=flat-square" />
   </p>
 </div>
@@ -77,11 +77,11 @@ claude plugin uninstall novel-studio
 | **Orchestrator** | 入口、意图识别、信息裁剪 | `progress.yaml`, `agent-log` | 不创作、不检查、不修改大状态 |
 | **Architect** | Canon 唯一所有者 | `core/`, `setting/` | 不读正文、不写大纲 |
 | **Outliner** | 多线叙事大纲 | `outline/` | 不读正文、不改 canon |
-| **Director** | 单章 Story Contract | 章节级故事合约 | 不读全文、不写正文，大纲由 Outliner 维护 |
-| **ScenePlanner** | 场景五拍骨架 | 场景节拍 | 不写正文 |
-| **Writer** | 正文唯一执行者 | `chapters/` | 不知道第 50 章的反转 |
-| **Critic** | 5 Checker 质量门禁 | 验收标准 | 只标注不修改正文 |
-| **StateManager** | 状态更新 + 记忆压缩 | `state/`（大状态唯一写入口） | Critic 未通过不执行 |
+| **Director** | 单章 Story Contract（仅修订） | 章节级故事合约 | 不读全文、不写正文，大纲由 Outliner 维护 |
+| **ScenePlanner** | 场景五拍骨架（仅修订） | 场景节拍 | 不写正文 |
+| **Writer** | 正文唯一执行者（逐段/修订双模式） | `chapters/` | 不知道第 50 章的反转 |
+| **Critic** | 5 Checker 质量门禁（仅修订/检查） | 验收标准 | 只标注不修改正文 |
+| **StateManager** | 状态更新 + 记忆压缩 | `state/`（大状态唯一写入口） | 写章节：用户锁定确认；修订：Critic 通过 |
 | **Archivist** | 正文逆向归档 | 迁移期间临时分析 | 仅迁移时使用 |
 
 ## 工作区结构
@@ -111,7 +111,7 @@ my-novel/
 | 3 | **Agent 不自选后继** | 流转由命令和用户确认决定，Agent 不自行调用下一个 Agent |
 | 4 | **StateManager 唯一写入口** | 大状态（author/reader/character/foreshadow）唯一写入口，其他 Agent 只标记增量 |
 | 5 | **Writer 不读大纲** | 只知道当前段的约束和禁止触碰清单，不知道全书走向 |
-| 6 | **Critic 最后一道门禁** | 5 Checker（逻辑/信息泄漏/人物/节奏/文风）全部通过才锁定 |
+| 6 | **Critic 门禁（修订/检查）** | 5 Checker 全部通过在修订/检查中才锁定；写章节逐段模式由用户逐段确认替代 |
 | 7 | **信息裁剪** | Orchestrator 从上游完整输出中裁剪下游真正需要的字段，累计上下文从 ~34K 降至 ~25K |
 
 ## 写作质量体系

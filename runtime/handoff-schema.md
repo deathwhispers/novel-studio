@@ -469,9 +469,6 @@ flowchart TD
     Archivist -->|"N批完成后"| ArchMigrate
     ArchMigrate -->|"合成完成"| Orchestrator
 ```
-    Archivist -->|"N批完成后"| ArchMigrate
-    ArchMigrate -->|"合成完成"| Orchestrator
-```
 
 ---
 

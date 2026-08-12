@@ -23,13 +23,12 @@ current:
   total_words: 25000
   last_updated: "2026-01-15T10:30:00"
 
-chapter_state:                  # 当前正在写的章节状态（write-chapter workflow 用）
+chapter_state:                  # 当前正在写的章节状态
   chapter_number: 11
-  status: "NEED_SCENE"          # NEED_PLAN | NEED_SCENE | NEED_DRAFT | NEED_REVIEW | COMPLETED
-  story_contract: ""            # 文件路径，NEED_PLAN 之后填充
-  scene_contract: ""            # 文件路径，NEED_SCENE 之后填充
-  draft: ""                     # 文件路径，NEED_DRAFT 之后填充
-  review_report: ""             # 文件路径，NEED_REVIEW 之后填充
+  status: "WRITING"             # DIRECTION（方向确认中）| WRITING（逐段写作中）| COMPLETED（已锁定）
+  chapter_direction: ""         # 本章方向（一句话）
+  draft: ""                     # 正文文件路径
+  segment_count: 0              # 已写成段数
 
 files:
   book_core: "core/作品总表.md"
@@ -45,9 +44,9 @@ next_milestone:
 ```
 
 **约束**：
-- `chapter_state.status` 只能取枚举值
-- `chapter_state` 在 write-chapter workflow 中由 Orchestrator 写入
-- `current` 在每次 State Manager 完成后更新
+- `chapter_state.status` 枚举值：DIRECTION | WRITING | COMPLETED
+- `chapter_state` 由 Orchestrator 在写章节过程中写入
+- `current` 的累计统计字段（total_words、total_chapters_written）由 StateManager 在章节锁定后更新
 
 ---
 
