@@ -1,7 +1,7 @@
 ---
 type: workflow
 name: write-chapter
-description: "章节写作流程。逐段写作+即时纠偏，用户主导每一步。"
+description: "章节写作流程。多轮对话确定方向，逐段写作即时纠偏，用户主导每一步。"
 ---
 
 # write-chapter — 章节写作 Workflow

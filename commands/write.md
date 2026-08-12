@@ -1,7 +1,7 @@
 ---
 type: command
 name: write
-description: "写指定章节。逐段写作+即时纠偏，一段确认后再写下一段，不再一次性写完。"
+description: "写指定章节。多轮对话确定方向，逐段写作即时纠偏，一段确认后再写下一段。"
 workflow: write-chapter
 ---
 

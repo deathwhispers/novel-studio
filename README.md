@@ -1,7 +1,7 @@
 <div align="center">
   <h1>Novel Studio</h1>
   <p><strong>面向中文长篇小说的 AI 写作多智能体系统</strong></p>
-  <p>一个命令，自动编排 8 个 Agent 完成从大纲到成稿的完整流水线</p>
+  <p>9 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
     <img src="https://img.shields.io/badge/version-1.0.0-green?style=flat-square" />
@@ -15,123 +15,82 @@
 
 用 AI 写长篇小说最痛苦的不是文笔，是**失控**。
 
-写到第 50 章忘了第 3 章埋的伏笔，角色性格悄然漂移，信息释放节奏混乱，上下文越写越长直到模型崩溃。Novel Studio 把这套复杂度拆成 **8 个各司其职的 Agent**，每个 Agent 只看到任务所需的最小上下文，通过状态机自动流转。
+写到第 50 章忘了第 3 章埋的伏笔，角色性格悄然漂移，信息释放节奏混乱，上下文越写越长直到模型崩溃。更致命的是——AI 一次性写完一章，跑偏了整章都得重来。
 
-> 你表达意图，系统自动流转。中间不需要人工干预。
+Novel Studio 把复杂度拆成 **9 个各司其职的 Agent**，每个 Agent 只看到任务所需的最小上下文。写作不再是"一键生成然后祈祷"，而是**多轮深度对话**——你定方向，AI 写一小段，你检查纠偏，确认后再写下一段。跑偏最多偏 400 字。
+
+> 不是自动流水线。是你和 AI 的协作工作台。
 
 ## 快速安装
 
 ```bash
-claude plugin marketplace add deathwhispers/novel-studio
-claude plugin install novel-studio@novel-studio
+# 安装
+claude plugin install novel-studio@deathwhispers/novel-studio
+
+# 更新
+claude plugin update novel-studio
+
+# 卸载
+claude plugin uninstall novel-studio
+
+# 重装（卸载后重装）
+claude plugin uninstall novel-studio && claude plugin install novel-studio@deathwhispers/novel-studio
 ```
 
-## 一条命令写完一章
+## 三条命令走完一章
 
 ```bash
+# 1. 确认本章方向（多轮对话，3-5 轮）
 /novel-studio:write 10
-```
 
-从确认方向 → 故事合约 → 场景五拍 → 正文起草 → 五重质量检查 → 状态更新，全自动流转：
+# 2. 逐段写作（你描述 → AI 写 200-400 字 → 你检查 → 下一段）
+→ 「从主角推开仓库门开始写」
+✍️ 第 10 章 · 第 1 段：[正文 350 字]
+→ 「这段可以，继续。接下来写他发现地上的血迹」
+✍️ 第 10 章 · 第 2 段：[正文 280 字]
+→ 「这段不对，血迹应该是新鲜的，不是干涸的」
+✅ 已修正
+→ ...循环直到你说「这章到此结束」
 
-```
-  ✍️  确认第 10 章方向        →  推进（主角首次使用新能力），章尾钩子就位
-  🎬  设计 3 个场景结构        →  钩子 → 主体冲突 → 收束，因果链闭合
-  📝  连续起草 2800 字         →  场景边界 4 项硬门禁全部通过
-  🔍  5-Checker 质量验收       →  AI 味 2 处已修复，无硬伤
-  📋  状态更新 + 记忆压缩       →  第 10 章完结，就绪 /novel-studio:write 11
+# 3. 查看本章统计，锁定
+✅ 第 10 章完成（约 2200 字）
 ```
 
 ## 命令一览
 
-| 命令 | 用途 |
-|:------|:------|
-| `/novel-studio:init` | 初始化新项目 — 多轮对话：品类、主角、篇幅、模式 |
-| `/novel-studio:world` | 世界观构建 — 创建角色、完善力量体系、扩展设定 |
-| `/novel-studio:write <N>` | 写章节 — Director → ScenePlanner → Writer → Critic → StateManager |
-| `/novel-studio:check <N>` | 只读质量扫描 — 5 Checker 并行检查，不修改正文 |
-| `/novel-studio:revise <N>` | 修订章节 — 自动选择最优修复路径，最小改动 |
-| `/novel-studio:migrate <path>` | 存量导入 — 已有章节逆向提取为结构化状态文件 |
+| 命令 | 用途 | 对话深度 |
+|:------|:------|:---------|
+| `/novel-studio:init` | 初始化新项目 — 创作起点、核心体验、品类基调、主角灵魂、篇幅模式 | 5 轮 |
+| `/novel-studio:world` | 世界观构建 — 角色、力量体系、世界扩展、冲突检测、综合审查 | 每设定不限轮次 |
+| `/novel-studio:outline` | 多线大纲 — 全书总纲、逐卷细化、伏笔布局、角色弧光，支持创建/调整/检查 | 逐层深化 |
+| `/novel-studio:write <N>` | 写章节 — 多轮对话确定方向 + 逐段写作即时纠偏 | 不限轮次 |
+| `/novel-studio:check <N>` | 质量扫描 — 问清楚用户关注什么，针对性检查，只报问题 | 1-2 轮 |
+| `/novel-studio:revise <N>` | 修订章节 — 理解问题 → 判断范围 → 告知影响 → 等待确认，支持范围升级 | 2-4 轮 |
+| `/novel-studio:migrate <path>` | 存量导入 — 已有章节逆向提取为结构化状态文件 | 逐章 |
 
-## 架构：Agent 流水线
+## 架构：Agent 体系
 
-```mermaid
-flowchart TB
-    classDef entry fill:#4f46e5,stroke:#3730a3,color:#fff,stroke-width:2px
-    classDef plan fill:#0ea5e9,stroke:#0284c7,color:#fff,stroke-width:2px
-    classDef draft fill:#8b5cf6,stroke:#7c3aed,color:#fff,stroke-width:2px
-    classDef review fill:#f59e0b,stroke:#d97706,color:#fff,stroke-width:2px
-    classDef persist fill:#10b981,stroke:#059669,color:#fff,stroke-width:2px
-    classDef done fill:#6b7280,stroke:#4b5563,color:#fff,stroke-width:2px
-
-    User(["👤 用户指令"]):::entry
-    Orch["🎯 Orchestrator<br/>意图识别 + 信息裁剪"]:::entry
-
-    User -->|"/novel-studio:write N"| Orch
-
-    subgraph Plan[" 规划阶段 "]
-        direction LR
-        Dir["📋 Director<br/>Story Contract<br/>信息释放策略"]:::plan
-        SP["🎬 ScenePlanner<br/>场景五拍骨架<br/>因果链设计"]:::plan
-        Dir -->|"ScenePlannerBrief ~1.5K"| SP
-    end
-
-    subgraph Execute[" 执行阶段 "]
-        W["✍️ Writer<br/>连续起草正文<br/>4 项场景硬门禁"]:::draft
-    end
-
-    subgraph Verify[" 验收阶段 "]
-        C["🔍 Critic<br/>5 Checker 并行检查<br/>逻辑 · 信息泄漏 · 人物 · 节奏 · 文风"]:::review
-    end
-
-    subgraph Commit[" 持久化阶段 "]
-        SM["📋 StateManager<br/>状态更新 · 记忆压缩<br/>state/ 唯一写入口"]:::persist
-    end
-
-    Orch -->|"DirectorBrief ~2.5K"| Dir
-    SP -->|"WriterBrief ~1.5K"| W
-    W -->|"CriticBrief ~1K"| C
-    C -->|"通过"| SM
-    C -.->|"局部修复"| W
-    C -.->|"骨架失效"| SP
-
-    SM --> Done(["✅ 完成"]):::done
-```
-
-## 8 个 Agent
-
-每个 Agent 只掌握自己职责范围内的信息，通过 Orchestrator 裁剪的**交接包**通信。
+每个 Agent 只掌握职责范围内的信息，通过 Orchestrator 裁剪的**交接包**通信。
 
 | Agent | 职责 | 所有权 | 关键约束 |
 |:-------|:------|:--------|:----------|
-| **Orchestrator** | 入口、意图识别、信息裁剪 | `progress.yaml`, `agent-log` | 不创作、不检查、不修改状态 |
+| **Orchestrator** | 入口、意图识别、信息裁剪 | `progress.yaml`, `agent-log` | 不创作、不检查、不修改大状态 |
 | **Architect** | Canon 唯一所有者 | `core/`, `setting/` | 不读正文、不写大纲 |
-| **Archivist** | 正文逆向归档（仅迁移） | 迁移期间临时分析 | 不编造正文中没有的信息 |
-| **Director** | 信息释放策略 + Story Contract | `outline/` | 不读正文、不写正文 |
-| **ScenePlanner** | 场景五拍骨架设计 | 场景节拍 | 不写正文、不决定信息释放 |
+| **Outliner** | 多线叙事大纲 | `outline/` | 不读正文、不改 canon |
+| **Director** | 单章 Story Contract | 章节级故事合约 | 不读全文、不写正文，大纲由 Outliner 维护 |
+| **ScenePlanner** | 场景五拍骨架 | 场景节拍 | 不写正文 |
 | **Writer** | 正文唯一执行者 | `chapters/` | 不知道第 50 章的反转 |
-| **Critic** | 5 Checker 质量门禁 | 质量报告 | 不修改正文 |
-| **StateManager** | 状态更新 + 记忆压缩 | `state/`（唯一写入口） | Critic 未通过不执行 |
-
-## 渐进式披露：信息裁剪
-
-Orchestrator 不仅是路由器，更是**信息经纪人**——从上游完整输出中裁剪出下游真正需要的字段。累计上下文预算从 ~34K 降至 ~25K。
-
-| 交接包 | 接收方 | 大小 | 核心内容 |
-|:--------|:--------|:-----|:----------|
-| DirectorBrief | Director | ~2.5K | 状态摘要 + 卷纲 + 硬设定 |
-| ScenePlannerBrief | ScenePlanner | ~1.5K | Story Contract 全文 + POV 角色摘要 |
-| WriterBrief | Writer | ~1.5K | 五拍骨架 + 禁止触碰清单 + 章尾落点 |
-| CriticBrief | Critic | ~1K | 合并检查清单（forbid + canon + pov） |
-| StateManagerBrief | StateManager | ~0.5K | Review Report + state_delta |
+| **Critic** | 5 Checker 质量门禁 | 验收标准 | 只标注不修改正文 |
+| **StateManager** | 状态更新 + 记忆压缩 | `state/`（大状态唯一写入口） | Critic 未通过不执行 |
+| **Archivist** | 正文逆向归档 | 迁移期间临时分析 | 仅迁移时使用 |
 
 ## 工作区结构
 
 ```
 my-novel/
-├── core/                    作品总表
+├── core/                    作品总表（品类、篇幅、主角设定）
 ├── setting/                 角色档案、世界规则、力量体系
-├── outline/                 全书总纲、分卷大纲
+├── outline/                 全书总纲、分卷大纲、伏笔地图、角色弧光、故事线交错
 ├── chapters/                已完成章节正文
 ├── snippets/                灵感片段、废弃草稿
 └── state/                   运行时状态（系统自动维护）
@@ -143,15 +102,101 @@ my-novel/
     └── agent-log.yaml       Agent 运行日志（支持断点恢复）
 ```
 
-## 5 大关键设计
+## 关键设计
 
 | # | 设计 | 说明 |
 |:--|:-----|:-----|
-| 1 | **Agent 不自选后继** | 下一步永远由状态机决定：NEED_PLAN → NEED_SCENE → NEED_DRAFT → NEED_REVIEW → COMPLETED |
-| 2 | **StateManager 唯一写入口** | 其他 Agent 只标记 `state_delta` 增量，不直接写 `state/` |
-| 3 | **Writer 不读大纲** | 只知道 Scene Contract 的允许与禁止，不知道第 50 章的反转 |
-| 4 | **Critic 最后一道门禁** | 5 Checker（逻辑/信息泄漏/人物/节奏/文风）全部通过才更新状态 |
-| 5 | **修复回路精准回退** | 局部修复 → Writer · 骨架失效 → ScenePlanner · 大面积泄漏 → Director |
+| 1 | **用户主导每一步** | 命令 = 多轮深度对话，不搞一键生成。方向、设定、大纲、写作全部由用户确认推动 |
+| 2 | **逐段写作，即时纠偏** | 每段 200-400 字，写完就停。跑偏最多偏一段，改完再继续 |
+| 3 | **Agent 不自选后继** | 流转由命令和用户确认决定，Agent 不自行调用下一个 Agent |
+| 4 | **StateManager 唯一写入口** | 大状态（author/reader/character/foreshadow）唯一写入口，其他 Agent 只标记增量 |
+| 5 | **Writer 不读大纲** | 只知道当前段的约束和禁止触碰清单，不知道全书走向 |
+| 6 | **Critic 最后一道门禁** | 5 Checker（逻辑/信息泄漏/人物/节奏/文风）全部通过才锁定 |
+| 7 | **信息裁剪** | Orchestrator 从上游完整输出中裁剪下游真正需要的字段，累计上下文从 ~34K 降至 ~25K |
+
+## 写作质量体系
+
+### AI 味检测
+
+三层递进：**目录**（`ai-flavor-catalog.md`，13 类模式+句式/结构/词汇风险索引）→ **清单**（`ai-flavor-checklist.md`，21 项关键词+6 项结构扫描）→ **修复**（`de-flavor-techniques.md`，13 章正面修复技法）。
+
+不仅做减法（删除解释腔、模板句式、机械罗列），更做加法——**活人感注入**：感官轮换、闲笔、身体反应优先、内心声音、不完美保留。
+
+### 网文排版规范
+
+`web-novel-formatting.md` — Writer 硬约束，排版违规 = 硬伤退回：
+
+- 短句式：每句 ≤30 字，2-8 字极短句 ≥20%，30+ 字禁止
+- 段落节奏：每段 ≤3 句，场景切换加空行
+- 系统文字统一用【】包裹
+- 对话一人一句一段，标签精简
+- 章节无回顾式开头、无评书式收尾
+
+### 老司机词汇检测
+
+`double-entendre-catalog.md` — 检测成人向暗示词汇的密度和人设匹配度。不为堆梗，为角色和场景服务。
+
+## 品类配方
+
+当前内置 **番茄系统爽文** 品类（`genres/番茄系统爽文/`）：
+
+- `recipe.md` — 品类核心配方：爽点类型、升级节奏、打脸频率
+- `tropes.md` — 系统文常用桥段：签到、任务、奖励、面板
+- `rhythm.md` — 节奏约束：爽点密度、章节落点规则
+- `examples.md` — 经典作品参考
+
+扩展品类：复制 `genres/_template/`，按模板填写即可。
+
+## 项目结构
+
+```
+novel-studio/
+├── agents/                   9 个 Agent 定义
+│   ├── orchestrator.md       入口路由 + 信息裁剪
+│   ├── architect.md          Canon 唯一所有者
+│   ├── outliner.md           多线大纲设计
+│   ├── director.md           单章故事合约
+│   ├── scene-planner.md      场景五拍骨架
+│   ├── writer.md             正文执行者
+│   ├── critic.md             5 Checker 质量门禁
+│   ├── state-manager.md      状态持久化
+│   └── archivist.md          正文逆向归档（迁移）
+├── commands/                 7 个用户命令
+│   ├── init.md               项目初始化
+│   ├── world.md              世界观构建
+│   ├── outline.md            大纲设计
+│   ├── write.md              章节写作
+│   ├── check.md              质量检查
+│   ├── revise.md             章节修订
+│   └── migrate.md            存量导入
+├── workflows/                7 个工作流定义
+│   ├── pipeline.md           总流水线
+│   ├── init-project.md       项目初始化
+│   ├── worldbuilding.md      世界观构建
+│   ├── outline.md            大纲设计
+│   ├── write-chapter.md      章节写作
+│   ├── check.md              质量检查
+│   └── revise-chapter.md     章节修订
+│   └── migrate-project.md    存量导入
+├── references/               参考规范（Agent 运行时加载）
+│   ├── ai-flavor-catalog.md      AI 味模式目录（13 类）
+│   ├── ai-flavor-checklist.md    AI 味检测清单（21+6 项）
+│   ├── de-flavor-techniques.md   去味修复技法（13 章）
+│   ├── web-novel-formatting.md   网文排版规范（11 章）
+│   ├── double-entendre-catalog.md 老司机词汇总表
+│   └── failure-cases.md          失败案例库
+├── skills/                   14 个纯能力 Skill
+│   ├── analysis/             分析类（AI味/因果/人物/伏笔/信息泄漏/节奏）
+│   ├── craft/                技法类（钩子/文风校准/Voice 检测）
+│   └── narrative/            叙事类（对话/情绪兑现/POV 控制/场景渲染）
+├── runtime/                  运行时规范
+│   ├── context-budget.md     上下文预算
+│   ├── handoff-schema.md     交接包 Schema
+│   ├── memory-compress.md    记忆压缩协议
+│   └── state-schema.md       状态文件 Schema
+├── genres/                   品类配方
+└── .claude-plugin/           Claude Code 插件配置
+```
 
 ## 许可
 
