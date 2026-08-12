@@ -15,7 +15,7 @@ flowchart TD
 
     User --> Orchestrator
 
-    Orchestrator -->|"全文重写"| Full["完整 write-chapter 流程<br/>Director → ScenePlanner →<br/>Writer → Critic → StateManager"]
+    Orchestrator -->|"全文重写"| Full["等同于 write-chapter 逐段流程<br/>多轮对话定方向 → 逐段写作 → 锁定 → StateManager"]
     Orchestrator -->|"场景重设"| SceneReset["跳过 Director<br/>ScenePlanner → Writer →<br/>Critic → StateManager"]
     Orchestrator -->|"局部修复"| LocalFix["跳过 Director + ScenePlanner<br/>Writer（限制范围）→<br/>Critic → StateManager"]
     Orchestrator -->|"仅去味"| DeFlavor["跳过 Director + ScenePlanner<br/>Writer（仅修AI味）→<br/>Critic（仅 Style Checker）→<br/>StateManager"]
@@ -48,12 +48,7 @@ Orchestrator 通过多轮对话判断修订范围。**先问用户觉得哪里�
 
 ### 全文重写
 
-```mermaid
-flowchart LR
-    Director --> ScenePlanner --> Writer --> Critic --> StateManager
-```
-
-（等同于 write-chapter，不优化）
+（等同于 write-chapter 逐段流程，详见 `write-chapter.md`）
 
 ### 场景重设
 

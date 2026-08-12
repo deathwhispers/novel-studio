@@ -16,7 +16,7 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 
 | 属性 | 值 |
 |------|-----|
-| 所有权 | `state/progress.yaml`、`state/agent-log.yaml`（调度层写入权。StateManager 拥有 `state/` 的最终一致性责任，Orchestrator 只做流转驱动的轻量更新） |
+| 所有权 | `state/progress.yaml`（chapter_state 字段）+ `state/agent-log.yaml`（调度层写入） |
 | 上下文预算 | ~2K tokens |
 | 必须加载 | `state/progress.yaml` + `state/agent-log.yaml`（最后 5 条） |
 | 按需加载 | Workflow 文件、品类配方索引、`runtime/handoff-schema.md`（裁剪交接包时参考） |
@@ -55,33 +55,29 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 
 读取对应 Workflow 文件，按状态机规则调度：
 
-```mermaid
-flowchart LR
-    NEED_PLAN["NEED_PLAN"] -->|"调度"| Director
-    NEED_SCENE["NEED_SCENE"] -->|"调度"| ScenePlanner
-    NEED_DRAFT["NEED_DRAFT"] -->|"调度"| Writer
-    NEED_REVIEW["NEED_REVIEW"] -->|"调度"| Critic
-    COMPLETED["COMPLETED"] -->|"报告"| User["用户"]
+**写章节（逐段模式）**：
+- 第一阶段：Orchestrator 与用户多轮对话确认方向（替代 Director 的 Story Contract）
+- 第二阶段：Orchestrator 给出选项 → 用户选择 → 调度 Writer 写一段 → 用户检查 → 循环
+- 第三阶段：用户确认完成 → Writer 汇总 state_delta → 调度 StateManager 更新所有状态文件
+- 无 NEED_PLAN/NEED_SCENE/NEED_REVIEW 等中间状态枚举，用户对话驱动流转
+
+**修订章节**：
+```
+NEED_DRAFT → Writer（限制修改范围）
+NEED_REVIEW → Critic（仅相关 Checker）
+通过 → StateManager
 ```
 
-**调度协议**：
-1. 读取 Workflow 文件，确认当前状态对应的下游 Agent
-2. 从上游 Agent 输出中组装交接包（按 `runtime/handoff-schema.md` 模板）
-3. 调用下游 Agent，传递交接包
-4. 下游 Agent 返回后：
-   - 检查输出完整性 → 写入 agent-log
-   - 状态推进 → 更新 progress.yaml
-   - 判断继续流转还是暂停
+**其他流水线**（初始化/世界观/大纲/检查/迁移）：按各自 workflow 定义执行。
 
 ### 4. 异常处理
 
 | 异常 | 处理 |
 |------|------|
 | Agent 输出不完整/格式错误 | 重试 1 次，仍失败则暂停并报告用户 |
-| Critic 返回「骨架失效」 | 回到 Scene Planner，不重跑 Director |
-| Critic 返回「局部修复」 | 回到 Writer，限制修改范围（只修问题项） |
 | 状态文件不存在/损坏 | 暂停，请用户确认工作区状态 |
 | 上下文超出预算 | 裁剪非必须加载项后重试 |
+| Writer 产出缺少 state_delta | 让 Writer 重新汇总全章状态变更 |
 
 ### 5. 工作区检测
 
@@ -107,23 +103,24 @@ Orchestrator 不仅是路由器，也是**信息经纪人**——从上游完整
 
 每种下游 Agent 使用专属 Brief，定义见 `runtime/handoff-schema.md`：
 
-| 下游 Agent | Brief 格式 | 预估大小 |
-|-----------|-----------|---------|
-| Director | DirectorBrief（状态摘要，非完整状态文件） | ~2.5K |
-| ScenePlanner | ScenePlannerBrief（完整 Story Contract + 结构） | ~1.5K |
-| Writer | WriterBrief（scenes + 约束 + 章尾落点） | ~1.5K |
-| Critic | CriticBrief（合并检查清单） | ~1K |
-| StateManager | StateManagerBrief（Review Report + state_delta） | ~0.5K |
-| Archivist | MigrationBrief（批次章节列表 + 前批摘要） | ~1K |
-| Architect（迁移合成） | ArchitectMigrationBrief（N 份提取结果路径列表） | ~0.5K |
-| Outliner | 不使用 Brief | Orchestrator 传递用户构想，Outliner 自行加载 canon 摘要 |
+| 下游 Agent | Brief 格式 | 预估大小 | 使用场景 |
+|-----------|-----------|---------|---------|
+| Writer（逐段） | 用户选择的推进方向 + 已写段落上下文 | ~1K | 写章节逐段模式 |
+| Writer（修订） | WriterBrief（scenes + 约束 + 章尾落点） | ~1.5K | 修订章节 |
+| StateManager | StateManagerBrief（state_delta） | ~0.5K | 写章节/修订 |
+| Director | DirectorBrief（状态摘要，非完整状态文件） | ~2.5K | 修订-全文重写 |
+| ScenePlanner | ScenePlannerBrief（完整 Story Contract + 结构） | ~1.5K | 修订-全文重写/场景重设 |
+| Critic | CriticBrief（合并检查清单） | ~1K | 修订/质量检查 |
+| Archivist | MigrationBrief（批次章节列表 + 前批摘要） | ~1K | 项目迁移 |
+| Architect（迁移合成） | ArchitectMigrationBrief（N 份提取结果路径列表） | ~0.5K | 项目迁移 |
+| Outliner | 不使用 Brief | — | Orchestrator 传递用户构想，Outliner 自行加载 canon 摘要 |
 
 ### 裁剪原则
 
-- **下游不需要的字段一律移除**：Scene Contract 的 `pace_check`/`transition_to_next` 不传给 Writer
-- **合并而非分发**：Critic 需要来自多个来源的信息 → 合并为一份 CriticBrief
+- **下游不需要的字段一律移除**：从上游输出中只提取下游需要的字段
 - **摘要而非全文**：Director 需要状态信息但不需完整文件 → 提取摘要
-- **路径而非内容**：正文等大文件 → 传递路径，由目标 Agent 自行读取
+- **路径而非内容**：正文、voice 样本等大文件 → 传递文件路径，由目标 Agent 自行读取
+- **禁止清单是硬约束**：每个 Agent 的 `must_not_read` 必须遵守
 
 ## 断点恢复
 
@@ -135,8 +132,9 @@ Orchestrator 启动时：
 
 ## 核心原则
 
-- **只在路由层做路由**：不写正文、不检查质量、不做设定、不修改状态
-- **状态机不可跳步**：NEED_PLAN → NEED_SCENE → NEED_DRAFT → NEED_REVIEW → COMPLETED，顺序固定
-- **Agent 不自选后继**：下一步永远由状态机决定，不由 Agent 推荐
+- **只在路由层做路由**：不写正文、不检查质量、不做设定、不修改 StateManager 管理的大状态文件
+- **用户对话驱动流转**：写章节不再使用 NEED_PLAN → NEED_SCENE 等固定状态枚举，用户确认/选择推动阶段前进
+- **Agent 不自选后继**：下一步由 Orchestrator 按 workflow 定义调度，不由 Agent 推荐
 - **用户可见的是进度，不是 Agent 名**：报告「正在设计章节结构…」而不是「正在调用 Director」
 - **对话流程在 command 文件中**：Orchestrator 不重复定义具体的多轮对话流程，command 文件是对话流程的唯一权威来源
+- **状态文件写入分工**：Orchestrator 写入 `progress.yaml`（章节进度）和 `agent-log.yaml`（流转日志）；StateManager 写入 `author.yaml`、`reader.yaml`、`character.yaml`、`foreshadow.yaml`（大状态），以及 `progress.yaml` 的累计统计字段（total_words、total_chapters_written）

@@ -39,7 +39,9 @@ flowchart TD
 
     Phase3["第三阶段：整章收尾<br/>排版自检→AI味速检→锁定"]
 
-    Phase3 --> Done(["✅ 第 N 章完成"])
+    Phase3 --> Summarize["第四阶段：状态更新<br/>Writer汇总state_delta→<br/>StateManager更新全部状态文件"]
+
+    Summarize --> Done(["✅ 第 N 章完成"])
 ```
 
 ## 核心变化（与旧版对比）
@@ -123,7 +125,37 @@ STEP 5 — 用户检查：
    - 对话标签：是否有多余的「XX说」
    - 章尾：是否在事件半途强行切断？是否出现没头没尾的句子？→ 如果是，往前找一个自然停顿点作为章尾
 3. 如有问题，列出建议让用户确认是否修复
-4. 用户确认 → 锁定章节 → 更新状态
+4. 用户确认 → 锁定章节
+```
+
+### 第四阶段：状态更新
+
+```
+章节锁定后，Orchestrator 触发状态更新：
+
+1. Writer 汇总全章 state_delta：
+   - character_changes（角色状态变化）
+   - threads_touched（触碰的伏笔）
+   - new_threads_planted（新埋的伏笔）
+   - secrets_touched（触碰的秘密）
+   - reader_knowledge_gained（读者新得知的信息）
+   - open_questions_answered / open_questions_raised
+
+2. Orchestrator 组装 StateManagerBrief（state_delta）
+   并调度 StateManager
+
+3. StateManager 更新：
+   - author.yaml（秘密状态）
+   - reader.yaml（读者知识/疑问/张力）
+   - character.yaml（角色状态/关系/压力）
+   - foreshadow.yaml（伏笔追踪）
+   - progress.yaml（total_words、total_chapters_written）
+
+4. Orchestrator 更新：
+   - progress.yaml（chapter_state 标记完成）
+   - agent-log.yaml（追加完成条目）
+
+5. 如满足压缩条件（每5章/卷末/状态文件>50KB）→ StateManager 执行记忆压缩
 ```
 
 ## 上下文管理

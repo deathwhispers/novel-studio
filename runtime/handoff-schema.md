@@ -34,10 +34,12 @@ director_brief:
       - "系统对主角的评价标准是什么？"
       - "被救者为什么认识主角？"
 
-    reading_tension:                  # 从 reader.yaml 提取，仅数值
-      main_plot_progress: 70
-      suspense_pressure: 65
-      satisfaction_pending: 3         # 距离上次爽点的章数
+    reading_tension:                  # 从 reader.yaml 提取
+      主线推进: 70
+      关系期待: 50
+      悬念压力: 65
+      升级期待: 80
+      satisfaction_pending: 3         # 距离上次爽点的章数（Orchestrator 计算）
 
     pov_characters:                   # 从 character.yaml 提取，仅 POV 角色
       - id: "char-001"
@@ -298,35 +300,34 @@ critic_brief:
 **预估**：~0.5K tokens（交接包自身）+ 状态文件（StateManager 自行读取）
 **用途**：StateManager 据此更新所有状态文件。唯一需要加载完整状态文件的 Agent。
 
+**两种模式**：
+- **写章节（逐段模式）**：包含 `state_delta`（Writer 全章汇总）+ `user_confirmed: true`（用户锁定确认）。无 Review Report。
+- **修订章节**：包含 `state_delta` + `review_report`（Critic 产出，verdict 必须为"通过"）。
+
 ```yaml
 statemanager_brief:
   from: Orchestrator
   to: StateManager
   chapter: 11
+  mode: "write"           # write（逐段模式）| revise（修订模式）
 
-  # Critic 产出的完整 Review Report
-  review_report:
-    chapter: 11
-    verdict: "通过"
+  # 用户锁定确认（逐段模式必填）
+  user_confirmed: true
 
-    checkers:
-      logic:
-        passed: true
-        issues: []
-      info_leak:
-        passed: true
-        issues: []
-      character:
-        passed: true
-        issues: []
-      pace:
-        passed: true
-        issues: []
-      style:
-        passed: true
-        ai_flavor_total: 1
+  # Critic 产出的 Review Report（修订模式必填，逐段模式为空）
+  review_report: null
+  # 修订模式示例：
+  # review_report:
+  #   chapter: 11
+  #   verdict: "通过"
+  #   checkers:
+  #     logic: { passed: true, issues: [] }
+  #     info_leak: { passed: true, issues: [] }
+  #     character: { passed: true, issues: [] }
+  #     pace: { passed: true, issues: [] }
+  #     style: { passed: true, ai_flavor_total: 1 }
 
-  # Writer 产出的完整 state_delta
+  # Writer 产出的完整 state_delta（必填）
   state_delta:
     character_changes:
       - character: "主角"
@@ -436,19 +437,28 @@ flowchart TD
 
     Orchestrator -->|"初始化"| Architect["🏗️ Architect<br/>直接传递用户构想<br/>（不使用 Brief）"]
 
-    subgraph WriteFlow["写章节 / 修订"]
-        Director["📋 Director<br/>← DirectorBrief<br/>（状态摘要）"]
-        ScenePlanner["🎬 ScenePlanner<br/>← ScenePlannerBrief<br/>（完整 Story Contract + 结构）"]
-        Writer["✍️ Writer<br/>← WriterBrief<br/>（scenes + 约束 + 章尾）"]
-        Critic["🔍 Critic<br/>← CriticBrief<br/>（合并检查清单）"]
-        StateManager["📋 StateManager<br/>← StateManagerBrief<br/>（Review Report + state_delta）"]
+    subgraph WriteFlow["写章节（逐段模式）"]
+        Writer["✍️ Writer<br/>← 用户选择的推进方向<br/>（逐段：给选项 → 写200-400字 → 检查）"]
+        StateManager["📋 StateManager<br/>← StateManagerBrief<br/>（state_delta + 用户锁定确认）"]
     end
 
-    Orchestrator --> Director
-    Director --> ScenePlanner
-    ScenePlanner --> Writer
-    Writer --> Critic
-    Critic --> StateManager
+    Orchestrator -->|"/novel-studio:write"| Writer
+    Writer -->|"章尾：汇总 state_delta"| Orchestrator
+    Orchestrator -->|"锁定确认"| StateManager
+
+    subgraph ReviseFlow["修订"]
+        DirectorR["📋 Director<br/>← DirectorBrief"]
+        ScenePlannerR["🎬 ScenePlanner<br/>← ScenePlannerBrief"]
+        WriterR["✍️ Writer<br/>← WriterBrief"]
+        CriticR["🔍 Critic<br/>← CriticBrief"]
+        StateManagerR["📋 StateManager<br/>← Review Report + state_delta"]
+    end
+
+    Orchestrator -->|"/novel-studio:revise"| DirectorR
+    DirectorR --> ScenePlannerR
+    ScenePlannerR --> WriterR
+    WriterR --> CriticR
+    CriticR --> StateManagerR
 
     subgraph MigrateFlow["项目迁移"]
         Archivist["📖 Archivist<br/>← MigrationBrief<br/>（批次章节 + 前批摘要）"]
@@ -459,6 +469,9 @@ flowchart TD
     Archivist -->|"N批完成后"| ArchMigrate
     ArchMigrate -->|"合成完成"| Orchestrator
 ```
+    Archivist -->|"N批完成后"| ArchMigrate
+    ArchMigrate -->|"合成完成"| Orchestrator
+```
 
 ---
 
@@ -466,8 +479,8 @@ flowchart TD
 
 Orchestrator 在准备交接包时遵守：
 
-1. **下游不需要的字段一律移除**：上游完整输出中的内部细节（如 Scene Contract 的 `pace_check`、`transition_to_next`）不传递给 Writer
-2. **合并而非分发**：Critic 需要 forbid_touch（来自 Story Contract）+ hard_canon（来自 setting）+ pov_constraints（来自 character）→ Orchestrator 合并为一份 CriticBrief，而不是让 Critic 读三份文件
-3. **摘要而非全文**：Director 需要状态信息但不需要完整文件 → Orchestrator 从状态文件中提取摘要
-4. **路径而非内容**：正文、voice 样本等大文件 → 传递文件路径，由目标 Agent 自行读取（避免 Orchestrator 上下文膨胀）
-5. **禁止清单是硬约束**：每个 Brief 包含 `must_not_read`，明确禁止 Agent 自行加载额外文件
+1. **下游不需要的字段一律移除**：上游完整输出中的内部细节不传递给下游
+2. **摘要而非全文**：Director 需要状态信息但不需要完整文件 → Orchestrator 从状态文件中提取摘要
+3. **路径而非内容**：正文、voice 样本等大文件 → 传递文件路径，由目标 Agent 自行读取（避免 Orchestrator 上下文膨胀）
+4. **禁止清单是硬约束**：每个 Brief 包含 `must_not_read`，明确禁止 Agent 自行加载额外文件
+5. **写章节逐段模式简化**：不使用 DirectorBrief/ScenePlannerBrief/CriticBrief，Writer 直接接收用户选择的推进方向，StateManager 接收 state_delta + 用户锁定确认

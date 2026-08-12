@@ -9,7 +9,7 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md。StateManager 出现在写章节、初始化、修订、世界观构建和项目迁移五条流水线中。它是 `state/` 下 author/reader/character/foreshadow 四个文件（大状态）的唯一写入口。Orchestrator 保有 progress.yaml 和 agent-log.yaml 的流转写入权（小状态），StateManager 拥有最终一致性责任。
+详见 workflows/pipeline.md。StateManager 出现在写章节、初始化、修订、世界观构建和项目迁移五条流水线中。它是 state/ 下 author/reader/character/foreshadow 四个文件（大状态）的唯一写入口，同时更新 progress.yaml 的累计统计字段（total_words、total_chapters_written）。Orchestrator 保有 progress.yaml 的 chapter_state 字段和 agent-log.yaml 的流转写入权。
 ```
 
 ## 角色定义
@@ -65,17 +65,16 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 
 ### 2. 进度更新
 
-更新 `progress.yaml`：
+更新 `progress.yaml` 的累计统计字段：
+
 ```yaml
 current:
-  chapter: 11                   # +1
-  total_chapters_written: 11     # +1
   total_words: 27500             # +本章字数
+  total_chapters_written: 11     # +1
   last_updated: "2026-01-15T11:00:00"
-
-chapter_state:
-  status: "COMPLETED"            # 标记完成
 ```
+
+注意：`progress.yaml` 中的 `chapter_state`（status、chapter_number、story_contract 路径等）由 Orchestrator 在流转时写入，StateManager 不修改这些字段。
 
 ### 3. 记忆压缩（每 5 章或卷末）
 
@@ -104,25 +103,29 @@ state/archive/
 
 ## 状态更新协议
 
+**触发条件**：
+- 写章节（逐段模式）：用户确认章节锁定 → Orchestrator 传递 StateManagerBrief（state_delta + 用户确认信号）
+- 修订章节：Critic Review Report（verdict: 通过）→ Orchestrator 传递 StateManagerBrief
+
 ```mermaid
 flowchart TD
-    Input["📥 输入<br/>Review Report（必须 verdict: 通过）<br/>Writer state_delta"]
+    Input["📥 输入<br/>写章节：state_delta（Writer 全章汇总）+ 用户锁定确认<br/>修订：Review Report（verdict: 通过）+ state_delta"]
 
-    Validate{"校验<br/>Review Report.verdict<br/>== 通过?"}
-    Reject["⛔ 拒绝执行"]
+    Validate{"校验输入完整性"}
+    Reject["⛔ 拒绝执行<br/>报告 Orchestrator"]
 
     Read["读取当前 4 个状态文件"]
     Update["按 state_delta 逐项更新<br/>• author.yaml<br/>• reader.yaml<br/>• character.yaml<br/>• foreshadow.yaml"]
-    Progress["更新 progress.yaml<br/>chapter+1, status=COMPLETED"]
-    Log["写入 agent-log"]
+    Progress["更新 progress.yaml<br/>total_words += 本章字数<br/>total_chapters_written += 1<br/>（chapter_state 由 Orchestrator 写入）"]
+    Log["追加 agent-log 条目<br/>标记状态更新完成"]
 
     Compress{"需要压缩?<br/>每5章 / 卷末 / >50KB"}
     RunCompress["执行压缩协议"]
-    Done["📤 输出<br/>更新后的状态文件<br/>progress.yaml<br/>agent-log 条目<br/>（如有压缩）归档 + 卷摘要"]
+    Done["📤 输出<br/>更新后的状态文件<br/>（如有压缩）归档 + 卷摘要"]
 
     Input --> Validate
-    Validate -->|"✗ 未通过"| Reject
-    Validate -->|"✓ 通过"| Read
+    Validate -->|"✗ 缺少必要输入"| Reject
+    Validate -->|"✓ 输入完整"| Read
     Read --> Update
     Update --> Progress
     Progress --> Log
@@ -146,8 +149,8 @@ flowchart TD
 
 ## 核心原则
 
-1. **唯一写入口**：其他 Agent 只标记增量（state_delta），不直接写状态文件
-2. **Critic 通过才启动**：Review Report 标记为「局部修复」或「骨架失效」时，State Manager 不执行
+1. **大状态唯一写入口**：author/reader/character/foreshadow 文件仅 StateManager 写入。progress.yaml 的累计统计字段（total_words、total_chapters_written）也由 StateManager 更新
+2. **输入校验不依赖 Critic**：逐段写作模式没有 Critic Review Report，StateManager 校验 state_delta 完整性即可执行；修订模式仍需 Review Report 通过
 3. **增量更新而非全量覆盖**：只更新变化的部分，不重写整个文件
 4. **压缩是常态不是例外**：每 5 章例行压缩，不让状态文件无限制增长
-5. **不判断质量**：State Manager 消费 Review Report 和 state_delta，不评估它们的正确性
+5. **不判断质量**：StateManager 消费 state_delta，不评估写作质量

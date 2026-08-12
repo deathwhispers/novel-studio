@@ -117,6 +117,17 @@ AI 味检测只能告诉你「删了什么」——活人感速检告诉你「�
 
 ### 第七步：产出
 
+**逐段写作模式**（每段写完只输出正文，不产出结构化数据）：
+
+```yaml
+writer_segment_output:
+  segment: 3
+  chapter: 11
+  text: "正文内容..."
+```
+
+**整章锁定后**（Orchestrator 要求汇总时，产出全章级 state_delta）：
+
 ```yaml
 writer_output:
   chapter: 11
@@ -137,12 +148,12 @@ writer_output:
       - id: "thr-001"
         action: "玉佩发烫"
         chapter: 11
-    new_threads_planted: []         # 本章新埋的伏笔
-    reader_knowledge_gained:        # 读者新得知的信息
+    new_threads_planted: []        # 本章新埋的伏笔
+    reader_knowledge_gained:       # 读者新得知的信息
       - "新能力的基本效果"
       - "被救者认识主角"
-    open_questions_answered: []     # 本章解答了哪个读者问题
-    open_questions_raised:          # 本章提出了哪些新问题
+    open_questions_answered: []    # 本章解答了哪个读者问题
+    open_questions_raised:         # 本章提出了哪些新问题
       - "系统和被救者有什么关联？"
 
   # 硬门禁状态
@@ -152,11 +163,6 @@ writer_output:
     canon_intact: true
     causality_intact: true
     formatting_compliant: true    # 符合 web-novel-formatting.md 全部规则
-
-  # 需关注项（软观察）
-  soft_observations:
-    - "场景 2 对话比例 70%，可能偏高——但是角色在获取信息，暂标记"
-    - "场景 2 和场景 1 的结尾情绪都是「疑惑」，检查是否雷同"
 ```
 
 ### Skill 调用

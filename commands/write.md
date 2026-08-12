@@ -179,6 +179,28 @@ workflow: write-chapter
 
 用户确认后，锁定章节。
 
+然后自动执行状态更新：
+
+```
+📋 正在更新状态…
+
+   Writer 汇总本章变更：
+   - 角色状态变化：[列出]
+   - 触碰的伏笔：[列出]
+   - 新埋的伏笔：[列出]
+   - 读者新获知的信息：[列出]
+
+   StateManager 写入：
+   ✅ author.yaml — [N] 个秘密状态更新
+   ✅ reader.yaml — [N] 条新事实，[N] 个疑问
+   ✅ character.yaml — [N] 个角色状态更新
+   ✅ foreshadow.yaml — [N] 条伏笔追踪
+   ✅ progress.yaml — 总字数 +XXXX，总章节数 11
+   （如有压缩）✅ 记忆压缩完成
+
+✅ 第 N 章已锁定，状态已同步。
+```
+
 ---
 
 ## 中途调整方向

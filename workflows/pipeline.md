@@ -9,49 +9,40 @@
 
 **触发**: `/novel-studio:write <N>` | `/novel-studio:write next`
 
+**当前模式**：逐段写作 + 用户协作。详见 [`workflows/write-chapter.md`](write-chapter.md)。
+
 ```mermaid
 flowchart TD
     User["👤 User"]
-    Orchestrator["🎯 Orchestrator<br/>意图确认 + 多轮对话<br/>读取 progress.yaml"]
+    Orchestrator["🎯 Orchestrator<br/>状态回顾 + 方向讨论"]
 
     User --> Orchestrator
 
-    subgraph StateMachine["状态机自动流转"]
-        direction TB
+    Orchestrator --> Phase1["第一阶段：确认本章方向<br/>报告状态 → 2-3个方向选项 → 用户选择 → 提炼节拍"]
+    Phase1 --> Phase2["第二阶段：逐段写作循环<br/>每段：给选项 → 用户选 → Writer写200-400字 → 用户检查/纠偏"]
+    Phase2 --> Phase3["第三阶段：整章收尾<br/>拼接 → 排版/AI味自检 → 锁定"]
 
-        Director["📋 Director<br/><b>产出: Story Contract</b><br/>• 章节功能（推进/揭示/余震/过渡/高潮）<br/>• 信息释放策略<br/>• 旧线触碰计划"]
-
-        ScenePlanner["🎬 ScenePlanner<br/><b>产出: Scene Contract</b><br/>• 每场景五拍骨架<br/>• 视角分配 + 叙述距离<br/>• 场景间因果链"]
-
-        Writer["✍️ Writer<br/><b>产出: 正文 + state_delta</b><br/>• Scene Contract 约束内连续起草<br/>• 每场景硬门禁自检<br/>• 标记状态增量"]
-
-        Critic["🔍 Critic<br/><b>产出: Review Report</b><br/>• Logic / Info Leak / Character<br/>• Pace / Style Checker"]
-
-        StateManager["📋 StateManager<br/>更新全部状态文件"]
-        Completed(["✅ COMPLETED<br/>报告用户"])
-    end
-
-    Orchestrator --> Director
-    Director -->|"Story Contract ✓"| ScenePlanner
-    ScenePlanner -->|"Scene Contract ✓"| Writer
-    Writer -->|"正文 ✓ + 自检 ✓"| Critic
-    Critic -->|"🟢 通过"| StateManager
-    StateManager --> Completed
-
-    Critic -->|"🟡 局部修复"| Writer
-    Critic -->|"🔴 骨架失效"| ScenePlanner
+    Phase3 --> Summarize["📊 汇总 state_delta<br/>Writer 整章级别状态变更"]
+    Summarize --> StateManager["📋 StateManager<br/>更新全部状态文件"]
+    StateManager --> Completed(["✅ COMPLETED<br/>报告用户"])
 ```
 
-**状态枚举**: NEED_PLAN → NEED_SCENE → NEED_DRAFT → NEED_REVIEW → COMPLETED
+**关键变化（vs 旧版自动流水线）**：
 
-**交接包流转**:
+| 阶段 | 旧版 | 新版 |
+|------|------|------|
+| 方向确定 | Director 生成 Story Contract | 用户对话替代（3-5 轮方向讨论） |
+| 结构设计 | ScenePlanner 生成 Scene Contract | 用户对话替代（每段前给选项选择推进方向） |
+| 正文写作 | Writer 一次性写完整章 | Writer 逐段写，每段 200-400 字，写完就停 |
+| 质量检查 | Critic 5 Checker 全量检查 | 收尾阶段 Writer 轻量自检（排版+AI味），用户确认 |
+| 状态更新 | StateManager（Critic 通过后） | StateManager（用户锁定章节后，Writer 汇总 state_delta） |
+
+**交接包流转**（逐段模式简化）：
 | 步骤 | 交接包 |
 |------|--------|
-| Orchestrator → Director | DirectorBrief |
-| Orchestrator → ScenePlanner | ScenePlannerBrief |
-| Orchestrator → Writer | WriterBrief |
-| Orchestrator → Critic | CriticBrief |
-| Critic 通过 → StateManager | StateManagerBrief |
+| Orchestrator → Writer（逐段） | 用户选择的推进方向 + 已写段落上下文 |
+| Writer → Orchestrator（章尾） | 整章正文 + state_delta 汇总 |
+| Orchestrator → StateManager | StateManagerBrief（state_delta + 锁定确认） |
 
 ---
 
@@ -223,21 +214,22 @@ flowchart TD
 | Architect | 初始化、世界观构建、项目迁移（合成归档） |
 | Archivist | 项目迁移（分批分析）——迁移完成后不再使用 |
 | Outliner | 大纲设计 |
-| Director | 写章节（修订-全文重写） |
-| ScenePlanner | 写章节、修订（全文重写/场景重设） |
-| Writer | 写章节、修订（全部四种范围） |
-| Critic | 写章节、修订（全部四种范围）、质量检查 |
-| StateManager | 写章节、初始化、修订、世界观构建、项目迁移（文件生成） |
+| Director | 修订（全文重写） |
+| ScenePlanner | 修订（全文重写/场景重设） |
+| Writer | 写章节（逐段模式）、修订（全部四种范围） |
+| Critic | 修订（全部四种范围）、质量检查 |
+| StateManager | 写章节（逐段模式）、初始化、修订、世界观构建、项目迁移（文件生成） |
 
 ---
 
 ## 关键约束
 
-1. **Agent 不自选后继**: 下一步由状态机决定，不由 Agent 推荐
+1. **Agent 不自选后继**: 下一步由 workflow 定义和用户确认决定，不由 Agent 推荐
 2. **Orchestrator 是唯一中转站**: Agent 之间不直接通信，所有信息经 Orchestrator 传递
-3. **StateManager 是唯一写入口**: 其他 Agent 只标记增量，不直接写 `state/` 文件
-4. **Writer 不读大纲**: 渐进披露，Writer 只知道 Scene Contract 和禁止触碰清单
+3. **StateManager 是大状态唯一写入口**: 其他 Agent 只标记增量（state_delta），不直接写 `state/` 大状态文件（author/reader/character/foreshadow）
+4. **Writer 不读大纲**: 渐进披露，Writer 只知道当前段的约束和禁止触碰清单
 5. **交接包裁剪**: Orchestrator 按 `runtime/handoff-schema.md` 裁剪交接包，下游 Agent 只收到所需字段
+6. **逐段模式不依赖 Director/ScenePlanner/Critic**: 写章节由用户对话驱动，这三个 Agent 仅在修订流程中使用
 
 ---
 

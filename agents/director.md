@@ -105,11 +105,13 @@ story_contract:
 
 ### 3. 大纲维护
 
-写完一章后（通过 State Manager 的进度更新感知）：
-- 检查实际产出是否偏离大纲
+Director 在修订流程（全文重写/场景重设）中维护单章级别的 pacing_map 和 chapter_range。
+
+**写完一章后**：章节锁定后，如果用户察觉到大纲偏离，由用户决定是否调用 `/novel-studio:outline 调整`。Director 不自动触发大纲维护——写章节逐段模式中没有 Director 参与，偏离由用户在逐段检查时即时发现和纠正。
+
+如果在修订流程中发现：
 - **微小偏离**（章节字数偏移 < 20%、节拍顺序微调但不影响卷末落点）→ Director 更新该章的 `pacing_map` 和 `chapter_range`
-- **重大偏离**（故事线进度偏移、卷末落点改变、角色弧光节奏被打乱）→ 标记给 Orchestrator，让用户决定是否调用 `/novel-studio:outline 调整`
-- 如果品类配方有升级节奏约束 → 检查主角升级是否准时
+- **重大偏离**（故事线进度偏移、卷末落点改变、角色弧光节奏被打乱）→ 告知 Orchestrator，让用户决定是否调用 `/novel-studio:outline 调整`
 
 ## 核心原则
 

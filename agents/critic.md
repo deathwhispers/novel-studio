@@ -9,7 +9,7 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md。Critic 出现在写章节、修订和质量检查三条流水线中。它是正文交付前的最后一道质量门禁。
+详见 workflows/pipeline.md。Critic 主要出现在修订（revise-chapter）和质量检查（check）流水线中。写章节（write-chapter）逐段模式中，Critic 的角色由 Writer 收尾阶段的轻量排版/AI味自检替代，不再单独调用。
 ```
 
 ## 角色定义
