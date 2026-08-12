@@ -1,13 +1,19 @@
 ---
 type: command
 name: check
-description: "对指定章节做质量检查（Critic only），不修改正文。"
+description: "对指定章节做质量检查。先确认你关心什么，再定向检查，不修改正文。"
 workflow: revise-chapter
 ---
 
 # /novel-studio:check
 
-对已完成的章节做质量检查，只输出 Review Report，不修改正文。
+对已完成的章节做质量检查。**不直接全量扫描**——先问你想关注什么，再有针对性地查。
+
+## 核心原则
+
+- **定向优先**：先知道你在担心什么，再决定检查重点
+- **不过度诊断**：你说只看 AI 味，就不跑完整 5 个 Checker
+- **只报问题，不给方案**：check 只诊断，不修改。修改用 `/novel-studio:revise`
 
 ## 用法
 
@@ -16,34 +22,67 @@ workflow: revise-chapter
 /novel-studio:check               # 检查最新完成的章节
 ```
 
-## 执行流程
+## 对话流程
 
-仅执行 Critic 的 5 个 Checker：
-1. Logic Checker（因果与连续性）
-2. Info Leak Checker（信息泄漏）
-3. Character Checker（人物一致性）
-4. Pace Checker（节奏）
-5. Style Checker（文风/AI味）
-
-## 示例
+### 第一步：确认检查范围
 
 ```
-/novel-studio:check 10
+🔍 检查第 N 章。你想重点看什么？
 
-🔍 第10章质量检查：
+（可以直接说，比如：
+- 「全部过一遍」
+- 「主要看有没有 AI 味」
+- 「角色有没有崩」
+- 「节奏对不对」
+- 「有没有泄露不该说的信息」
+- 或者描述你读完后觉得不对的地方）
+```
 
-✅ Logic：通过（因果链完整，无硬设定冲突）
-✅ Info Leak：通过（未触碰禁止清单）
-⚠️  Character：软问题1处——配角XX的行为缺少动机铺垫
-⚠️  Pace：场景2冲突升级偏快（计划1200字/实际800字）
-⚠️  Style：AI味4处（2处解释腔 + 2处修饰过度）
+等待用户回答。
 
-📊 总体：局部修复（3个Checker有软问题，无硬伤）
+### 第二步：定向检查
 
-需要修复吗？使用 /novel-studio:revise 10
+根据用户的选择，只运行相关的 Checker：
+
+| 用户关心的 | 运行的 Checker |
+|-----------|---------------|
+| 「全部过一遍」 | 5 个 Checker 全部 |
+| 「AI 味 / 文风 / 写得僵」 | Style Checker（重点）+ Pace Checker（辅助） |
+| 「角色有没有崩 / 人设」 | Character Checker + Logic Checker |
+| 「节奏 / 太拖 / 太快」 | Pace Checker + Logic Checker |
+| 「信息控制 / 泄露」 | Info Leak Checker + Logic Checker |
+| 「逻辑 / 情节 bug」 | Logic Checker |
+| 「读着不舒服但说不上来」 | Style Checker → Character Checker → Pace Checker（逐步） |
+
+### 第三步：报告
+
+只报告发现的问题，不输出通过的 Checker（除非用户说「全部过一遍」）：
+
+```
+🔍 第 N 章检查结果（按你说的，重点看 AI 味和角色）：
+
+   ⚠️ AI 味：4 处
+      - 场景 1，第 2 段：「他感到一阵紧张」→ 解释腔
+      - 场景 2，对话：「不是我不帮你，而是...」→ 否定句式
+      - 场景 2，第 4 段：「第一...第二...」→ 机械罗列
+      - 场景 3，第 1 段：连续 300 字全视觉描写 → 活人感缺失
+
+   ⚠️ 角色：1 处
+      - 场景 2：配角 XX 的行为缺少动机——突然帮忙很奇怪
+
+   📊 没有硬伤，6 处软问题。
+
+需要修复的话：/novel-studio:revise N
 ```
 
 ## 与 /novel-studio:revise 的区别
 
-- `/novel-studio:check` = 只检查不修改
-- `/novel-studio:revise` = 检查 + 自动修复
+- `/novel-studio:check` = 诊断，不治疗。先看看有什么问题
+- `/novel-studio:revise` = 诊断 + 治疗。检查后直接修复
+
+## 反模式（禁止）
+
+- ❌ 用户没说要查什么，你就 5 个 Checker 全部跑一遍
+- ❌ 输出所有通过的 Checker（用户不关心通过的，只关心有问题的）
+- ❌ 在 check 中擅自修改正文
+- ❌ 发现一个问题就开始分析深层原因（那是 revise 的事）
