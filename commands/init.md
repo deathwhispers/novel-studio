@@ -128,6 +128,19 @@ workflow: init-project
 
 然后执行 workflow：Architect 创建骨架 → StateManager 初始化状态。
 
+```
+✅ 项目初始化完成！
+
+📁 已创建：
+   core/作品总表.md
+   setting/（硬设定 + 主角档案 + 世界观 + 力量体系）
+
+🎯 下一步建议：
+   1. /novel-studio:world   — 继续完善世界观和角色设定
+   2. /novel-studio:outline — 设计故事大纲（多线结构/分卷/节奏/伏笔）
+   3. /novel-studio:write 1 — 直接开始写第一章
+```
+
 ## 快速通道
 
 如果你一上来就给出了非常完整的信息（故事概念 + 主角 + 品类 + 篇幅），我会用自己的话复述一遍，确认无误后直接创建项目，跳过逐轮对话。
