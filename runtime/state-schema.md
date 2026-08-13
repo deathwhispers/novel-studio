@@ -192,7 +192,7 @@ threads:
   - id: "thr-001"
     content: "玉佩上的裂纹会在关键时刻发光"
     planted_chapter: 3
-    status: "active"             # active | touched | revealed | resolved
+    status: "active"             # active | touched | revealed | resolved | abandoned | stale
     type: "物件"                 # 物件 | 人物 | 信息 | 能力 | 关系
     priority: "high"             # high | medium | low
     touched_chapters: [7, 15]    # 轻碰但未揭示的章节
@@ -227,7 +227,7 @@ stats:
 ```
 
 **约束**：
-- `status` 只能取 `active | touched | revealed | resolved | abandoned`
+- `status` 只能取 `active | touched | revealed | resolved | abandoned | stale`（`stale` = 超过 30 章未触碰的活跃伏笔，由 State Manager 标记）
 - Director 每章从 `active + touched` 中选择 0-2 条进行轻碰
 - State Manager 在伏笔 resolve 后保留一行摘要，删除详细描述
 - 每 5 章检查是否有超过 30 章未触碰的活跃伏笔
