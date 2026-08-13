@@ -45,6 +45,7 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 - 更新 `author_notes`（如果 Writer 标记了新的作者备忘）
 
 **更新 character.yaml**：
+- 新增角色 → 从 setting/characters/ 导入新角色条目（worldbuilding 或写作中新增的重要配角）
 - POV 角色的 `knowledge.known` → 追加本章新获知的信息
 - POV 角色的 `knowledge.unknown` → 移除已获知项
 - 所有角色的 `current_state` → 更新位置/身体状态/情绪/等级/资源

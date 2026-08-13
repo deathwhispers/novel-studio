@@ -58,6 +58,7 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 **写章节（逐段模式）**：
 - 第一阶段：Orchestrator 与用户多轮对话确认方向（替代 Director 的 Story Contract）
 - 第二阶段：Orchestrator 给出选项 → 用户选择 → 调度 Writer 写一段 → 用户检查 → 循环
+- 写作中若需引入新重要角色（非一次性路人）→ 暂停写作，走 worldbuilding「添加角色」分支设定后继续
 - 第三阶段：用户确认完成 → Writer 汇总 state_delta → 调度 StateManager 更新所有状态文件
 - 无 NEED_PLAN/NEED_SCENE/NEED_REVIEW 等中间状态枚举，用户对话驱动流转
 

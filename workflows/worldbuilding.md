@@ -20,6 +20,7 @@ flowchart TD
     Orchestrator --> WorldExp["扩展世界观<br/>每维度独立对话<br/>提供多选项"]
     Orchestrator --> FixConflict["设定冲突检测<br/>逐条诊断+多修复方案"]
     Orchestrator --> Review["全面审视<br/>梳理完成度+优先级建议"]
+    Orchestrator --> SysDesign["系统设计（系统文）<br/>系统类型/人格/面板"]
 
     AddChar --> Confirm{"用户确认？"}
     Confirm -->|"✗ 继续调整"| AddChar
@@ -30,6 +31,9 @@ flowchart TD
     WorldExp --> Confirm3{"用户确认？"}
     Confirm3 -->|"✗ 继续调整"| WorldExp
     Confirm3 -->|"✓ 确认"| Architect
+    SysDesign --> Confirm4{"用户确认？"}
+    Confirm4 -->|"✗ 继续调整"| SysDesign
+    Confirm4 -->|"✓ 确认"| Architect
     FixConflict --> Architect
     Review --> Architect
 
@@ -56,6 +60,8 @@ flowchart TD
 ```
 
 ## 分支 A：添加角色（6+ 轮）
+
+> 本分支也服务于写作中发现的角色：write-chapter 中若需引入新重要配角（非一次性路人），Orchestrator 暂停写作并复用此分支完成设定。
 
 ### 第 1 轮：故事功能
 ```
@@ -128,6 +134,30 @@ flowchart TD
 按维度梳理完成度，指出最薄弱环节。
 建议优先级，用户决定。
 ```
+
+## 分支 F：系统设计（系统文专属）
+
+系统文除力量体系外，还需设计系统本身。每维度独立对话 + 多选项。
+
+### 第 1 轮：系统类型
+```
+主线是任务流、签到流、抽奖流还是商城流？综合还是单一？
+提供 2-3 个方案 + 自定义。
+```
+
+### 第 2 轮：系统人格
+```
+系统说话是什么口吻？高冷/吐槽/引导型/无感情播报？
+提供 2-3 个选项，每个带示例台词。
+```
+
+### 第 3 轮：核心面板与字段
+```
+基于系统类型，列出本书剧情会出现的面板，逐面板确认字段。
+提供面板清单，用户勾选/增删，锁定后不再随意增改。
+```
+
+> 面板确定后，同步更新 `setting/系统面板.md`：面板清单（本书启用哪几个面板）、字段命名、标题叫法、难度取值。锁定后全书统一，写作/检查/校正都以此为准。
 
 ## 渐进原则
 

@@ -229,6 +229,7 @@ writer_brief:
   must_read:
     voice_samples:               # Writer 自行读取
       - "snippets/主角-voice.md"
+    system_panels: "setting/系统面板.md"   # 系统爽文品类，写系统界面时读取
 
   # 明确禁止加载
   must_not_read:
@@ -236,7 +237,7 @@ writer_brief:
     - "Scene Contract 完整文件（已在上方 scenes 中提取所需字段）"
     - "outline/ 任何文件"
     - "state/ 任何文件"
-    - "setting/ 任何文件"
+    - "setting/ 任何文件（系统面板 `setting/系统面板.md` 除外——系统爽文品类写系统界面时读取）"
 ```
 
 ---
@@ -256,6 +257,7 @@ critic_brief:
   # 需自行读取
   chapter_text: "chapters/第011章-章节名.md"
   ai_flavor_checklist: "references/ai-flavor-checklist.md"
+  system_panel_definition: "setting/系统面板.md"   # 系统爽文品类，面板一致性检查用
 
   # 信息泄漏检查清单（从 Story Contract 提取）
   forbid_touch:
@@ -289,7 +291,7 @@ critic_brief:
     - "Story Contract 完整文件"
     - "state/ 完整状态文件"
     - "outline/ 任何文件"
-    - "setting/ 完整设定文件"
+    - "setting/ 完整设定文件（系统面板 `setting/系统面板.md` 除外——面板一致性检查时读取）"
 ```
 
 ---
