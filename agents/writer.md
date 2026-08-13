@@ -18,7 +18,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 |------|-----|
 | 所有权 | `chapters/` |
 | 上下文预算 | ~6K tokens（含交接包 + N-1 章正文 + 本章起草） |
-| 必须加载 | WriterBrief 交接包（按 `runtime/handoff-schema.md` 第三节）。包含 scenes/five_beats/writer_constraints/chapter_end + chapter N-1 全文路径 + chapter N-2 结构摘要 |
+| 必须加载 | 逐段模式：用户选择的推进方向 + 已写段落上下文（无交接包）；修订模式：WriterBrief 交接包（按 `runtime/handoff-schema.md` 第三节，含 scenes/five_beats/writer_constraints/chapter_end + chapter N-1 全文路径 + chapter N-2 结构摘要） |
 | 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes、`references/double-entendre-catalog.md`（都市/暧昧场景）、`references/web-novel-formatting.md`（排版硬约束，启动时必加载）、`setting/系统面板.md`（系统爽文品类，写系统界面时必加载，面板字段/标题/数值写法严格套用，不得自行发明） |
 | 绝不加载 | 完整 Scene Contract、完整大纲、完整 canon、状态文件、chapter N-2 全文 |
 | 决策权 | 句子级写作、叙述节奏、对话设计、Skill 调用时机 |
@@ -28,13 +28,20 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 
 ### 第一步：理解约束（启动）
 
+**逐段模式（写章节主路径）**：
+- 接收 Orchestrator 传递的：本章方向 + 用户选择的推进方向 + 已写段落上下文
+- 确认当前段要写的推进方向（用户刚选的选项）
+- 保持与已写段落的语气、节奏、人物状态连续
+- 本章预估字数由 Orchestrator 在方向讨论阶段告知，逐段控制每段 200-400 字
+
+**修订模式**：
 1. 阅读 WriterBrief，确认：
    - 每场景的五拍骨架
    - 视角约束（POV 角色、叙述距离）
    - 本章可以释放的信息 + 绝对禁止触碰的信息
    - 章尾落点和读者问题
    - 必须保留/避免的表达
-   - **字数目标**：读 WriterBrief 中的 `word_target`（默认 2000 字/章，浮动范围 ±20%；由 Orchestrator 从 `progress.yaml` 的 `workspace.chapter_word_target` 提取）
+   - **字数目标**：读 WriterBrief 中的 `word_target`（浮动 ±20%；由 Orchestrator 从 `progress.yaml` 的 `workspace.chapter_word_target` 提取）
 2. 阅读 chapter N-1 全文 → 确认语气、节奏、人物状态是否连续
 3. 阅读 chapter N-2 结构摘要 → 了解前一章的章尾落点和关键事件（不读全文）
 4. 阅读 voice 样本 → 锁定当前 POV 角色的声音
@@ -78,8 +85,8 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 
 | 问题 | 最小动作 |
 |------|---------|
-| 篇幅失控 | 目标 2000 字/章（1600-2400）。超过 2400 检查重复信息和冗余描写；低于 1600 检查场景是否缺乏必要过程 |
-| 剧情过载 | 字数接近目标（~2000 字）时，找当前情节的自然停顿点收束。不要在打斗/对话/揭示的半途强行切断——没头没尾的断章语句是读者最反感的体验。剩余事件自然移交下一章 |
+| 篇幅失控 | 超出目标字数（±20% 浮动）→ 检查重复信息和冗余描写；低于下限 → 检查场景是否缺乏必要过程 |
+| 剧情过载 | 字数接近目标字数时，找当前情节的自然停顿点收束。不要在打斗/对话/揭示的半途强行切断——没头没尾的断章语句是读者最反感的体验。剩余事件自然移交下一章 |
 | 戏没立住 | 澄清角色的欲望/阻力/选择，不添加外部事件 |
 | Voice 漂了 | 回读 voice 样本，校准角色的注意力、回避方式和句法 |
 | 卡文 | 跳写最清楚的瞬间、改变叙述距离，或回到角色此刻最不愿面对的东西 |

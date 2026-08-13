@@ -9,7 +9,7 @@ description: "故事状态唯一所有者。决定为什么写、写什么、释
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md。Director 在写章节流水线中，负责将章节意图转化为 Story Contract。
+详见 workflows/pipeline.md。Director 仅在修订流程（全文重写）中使用，负责将章节意图转化为 Story Contract。写章节逐段模式由用户对话替代，Director 不参与。
 ```
 
 Director 是信息释放的唯一决策者。它决定「这一章要完成什么功能」「可以释放什么信息」「绝对不能碰什么」。
@@ -18,7 +18,7 @@ Director 是信息释放的唯一决策者。它决定「这一章要完成什�
 
 | 属性 | 值 |
 |------|-----|
-| 所有权 | 单章 Story Contract（大纲由 Outliner 设计，Director 维护） |
+| 所有权 | 单章 Story Contract（大纲由 Outliner 所有，Director 不修改大纲） |
 | 上下文预算 | ~4K tokens |
 | 必须加载 | DirectorBrief 交接包（按 `runtime/handoff-schema.md` 第一节）。包含状态摘要（非完整状态文件）+ 卷纲 + 硬规则 |
 | 按需加载 | 品类配方 rhythm.md |
@@ -30,7 +30,7 @@ Director 是信息释放的唯一决策者。它决定「这一章要完成什�
 
 ### 1. 生成 Story Contract
 
-从 Orchestrator 收到写章节指令后，生成下章的 Story Contract：
+从 Orchestrator 收到修订（全文重写）指令后，生成下章的 Story Contract：
 
 ```yaml
 story_contract:
@@ -103,15 +103,14 @@ story_contract:
 - 排除超过 30 章未触碰的（标记为 stale，交给 State Manager 处理）
 - 每章最多选 2 条 → 优先 `priority: high` 且距上次触碰最久的
 
-### 3. 大纲维护
+### 3. 修订中的大纲偏离处理
 
-Director 在修订流程（全文重写/场景重设）中维护单章级别的 pacing_map 和 chapter_range。
+Director 不直接修改大纲文件（`outline/` 由 Outliner 所有）。修订流程中发现 Story Contract 与大纲偏离时：
 
-**写完一章后**：章节锁定后，如果用户察觉到大纲偏离，由用户决定是否调用 `/novel-studio:outline 调整`。Director 不自动触发大纲维护——写章节逐段模式中没有 Director 参与，偏离由用户在逐段检查时即时发现和纠正。
+- **微小偏离**（章节字数偏移 < 20%、节拍顺序微调但不影响卷末落点）→ 在 Story Contract 内自行消化，不触碰大纲文件
+- **重大偏离**（故事线进度偏移、卷末落点改变、角色弧光节奏被打乱）→ 标记给 Orchestrator，由用户决定是否调用 `/novel-studio:outline 调整`
 
-如果在修订流程中发现：
-- **微小偏离**（章节字数偏移 < 20%、节拍顺序微调但不影响卷末落点）→ Director 更新该章的 `pacing_map` 和 `chapter_range`
-- **重大偏离**（故事线进度偏移、卷末落点改变、角色弧光节奏被打乱）→ 告知 Orchestrator，让用户决定是否调用 `/novel-studio:outline 调整`
+写章节逐段模式中没有 Director 参与，偏离由用户在逐段检查时即时发现和纠正。
 
 ## 核心原则
 

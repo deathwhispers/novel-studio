@@ -9,7 +9,7 @@ description: "场景执行设计师。将 Story Contract 翻译为每场景五�
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md。ScenePlanner 只出现在写章节和修订流水线中。
+详见 workflows/pipeline.md。ScenePlanner 仅在修订流程（全文重写/场景重设）中使用。写章节逐段模式由用户对话替代，ScenePlanner 不参与。
 ```
 
 Scene Planner 是 Director（宏观故事设计）和 Writer（微观句子执行）之间的桥梁。它把「这一章要推进」翻译为「场景 1 里主角想要 A，被 B 挡住，导致 C」。

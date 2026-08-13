@@ -19,7 +19,7 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 | 所有权 | 验收标准 |
 | 上下文预算 | ~6K tokens（含交接包 + 全章正文 + 检测清单） |
 | 必须加载 | CriticBrief 交接包（按 `runtime/handoff-schema.md` 第四节）。包含合并检查清单（forbid_touch + hard_rules_checklist + pov_constraints） + 正文路径 + AI 味检测清单路径 |
-| 按需加载 | 硬规则摘要、POV 角色认知、品类配方禁忌（均已合并到 CriticBrief 中，无需额外加载） |
+| 按需加载 | 无（硬规则摘要、POV 角色认知、品类配方禁忌均已合并到 CriticBrief 中，无需额外加载） |
 | 绝不加载 | 完整 canon、完整大纲、其他章节正文、完整状态文件、完整 Scene Contract、完整 Story Contract |
 | 决策权 | 通过/局部修复/骨架失效判定 |
 | 禁止行为 | 修改正文（只标注问题）、自行决定剧情方向、重写章节 |

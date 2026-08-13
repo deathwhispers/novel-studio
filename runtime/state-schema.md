@@ -34,7 +34,7 @@ chapter_state:                  # 当前正在写的章节状态
 files:
   book_core: "core/作品核心.md"
   hard_rules: "setting/硬规则.yaml"
-  outline: "outline/全书总纲.md"
+  outline: "outline/全书总纲.yaml"
   volumes:
     - "outline/volumes/volume-01.yaml"
   chapters_dir: "chapters/"

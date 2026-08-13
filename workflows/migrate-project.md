@@ -77,6 +77,7 @@ workspace:
   genre: "待确认"
   mode: "商业连载"
   created: "2026-08-10"
+  chapter_word_target: 2000
 
 current:
   chapter: <已完成的最后一章编号>
@@ -338,7 +339,7 @@ migration_extraction:
 4. `setting/characters/配角.yaml`：主要配角（POV 或出场 >10 章）
 5. `setting/world/`：从事件中提取的地理/势力信息（如有）
 6. `setting/power-system/`：从能力时间线反推的等级体系（如有）
-7. `outline/全书总纲.md`：如有大纲导入
+7. `outline/全书总纲.yaml`：如有大纲导入
 
 ### StateManager 写入 state/
 
