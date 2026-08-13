@@ -92,6 +92,9 @@ write-chapter 中若需引入新重要配角（非一次性路人），Orchestra
     start_state: ""              # 初始状态
     end_state: ""                # 计划终点（长篇可写「未知」）
     growth_direction: ""         # 成长方向
+  storyline:                     # 方向性故事线（不具体到章/卷，写作时把握方向用）
+    direction: ""                # 本角色的故事走向：追求什么 → 会经历什么 → 走向哪里
+    crossing: ""                 # 与其他角色故事线的交错点：在哪类事件/冲突上碰撞（配角尤其写与主角的交错）
   constraints:
     cannot_do: []                # 能力限制
     cannot_know: []              # 信息限制

@@ -64,7 +64,7 @@ director_brief:
 
   # 必读文件路径
   must_read:
-    volume_outline: "outline/volumes/volume-01-outline.md"
+    volume_outline: "outline/volumes/volume-01.yaml"
     hard_rules: "setting/硬规则.yaml"
     genre_rhythm: "genres/番茄系统爽文/rhythm.md"   # 如适用
 

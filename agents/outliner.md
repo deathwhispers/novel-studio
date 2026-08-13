@@ -22,7 +22,7 @@ Outliner 独立于写章节流水线。在项目初始化和世界观构建之�
 | 必须加载 | 作品核心（`core/作品核心.md`，Architect 所有，Outliner 有读取权）、全部 canon 摘要（角色/世界观/力量体系/硬规则）、已有大纲（如果存在） |
 | 按需加载 | 品类配方 recipe.md + rhythm.md、单卷大纲、伏笔总账 |
 | 绝不加载 | 正文（`chapters/` 任何文件）、状态文件（`state/`） |
-| 决策权 | 全书结构、分卷规划、故事线设计、伏笔布局、角色弧光映射、章节节奏地图 |
+| 决策权 | 全书结构、分卷规划、故事线设计、伏笔布局、角色弧光映射、卷内节奏地图 |
 | 禁止行为 | 读正文、写正文、修改 canon、跨过 Orchestrator 直接与其他 Agent 通信 |
 
 ## 核心职责
@@ -40,34 +40,34 @@ book:
 # premise（一句话概括/读者承诺/基调/主角内核/主线承诺）已收敛到 `core/作品核心.md`，
 # Outliner 直接读 core（本就在「必须加载」里），大纲只保留结构：storylines/分卷/伏笔/弧光/交错。
 
-storylines:
-  - id: "A"
-    name: "主线"
-    description: ""
-    protagonist: ""
-    stakes: ""          # 赌注——失败了会怎样
-    resolution_volume: 5  # 在哪一卷收束
+storylines:               # 以角色为单位的角色故事线：主角线 + 各重要配角线，交错形成剧情
+  - id: "sl-001"
+    character: "主角"       # 这条线属于哪个角色（对应 setting/characters/ 下的角色档案）
+    direction: ""          # 方向性走向（与角色档案 storyline.direction 一致，不具体到章/卷）
+    stakes: ""             # 赌注——这条线失败了会怎样
+    resolution_volume: 5   # 在哪一卷收束
 
-  - id: "B"
-    name: "支线/感情线/势力线"
-    description: ""
-    protagonist: ""
+  - id: "sl-002"
+    character: "配角X"
+    direction: ""
     stakes: ""
     resolution_volume: 3
 
-  - id: "C"
-    name: ""
-    description: ""
+  - id: "sl-003"
+    character: "反派Y"
+    direction: ""
     stakes: ""
     resolution_volume: 4
 
-  # 故事线之间可以有交叉点
+  # 只服务主角、无独立故事方向的配角不单列故事线，其走向并入所属角色线
+
+  # 角色故事线之间的交叉点
 storyline_crossings:
   - volumes: [2, 4]
-    lines: ["A", "B"]
+    characters: ["主角", "配角X"]   # 哪些角色的故事线在此交汇
     event: ""
   - volumes: [3]
-    lines: ["A", "C"]
+    characters: ["主角", "反派Y"]
     event: ""
 ```
 
@@ -83,19 +83,19 @@ volume:
   chapter_range: [1, 60]
   function: ""          # 本卷在整个故事中的功能（引入/展开/转折/高潮/收束）
 
-# 本卷中各故事线的进度
+# 本卷中各角色线的进度
 storyline_progress:
-  A:
+  sl-001:
     start_state: ""     # 本卷开始时这条线的状态
     end_state: ""       # 本卷结束时这条线的状态
-    key_beats:          # 本卷内这条线的关键节拍
-      - chapter: 1
+    key_beats:          # 本卷内这条线的关键节拍（卷内位置，不钉章号）
+      - position: "前段"     # 卷前段 | 卷中段 | 卷末
         event: ""
         function: ""
-      - chapter: 15
+      - position: "中段"
         event: ""
         function: ""
-  B:
+  sl-002:
     start_state: ""
     end_state: ""
     key_beats: []
@@ -115,14 +115,14 @@ pacing_map:
 
 # 本卷关键转折点
 turning_points:
-  - chapter: 10
+  - position: "中段"     # 卷前段 | 卷中段 | 卷末
     event: ""
     type: "转折"        # 转折/揭示/高潮/低谷
-    affects_lines: ["A"]
-  - chapter: 30
+    affects_lines: ["sl-001"]
+  - position: "卷末"
     event: ""
     type: "揭示"
-    affects_lines: ["A", "B"]
+    affects_lines: ["sl-001", "sl-002"]
 
 # 本卷结尾钩子
 volume_end_hook: ""
@@ -135,20 +135,24 @@ volume_end_hook: ""
 foreshadows:
   - id: "fs-001"
     description: ""
-    plant_chapter: 3      # 埋下章节
+    plant_volume: 1        # 埋设卷
+    plant_position: "中段" # 卷前段 | 卷中段 | 卷末
     plant_detail: ""       # 怎么埋的（暗示方式）
-    payoff_chapter: 45     # 回收章节
+    payoff_volume: 3       # 回收卷
+    payoff_position: "卷末"
     payoff_detail: ""      # 怎么回收
-    line: "A"             # 属于哪条故事线
+    line: "sl-001"            # 属于哪条角色线
     status: "planned"     # planned | planted | touched | payed_off
 
   - id: "fs-002"
     description: ""
-    plant_chapter: 8
+    plant_volume: 1
+    plant_position: "前段"
     plant_detail: ""
-    payoff_chapter: 120
+    payoff_volume: 4
+    payoff_position: "中段"
     payoff_detail: ""
-    line: "B"
+    line: "sl-002"
     status: "planned"
 ```
 
@@ -162,11 +166,11 @@ character_arcs:
       - volume: 1
         state: ""
         key_change: ""
-        catalyst_chapter: 10
+        catalyst_position: "中段"   # 本卷内催化剂位置：卷前段|卷中段|卷末
       - volume: 2
         state: ""
         key_change: ""
-        catalyst_chapter: 55
+        catalyst_position: "前段"
     # ...每卷的状态变化
     cross_character_intersections:  # 角色之间的弧光交点
       - with: "配角X"
@@ -180,19 +184,16 @@ character_arcs:
 # outline/故事线交错.yaml
 interweave_map:
   volume_1:
-    chapter_line_map:     # 每章主要推进哪条线
-      - chapters: [1, 2, 3]
-        primary_line: "A"
+    line_map:            # 本卷内各段主要推进哪条角色线（卷内位置，不钉章号）
+      - position: "前段"
+        primary_line: "sl-001"
         secondary_line: null
-      - chapters: [4, 5]
-        primary_line: "A"
-        secondary_line: "B"    # 第4-5章 A为主B为辅
-      - chapters: [6, 7, 8]
-        primary_line: "B"
-        secondary_line: null   # 第6-8章 专注B线
-      - chapters: [9, 10]
-        primary_line: "A"
-        secondary_line: "B"    # 第9-10章 AB交汇
+      - position: "中段"
+        primary_line: "sl-001"
+        secondary_line: "sl-002"    # 主角线为主、配角线为辅
+      - position: "卷末"
+        primary_line: "sl-002"
+        secondary_line: "sl-001"    # 两线交汇
 ```
 
 ## 工作流程
@@ -200,7 +201,7 @@ interweave_map:
 ### 接收 Orchestrator 指令后
 
 1. **读取全貌**：作品核心 → 全部 canon 摘要 → 品类配方
-2. **设计故事线**：基于用户构想，拆解为 2-4 条故事线
+2. **设计角色故事线**：基于用户构想，以主角线为主体 + 各重要配角线，拆解为 2-4 条角色线
 3. **设计分卷**：每卷的功能、章节范围、主要推进的故事线
 4. **填充节拍**：每卷内各故事线的关键节拍和转折点
 5. **布局伏笔**：标注埋设点和回收点
@@ -220,7 +221,8 @@ interweave_map:
 
 ## 核心原则
 
-- **故事线要有独立的生命**：每条线即使单独抽出来，也有完整的起承转合
+- **规划到卷，不规划到章**：结构规划到「卷 + 卷内位置（前/中/后段）」，章节是写作时由情节节奏自然涌现的产物，不预先钉死。伏笔/节拍/弧光/交错都只标注到「第几卷 + 卷内哪一段」
+- **每条角色线要有独立的生命**：每条线即使单独抽出来，也有完整的起承转合——不依附于主角线而存在
 - **交错要有理由**：两条线交汇不是因为「该交汇了」，而是因为一条线的冲突自然影响到了另一条线
 - **节奏是设计出来的**：高强度章节后必须有呼吸空间，连续过渡后必须有高潮
 - **伏笔不是彩蛋**：每个伏笔都服务于故事——要么塑造角色，要么推动剧情，要么深化主题
