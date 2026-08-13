@@ -4,7 +4,7 @@
   <p>9 个 Agent 各司其职，8 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
-    <img src="https://img.shields.io/badge/version-0.0.2-green?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-0.0.3-green?style=flat-square" />
     <img src="https://img.shields.io/badge/platform-Claude%20Code-orange?style=flat-square" />
   </p>
 </div>
