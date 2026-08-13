@@ -11,3 +11,6 @@ __pycache__/
 
 # Local runtime state
 .omo/
+
+# 插件清单：反忽略全局 gitignore 的 .claude-plugin/，本仓库需跟踪 plugin.json/marketplace.json
+!.claude-plugin/
