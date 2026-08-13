@@ -1,7 +1,7 @@
 <div align="center">
   <h1>Novel Studio</h1>
   <p><strong>面向中文长篇小说的 AI 写作多智能体系统</strong></p>
-  <p>9 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
+  <p>9 个 Agent 各司其职，8 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
     <img src="https://img.shields.io/badge/version-0.0.2-green?style=flat-square" />
@@ -67,6 +67,7 @@ claude plugin uninstall novel-studio
 | `/novel-studio:check <N>` | 质量扫描 — 问清楚用户关注什么，针对性检查，只报问题 | 1-2 轮 |
 | `/novel-studio:revise <N>` | 修订章节 — 理解问题 → 判断范围 → 告知影响 → 等待确认，支持范围升级 | 2-4 轮 |
 | `/novel-studio:migrate <path>` | 存量导入 — 已有章节逆向提取为结构化状态文件 | 逐章 |
+| `/novel-studio:upgrade` | 旧版升级 — v2 旧结构无损升级到 v3，保留续写状态 | 2-3 轮 |
 
 ## 架构：Agent 体系
 

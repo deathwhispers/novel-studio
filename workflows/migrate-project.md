@@ -32,6 +32,8 @@ flowchart TD
 - 用户执行 `/novel-studio:migrate <现有目录路径>`
 - Orchestrator 检测到当前目录不包含 `core/作品核心.md` 和 `state/progress.yaml`，但存在正文文件（`.md`/`.txt`）
 
+> **边界（与 upgrade 的区别）**：migrate 只针对「裸正文目录」——从没初始化过、没有 `state/`。如果目录里已有旧版 `state/progress.yaml`（v2 结构，`files` 用 `hard_canon` 字段），说明是「旧版工作区」而非「裸目录」，请改用 `/novel-studio:upgrade`。误用 migrate 会重扫正文、重建 state/，丢失角色/读者/伏笔等续写上下文。
+
 ---
 
 ## 步骤 1：工作区重组（Orchestrator 直接执行）

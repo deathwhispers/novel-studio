@@ -206,19 +206,40 @@ flowchart TD
 
 ---
 
+## 八、工作区升级（upgrade-project）
+
+**触发**: `/novel-studio:upgrade`（检测到 v2 旧结构时）
+
+```mermaid
+flowchart TD
+    User["👤 User: /novel-studio:upgrade"]
+    Orchestrator["🎯 Orchestrator<br/>检测旧版特征 + 备份 + 改名"]
+
+    User --> Orchestrator
+
+    Orchestrator -->|"备份完成"| Rename["🔧 结构改名<br/>• 作品总表→作品核心<br/>• 硬设定→硬规则<br/>• progress.yaml 字段改写"]
+    Rename --> Architect["🏗️ Architect<br/><b>内容补全</b><br/>• core 灵魂契约补全<br/>• 硬设定拆分<br/>（作者确认）"]
+    Architect --> StateManager["📋 StateManager<br/>校验 + 写 schema_version"]
+    StateManager --> Done(["✅ 升级完成<br/>state/ 已保留，可续写"])
+```
+
+详见 [`workflows/upgrade-project.md`](upgrade-project.md)。
+
+---
+
 ## Agent ↔ 流水线对应关系
 
 | Agent | 出现在流水线 |
 |-------|-------------|
-| Orchestrator | 全部七条 |
-| Architect | 初始化、世界观构建、项目迁移（合成归档） |
+| Orchestrator | 全部八条 |
+| Architect | 初始化、世界观构建、项目迁移（合成归档）、工作区升级（内容补全） |
 | Archivist | 项目迁移（分批分析）——迁移完成后不再使用 |
 | Outliner | 大纲设计 |
 | Director | 修订（全文重写） |
 | ScenePlanner | 修订（全文重写/场景重设） |
 | Writer | 写章节（逐段模式）、修订（全部四种范围） |
 | Critic | 修订（全部四种范围）、质量检查 |
-| StateManager | 写章节（逐段模式）、初始化、修订、世界观构建、项目迁移（文件生成） |
+| StateManager | 写章节（逐段模式）、初始化、修订、世界观构建、项目迁移（文件生成）、工作区升级（校验） |
 
 ---
 

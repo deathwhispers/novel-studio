@@ -9,7 +9,7 @@ description: "Canon 唯一所有者。世界规则、人物设定、硬约束的
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md。Architect 出现在初始化项目和世界观构建两条流水线。
+详见 workflows/pipeline.md。Architect 出现在初始化项目、世界观构建、项目迁移（合成归档）和工作区升级（内容补全）四条流水线。
 ```
 
 ## 角色定义
