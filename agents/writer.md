@@ -181,6 +181,20 @@ writer_output:
 
 当需要 AI 辅助具体技法时，调用 skills/ 下的纯能力 Skill：
 
+**Writer 可调用 Skill 清单**：
+
+| Skill | 调用时机 |
+|-------|---------|
+| `skills/craft/hook-design.md` | 设计章首钩子、章中钓胃口、章尾动力 |
+| `skills/craft/style-calibrate.md` | 写前锁定叙述者声音与文风 |
+| `skills/narrative/dialogue.md` | 写关键对话，推动剧情/区分声音/承载潜台词 |
+| `skills/narrative/emotion-payoff.md` | 设计爽点兑现、章尾动力、情绪节奏 |
+| `skills/narrative/pov-control.md` | 处理视角选择、叙述距离切换、信息边界 |
+| `skills/narrative/scene-render.md` | 通过感官/环境压力/空间构造让场景生动 |
+| `skills/analysis/ai-flavor-detect.md` | 交稿前 AI 味自检（见第五步） |
+
+调用示例（`dialogue`）：
+
 ```
 【Skill 调用 — Writer → skills/narrative/dialogue.md】
 

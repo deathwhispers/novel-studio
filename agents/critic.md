@@ -26,6 +26,16 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 
 ## 5 个 Checker（按序执行）
 
+**Checker ↔ Skill 映射**（深度检查时调用对应 skill）：
+
+| Checker | 对应 Skill |
+|---------|-----------|
+| Logic Checker | `skills/analysis/causality-check.md` + `skills/analysis/foreshadow-check.md` |
+| Info Leak Checker | `skills/analysis/info-leak-check.md` |
+| Character Checker | `skills/analysis/character-check.md` |
+| Pace Checker | `skills/analysis/pacing-check.md` |
+| Style Checker | `skills/analysis/ai-flavor-detect.md` + `skills/craft/style-calibrate.md` + `skills/craft/voice-check.md` |
+
 ### Checker 1: Logic Checker（因果与连续性）
 
 **检查内容**：
