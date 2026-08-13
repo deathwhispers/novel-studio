@@ -16,7 +16,7 @@
 |------|--------|------|
 | 路由层 | Orchestrator | progress.yaml、agent-log.yaml |
 | 结构层 | Outliner | 大纲、故事线、分卷、伏笔、弧光、节奏 |
-| 决策层 | Director（仅修订） | 状态摘要、卷纲、硬设定摘要 |
+| 决策层 | Director（仅修订） | 状态摘要、卷纲、硬规则摘要 |
 | 修订层 | ScenePlanner/Critic（仅修订） | 场景级信息、正文检查 |
 | 执行层 | Writer | 逐段写作（写章节）或受约束重写（修订） |
 
@@ -43,7 +43,7 @@
 |-------|------|---------|---------|
 | Orchestrator | ~2K | progress.yaml + agent-log.yaml | 不创作、不检查、不修改大状态文件 |
 | Architect | ~8K | 用户构想 + canon + 品类配方 | 不读正文/大纲/状态文件 |
-| Outliner | ~8K | 作品总表 + canon 摘要 + 已有大纲 + 品类配方 | 不读正文/状态文件 |
+| Outliner | ~8K | 作品核心 + canon 摘要 + 已有大纲 + 品类配方 | 不读正文/状态文件 |
 | Director（仅修订） | ~4K | DirectorBrief（状态摘要） | 不读正文、不读完整状态文件 |
 | ScenePlanner（仅修订） | ~3K | ScenePlannerBrief（Story Contract + 结构） | 不读完整大纲/完整 canon |
 | Writer | ~6K | 逐段模式：用户选择的推进方向 + 已写段落<br/>修订模式：WriterBrief + chapter N-1 全文 | 不读大纲/canon/状态文件 |
@@ -119,11 +119,11 @@ Director 不自行加载完整状态文件。Orchestrator 从状态文件中提�
   - `reading_tension`：四项指标数值
   - `pov_characters`：POV 角色的 knowledge.unknown + constraints
   - `active_threads`：foreshadow.yaml 中 active 伏笔（id + content + priority + last_touched）
-- `must_read`：卷纲路径、硬设定路径、品类 rhythm 路径
+- `must_read`：卷纲路径、硬规则路径、品类 rhythm 路径
 
 **交接包外自行加载**（仅路径指定的文件）：
 - 当前卷纲（约1K tokens）
-- 硬设定摘要（约300 tokens）
+- 硬规则摘要（约300 tokens）
 - 品类配方 rhythm.md（约500 tokens，如适用）
 
 **绝不加载**：
@@ -200,7 +200,7 @@ Critic 不分别加载 Scene Contract + Story Contract + character.yaml，也不
 **交接包内容**（~0.8K tokens）：
 - `chapter_text`：当前章正文路径
 - `forbid_touch`：禁止触碰清单（从 Story Contract 提取）
-- `hard_canon_checklist`：硬设定检查清单（从 setting/硬设定.yaml 精简）
+- `hard_rules_checklist`：硬规则检查清单（从 setting/硬规则.yaml 精简）
 - `pov_constraints`：POV 角色的 cannot_know + cannot_do
 - `genre_taboos`：品类禁忌（如适用）
 - `ai_flavor_checklist`：AI 味检测清单路径（~250 tokens，精简版）

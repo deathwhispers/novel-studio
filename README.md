@@ -88,8 +88,8 @@ claude plugin uninstall novel-studio
 
 ```
 my-novel/
-├── core/                    作品总表（品类、篇幅、主角设定）
-├── setting/                 角色档案、世界规则、力量体系
+├── core/                    作品核心（灵魂契约：一句话概括/读者承诺/基调/主角内核/主线承诺/禁忌与红线）
+├── setting/                 硬规则、角色档案、世界规则、力量体系
 ├── outline/                 全书总纲、分卷大纲、伏笔地图、角色弧光、故事线交错
 ├── chapters/                已完成章节正文
 ├── snippets/                灵感片段、废弃草稿

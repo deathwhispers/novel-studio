@@ -65,7 +65,7 @@ director_brief:
   # 必读文件路径
   must_read:
     volume_outline: "outline/volumes/volume-01-outline.md"
-    hard_canon: "setting/硬设定.yaml"
+    hard_rules: "setting/硬规则.yaml"
     genre_rhythm: "genres/番茄系统爽文/rhythm.md"   # 如适用
 
   # 明确禁止加载
@@ -157,6 +157,7 @@ writer_brief:
   from: Orchestrator
   to: Writer
   chapter: 11
+  word_target: 2000           # 每章目标字数，Orchestrator 从 progress.yaml workspace.chapter_word_target 提取（浮动 ±20%）
 
   # 场景列表（从 Scene Contract 提取，仅 Writer 需要的字段）
   scenes:
@@ -265,8 +266,8 @@ critic_brief:
     - "神秘配角的真实身份"
     - "第50章的反转线索"
 
-  # 硬设定检查清单（从 setting/硬设定.yaml 精简提取）
-  hard_canon_checklist:
+  # 硬规则检查清单（从 setting/硬规则.yaml 精简提取）
+  hard_rules_checklist:
     - "系统只能由主角使用"
     - "系统任务不可拒绝，但完成方式可选"
     - "主角当前等级：炼气三层——不能使用超过炼气期的能力"

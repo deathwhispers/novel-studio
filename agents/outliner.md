@@ -19,7 +19,7 @@ Outliner 独立于写章节流水线。在项目初始化和世界观构建之�
 |------|-----|
 | 所有权 | `outline/` |
 | 上下文预算 | ~8K tokens |
-| 必须加载 | 作品总表（`core/作品总表.md`，Architect 所有，Outliner 有读取权）、全部 canon 摘要（角色/世界观/力量体系/硬设定）、已有大纲（如果存在） |
+| 必须加载 | 作品核心（`core/作品核心.md`，Architect 所有，Outliner 有读取权）、全部 canon 摘要（角色/世界观/力量体系/硬规则）、已有大纲（如果存在） |
 | 按需加载 | 品类配方 recipe.md + rhythm.md、单卷大纲、伏笔总账 |
 | 绝不加载 | 正文（`chapters/` 任何文件）、状态文件（`state/`） |
 | 决策权 | 全书结构、分卷规划、故事线设计、伏笔布局、角色弧光映射、章节节奏地图 |
@@ -37,11 +37,8 @@ book:
   total_volumes: 5
   total_chapters_estimate: 300
 
-premise:
-  logline: ""           # 一句话概括
-  core_conflict: ""     # 核心冲突
-  theme: ""             # 主题
-  reader_promise: ""    # 读者承诺（读完会得到什么体验）
+# premise（一句话概括/读者承诺/基调/主角内核/主线承诺）已收敛到 `core/作品核心.md`，
+# Outliner 直接读 core（本就在「必须加载」里），大纲只保留结构：storylines/分卷/伏笔/弧光/交错。
 
 storylines:
   - id: "A"
@@ -202,7 +199,7 @@ interweave_map:
 
 ### 接收 Orchestrator 指令后
 
-1. **读取全貌**：作品总表 → 全部 canon 摘要 → 品类配方
+1. **读取全貌**：作品核心 → 全部 canon 摘要 → 品类配方
 2. **设计故事线**：基于用户构想，拆解为 2-4 条故事线
 3. **设计分卷**：每卷的功能、章节范围、主要推进的故事线
 4. **填充节拍**：每卷内各故事线的关键节拍和转折点

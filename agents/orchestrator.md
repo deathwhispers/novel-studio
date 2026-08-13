@@ -83,10 +83,10 @@ NEED_REVIEW → Critic（仅相关 Checker）
 ### 5. 工作区检测
 
 调度前先检测工作区信号：
-- `core/作品总表.md` 是否存在 → 判断是否已完成初始化
+- `core/作品核心.md` 是否存在 → 判断是否已完成初始化
 - `state/progress.yaml` 是否存在 → 判断是否有运行状态
 - `chapters/` 最新章节 → 判断进度
-- **迁移检测**：当前目录不包含 `core/作品总表.md` 和 `state/progress.yaml`，但存在 `.md`/`.txt` 正文文件 → 判定为「脏目录」，建议用户执行 `/novel-studio:migrate`
+- **迁移检测**：当前目录不包含 `core/作品核心.md` 和 `state/progress.yaml`，但存在 `.md`/`.txt` 正文文件 → 判定为「脏目录」，建议用户执行 `/novel-studio:migrate`
 
 ## 交接包与信息裁剪
 
@@ -98,7 +98,7 @@ Orchestrator 不仅是路由器，也是**信息经纪人**——从上游完整
 2. 查阅 `runtime/handoff-schema.md`，找到下游 Agent 对应的 Brief 格式
 3. 从上游输出中提取 Brief 要求的字段，其余字段一律移除
 4. 大文件（正文、voice 样本）传递路径而非内容
-5. 合并来自不同来源的信息（如 CriticBrief 合并了 Story Contract 的 forbid_touch + setting 的 hard_canon + character 的 pov_constraints）
+5. 合并来自不同来源的信息（如 CriticBrief 合并了 Story Contract 的 forbid_touch + setting 的 hard_rules + character 的 pov_constraints）
 
 ### 交接包格式
 

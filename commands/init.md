@@ -132,8 +132,8 @@ workflow: init-project
 ✅ 项目初始化完成！
 
 📁 已创建：
-   core/作品总表.md
-   setting/（硬设定 + 主角档案 + 世界观 + 力量体系）
+   core/作品核心.md
+   setting/（硬规则 + 主角档案 + 世界观 + 力量体系）
 
 🎯 下一步建议：
    1. /novel-studio:world   — 继续完善世界观和角色设定

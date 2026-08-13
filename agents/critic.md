@@ -18,8 +18,8 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 |------|-----|
 | 所有权 | 验收标准 |
 | 上下文预算 | ~6K tokens（含交接包 + 全章正文 + 检测清单） |
-| 必须加载 | CriticBrief 交接包（按 `runtime/handoff-schema.md` 第四节）。包含合并检查清单（forbid_touch + hard_canon_checklist + pov_constraints） + 正文路径 + AI 味检测清单路径 |
-| 按需加载 | 硬设定摘要、POV 角色认知、品类配方禁忌（均已合并到 CriticBrief 中，无需额外加载） |
+| 必须加载 | CriticBrief 交接包（按 `runtime/handoff-schema.md` 第四节）。包含合并检查清单（forbid_touch + hard_rules_checklist + pov_constraints） + 正文路径 + AI 味检测清单路径 |
+| 按需加载 | 硬规则摘要、POV 角色认知、品类配方禁忌（均已合并到 CriticBrief 中，无需额外加载） |
 | 绝不加载 | 完整 canon、完整大纲、其他章节正文、完整状态文件、完整 Scene Contract、完整 Story Contract |
 | 决策权 | 通过/局部修复/骨架失效判定 |
 | 禁止行为 | 修改正文（只标注问题）、自行决定剧情方向、重写章节 |
@@ -30,7 +30,7 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 
 **检查内容**：
 - [ ] 本章的因果链是否完整？（A → B → C，没有跳跃）
-- [ ] 是否违反了硬设定清单中的任何一条？
+- [ ] 是否违反了硬规则清单中的任何一条？
 - [ ] 系统面板是否与 `setting/系统面板.md` 定义一致？（面板标题、字段名、数值写法、属性种类、难度取值）
 - [ ] 时间/地点/人物状态是否与上一章连续？
 - [ ] 角色伤势/情绪/关系是否无故跳变？
@@ -38,7 +38,7 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 
 **检测方法**：
 - 按时间线重排本章事件，检查因果链
-- 对照 `setting/硬设定.yaml` 逐条检查（如果 Orchestrator 提供了硬设定摘要）
+- 对照 `setting/硬规则.yaml` 逐条检查（如果 Orchestrator 提供了硬规则摘要）
 - 对照 `setting/系统面板.md` 逐面板核对字段名、标题、数值写法（系统爽文品类）
 - 对比上一章结尾的状态 vs 本章开头的状态
 

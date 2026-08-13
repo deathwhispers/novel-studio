@@ -20,7 +20,7 @@ Director 是信息释放的唯一决策者。它决定「这一章要完成什�
 |------|-----|
 | 所有权 | 单章 Story Contract（大纲由 Outliner 设计，Director 维护） |
 | 上下文预算 | ~4K tokens |
-| 必须加载 | DirectorBrief 交接包（按 `runtime/handoff-schema.md` 第一节）。包含状态摘要（非完整状态文件）+ 卷纲 + 硬设定 |
+| 必须加载 | DirectorBrief 交接包（按 `runtime/handoff-schema.md` 第一节）。包含状态摘要（非完整状态文件）+ 卷纲 + 硬规则 |
 | 按需加载 | 品类配方 rhythm.md |
 | 绝不加载 | `chapters/` 任何文件、`state/` 完整状态文件 |
 | 决策权 | 章节功能、信息释放策略、禁止触碰清单、旧线触碰计划 |

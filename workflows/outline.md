@@ -69,7 +69,7 @@ Orchestrator 首先确认用户意图：
 
 **第 1 轮：核心冲突与主题**
 ```
-Orchestrator 读取作品总表 + canon 摘要
+Orchestrator 读取作品核心 + canon 摘要
 问用户：核心冲突、最想让读者记住的事、绝对要写的场景
 ```
 

@@ -15,6 +15,7 @@ workspace:
   genre: "番茄系统爽文"         # 品类标识，关联 genres/ 下的配方
   mode: "商业连载"              # 商业连载 | 类型长篇 | 文学叙事 | 短篇 | 探索起草
   created: "2026-01-01"
+  chapter_word_target: 2000     # 每章目标字数（默认 2000，浮动 ±20%），由 Orchestrator 提取进 WriterBrief
 
 current:
   chapter: 10                   # 当前已完成的最后一章编号
@@ -31,8 +32,8 @@ chapter_state:                  # 当前正在写的章节状态
   segment_count: 0              # 已写成段数
 
 files:
-  book_core: "core/作品总表.md"
-  hard_canon: "setting/硬设定.yaml"
+  book_core: "core/作品核心.md"
+  hard_rules: "setting/硬规则.yaml"
   outline: "outline/全书总纲.md"
   volumes:
     - "outline/volumes/volume-01.yaml"

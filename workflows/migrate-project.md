@@ -21,7 +21,7 @@ flowchart TD
 
     Step2 --> Step3["🧩 步骤3：合成归档<br/>Architect 读 N 份提取结果<br/>合并去重 → migration-extraction.yaml"]
 
-    Step3 --> Step4["💬 步骤4：作者确认<br/>Orchestrator 多轮对话<br/>角色/伏笔/秘密/硬设定/大纲"]
+    Step3 --> Step4["💬 步骤4：作者确认<br/>Orchestrator 多轮对话<br/>角色/伏笔/秘密/硬规则/大纲"]
 
     Step4 --> Step5["📋 步骤5：文件生成<br/>Architect → setting/<br/>StateManager → state/"]
     Step5 --> Done(["✅ 迁移完成<br/>后续可使用 /novel-studio:write"])
@@ -30,7 +30,7 @@ flowchart TD
 ## 触发条件
 
 - 用户执行 `/novel-studio:migrate <现有目录路径>`
-- Orchestrator 检测到当前目录不包含 `core/作品总表.md` 和 `state/progress.yaml`，但存在正文文件（`.md`/`.txt`）
+- Orchestrator 检测到当前目录不包含 `core/作品核心.md` 和 `state/progress.yaml`，但存在正文文件（`.md`/`.txt`）
 
 ---
 
@@ -90,8 +90,8 @@ chapter_state:
   status: "COMPLETED"
 
 files:
-  book_core: "core/作品总表.md"
-  hard_canon: "setting/硬设定.yaml"
+  book_core: "core/作品核心.md"
+  hard_rules: "setting/硬规则.yaml"
   chapters_dir: "chapters/"
 ```
 
@@ -176,9 +176,9 @@ architect_migration_brief:
 3. 出现在 2 章 → 标记为 `likely`
 4. 仅 1 章出现 → 标记为 `possible`，保留给作者判断
 
-**硬设定合并**：
+**硬规则合并**：
 1. 同一规则在多批中的 evidence 合并
-2. 输出候选硬设定清单（按 category 分组）
+2. 输出候选硬规则清单（按 category 分组）
 
 **关键事件时间线**：
 1. 按章排序合并
@@ -234,7 +234,7 @@ migration_extraction:
       - id: "candidate-005"
         content: "第20章出现的陌生老者——只出场一次但描写详细"
 
-  hard_canon_candidates:
+  hard_rules_candidates:
     - rule: "系统任务不可拒绝"
       category: "能力限制"
       evidence_count: 12
@@ -263,7 +263,7 @@ migration_extraction:
 自动识别结果：
   👤 角色：12 个（主角1 / 主要配角4 / 次要角色7）
   🔮 伏笔候选：8 条（确认3条 / 疑似3条 / 待定2条）
-  📜 硬设定候选：6 条
+  📜 硬规则候选：6 条
   🏷️ 品类信号：系统爽文（置信度 85%）
   ❓ 开放问题：5 个
 
@@ -283,7 +283,7 @@ migration_extraction:
 
 需要补充：
   1. 主角的深层动机是什么？（正文没写，只有你知道）
-  2. 主角有什么绝对不能做的事？（硬设定约束）
+  2. 主角有什么绝对不能做的事？（硬规则约束）
   3. 主角不知道什么？（将来会揭示但现在蒙在鼓里的信息）
 ```
 
@@ -332,8 +332,8 @@ migration_extraction:
 
 收到作者确认后的 `migration-extraction.yaml`：
 
-1. `core/作品总表.md`：书名（用户提供）+ 品类 + 模式 + 篇幅 + 一句话概括
-2. `setting/硬设定.yaml`：从候选硬设定中筛选用户确认的规则
+1. `core/作品核心.md`：作品级灵魂契约（一句话概括/读者承诺/基调/主角内核/主线承诺/禁忌与红线）。元信息（书名/品类/模式/篇幅）写进 `progress.yaml` 的 `workspace` 块，不写进 core
+2. `setting/硬规则.yaml`：从候选硬规则中筛选用户确认的规则
 3. `setting/characters/主角.yaml`：按角色档案模板（从提取数据 + 作者补充填充）
 4. `setting/characters/配角.yaml`：主要配角（POV 或出场 >10 章）
 5. `setting/world/`：从事件中提取的地理/势力信息（如有）
@@ -360,7 +360,7 @@ migration_extraction:
    📁 章节：50章已重组到 chapters/
    👤 角色：12个角色已归档（主角1 / 配角4 / 次要角色7）
    🔮 伏笔：5条活跃 / 2条已回收（第25/30章）
-   📜 硬设定：6条已确认
+   📜 硬规则：6条已确认
    🤫 作者秘密：3条已记录
 
 🎯 下一步：

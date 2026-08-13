@@ -54,7 +54,7 @@ flowchart TD
 flowchart TD
     User["👤 User: /novel-studio:init"]
     Orchestrator["🎯 Orchestrator<br/>多轮确认"]
-    Architect["🏗️ Architect<br/><b>创建骨架</b><br/>• core/ + setting/<br/>• 按品类配方初始化设定<br/>• 生成硬设定 + 角色档案"]
+    Architect["🏗️ Architect<br/><b>创建骨架</b><br/>• core/ + setting/<br/>• 按品类配方初始化设定<br/>• 生成硬规则 + 角色档案"]
     StateManager["📋 StateManager<br/><b>初始化状态</b><br/>• progress.yaml (chapter=0)<br/>• author / reader / character<br/>• foreshadow / agent-log"]
     Done(["✅ 项目就绪"])
 
@@ -108,7 +108,7 @@ flowchart TD
 flowchart TD
     User["👤 User: /novel-studio:world"]
     Orchestrator["🎯 Orchestrator<br/>确认构建范围"]
-    Architect["🏗️ Architect<br/><b>创建/更新 canon</b><br/>• 新增角色档案<br/>• 扩展世界观/力量体系<br/>• 更新硬设定清单"]
+    Architect["🏗️ Architect<br/><b>创建/更新 canon</b><br/>• 新增角色档案<br/>• 扩展世界观/力量体系<br/>• 更新硬规则清单"]
     StateManager["📋 StateManager<br/>同步 character.yaml<br/>更新 agent-log"]
     Done(["✅ 报告用户"])
 
@@ -191,7 +191,7 @@ flowchart TD
     Archivist1 -->|"前批摘要"| Archivist2
     Archivist2 -->|"...前批摘要"| ArchivistN
 
-    ArchivistN -->|"N份提取结果"| Architect["🏗️ Architect<br/><b>合成归档</b><br/>• 角色去重合并<br/>• 伏笔候选升级<br/>• 硬设定合并<br/>• 品类确认<br/>→ migration-extraction.yaml"]
+    ArchivistN -->|"N份提取结果"| Architect["🏗️ Architect<br/><b>合成归档</b><br/>• 角色去重合并<br/>• 伏笔候选升级<br/>• 硬规则合并<br/>• 品类确认<br/>→ migration-extraction.yaml"]
 
     Architect -->|"提取结果"| OrchestratorConfirm["🎯 Orchestrator<br/><b>多轮作者确认</b><br/>• 角色确认+补充<br/>• 伏笔确认<br/>• 秘密收集<br/>• 大纲导入"]
 
