@@ -123,7 +123,7 @@ reading_tension:                # 当前追读张力
 
 **约束**：
 - `suspicions[].confidence` 范围 0-100
-- State Manager 每章更新，Director 读取后决定信息释放节奏
+- State Manager 每章更新，信息释放节奏由用户方向讨论确定
 
 ---
 
@@ -137,12 +137,19 @@ characters:
   - id: "char-001"
     name: "主角名"
     is_pov: true
+    surface:                     # 静态角色属性（从 setting/characters/ 同步，写作时用于对话/动作一致性）
+      speech_pattern: "简短/直接/不解释"
+      mannerisms: "思考时摸下巴"
     current_state:
       location: "XX城"
       physical: "健康"
       emotional: "焦虑——刚发现系统的隐藏规则"
       level: "筑基期"            # 本作品的能力等级体系
       resources: ["XX法宝", "300灵石"]
+    constraints:                 # 角色硬约束（Critic 的 pov_constraints 来源）
+      cannot_do: ["暴露系统存在"]
+      cannot_know: ["系统的真正来源", "盟友的真实身份"]
+      cannot_change: ["不能突然变得优柔寡断"]
     knowledge:                   # 该角色知道什么
       known: ["系统的基本功能", "XX是盟友", "XX在追踪自己"]
       unknown: ["系统的真正来源", "盟友的真实身份"]
@@ -167,6 +174,9 @@ characters:
   - id: "char-002"
     name: "配角名"
     is_pov: false
+    surface:                     # 静态角色属性（写作配角对话/动作时用）
+      speech_pattern: "急促/省略/用词古怪"
+      mannerisms: ""
     current_state:
       location: "未知"
       physical: "健康"
@@ -177,8 +187,10 @@ characters:
 
 **约束**：
 - 只有 `is_pov: true` 的角色需要维护完整的 `knowledge` 块
-- 非 POV 角色只需 `current_state` 和简要 `knowledge`
+- 非 POV 角色只需 `surface`、`current_state` 和简要 `knowledge`
 - `pressures[].level` 范围 0-100
+- `surface` 与 `constraints` 为静态属性，由 StateManager 在初始化/世界观构建时从 `setting/characters/xxx.yaml` 同步；worldbuilding 新增/修改角色时同步更新
+- 非 POV 角色可省略 `constraints`（Critic 的 pov_constraints 只针对 POV 角色）
 - State Manager 每 5 章压缩非 POV 角色状态
 
 ---
@@ -229,7 +241,7 @@ stats:
 
 **约束**：
 - `status` 只能取 `active | touched | revealed | resolved | abandoned | stale`（`stale` = 超过 30 章未触碰的活跃伏笔，由 State Manager 标记）
-- Director 每章从 `active + touched` 中选择 0-2 条进行轻碰
+- Writer 每章从 `active + touched` 中选择 0-2 条进行轻碰
 - State Manager 在伏笔 resolve 后保留一行摘要，删除详细描述
 - 每 5 章检查是否有超过 30 章未触碰的活跃伏笔
 
@@ -246,31 +258,31 @@ entries:
     workflow: "write-chapter"
     chapter: 11
     from_agent: "Orchestrator"
-    to_agent: "Director"
-    status: "completed"
-    output: "Story Contract 已生成"
-    file: "outline/volumes/chapter-11-contract.yaml"
-
-  - timestamp: "2026-01-15T10:05:00"
-    workflow: "write-chapter"
-    chapter: 11
-    from_agent: "Director"
-    to_agent: "Scene Planner"
-    status: "completed"
-    output: "Scene Contract 已生成"
+    to_agent: "Writer"
+    status: "in_progress"
+    output: "方向已确认，逐段写作中"
 
   - timestamp: "2026-01-15T10:20:00"
     workflow: "write-chapter"
     chapter: 11
-    from_agent: "Scene Planner"
-    to_agent: "Writer"
-    status: "in_progress"
+    from_agent: "Writer"
+    to_agent: "Orchestrator"
+    status: "completed"
+    output: "整章完成，state_delta 汇总"
+
+  - timestamp: "2026-01-15T10:25:00"
+    workflow: "write-chapter"
+    chapter: 11
+    from_agent: "Orchestrator"
+    to_agent: "StateManager"
+    status: "completed"
+    output: "用户锁定确认，状态已更新"
 
 last_checkpoint:
   workflow: "write-chapter"
   chapter: 11
-  agent: "Writer"
-  timestamp: "2026-01-15T10:20:00"
+  agent: "StateManager"
+  timestamp: "2026-01-15T10:25:00"
 ```
 
 **约束**：

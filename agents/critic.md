@@ -9,7 +9,7 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md。Critic 主要出现在修订（revise-chapter）和质量检查（check）流水线中。写章节（write-chapter）逐段模式中，Critic 的角色由 Writer 收尾阶段的轻量排版/AI味自检替代，不再单独调用。
+详见 workflows/pipeline.md 关键约束。Critic 主要出现在修订（revise-chapter）和质量检查（check）流水线中，写章节逐段模式由 Writer 收尾自检替代，不单独调用。
 ```
 
 ## 角色定义
@@ -18,9 +18,9 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 |------|-----|
 | 所有权 | 验收标准 |
 | 上下文预算 | ~6K tokens（含交接包 + 全章正文 + 检测清单） |
-| 必须加载 | CriticBrief 交接包（按 `runtime/handoff-schema.md` 第四节）。包含合并检查清单（forbid_touch + hard_rules_checklist + pov_constraints） + 正文路径 + AI 味检测清单路径 |
-| 按需加载 | 无（硬规则摘要、POV 角色认知、品类配方禁忌均已合并到 CriticBrief 中，无需额外加载） |
-| 绝不加载 | 完整 canon、完整大纲、其他章节正文、完整状态文件、完整 Scene Contract、完整 Story Contract |
+| 必须加载 | CriticBrief 交接包（按 `runtime/handoff-schema.md` 第三节）。包含合并检查清单（forbid_touch + hard_rules_checklist + pov_constraints） + 正文路径 + AI 味检测清单路径 |
+| 按需加载 | 检测清单路径（由 CriticBrief 提供）：`references/ai-flavor-checklist.md`（AI 味扫描，精简清单）、`references/lib/double-entendre-catalog.md`（老司机词汇）、`references/web-novel-formatting.md`（排版合规）、`setting/系统面板.md`（面板一致性，系统爽文品类） |
+| 绝不加载 | 完整 canon、完整大纲、其他章节正文、完整状态文件、完整 Scene Contract、完整 AI 味目录 `references/ai-flavor-catalog.md` |
 | 决策权 | 通过/局部修复/骨架失效判定 |
 | 禁止行为 | 修改正文（只标注问题）、自行决定剧情方向、重写章节 |
 
@@ -34,7 +34,7 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 | Info Leak Checker | `skills/analysis/info-leak-check.md` |
 | Character Checker | `skills/analysis/character-check.md` |
 | Pace Checker | `skills/analysis/pacing-check.md` |
-| Style Checker | `skills/analysis/ai-flavor-detect.md` + `skills/craft/style-calibrate.md` + `skills/craft/voice-check.md` |
+| Style Checker | `skills/analysis/ai-flavor-detect.md` + `skills/craft/style-calibrate.md` + `skills/analysis/voice-check.md` |
 
 ### Checker 1: Logic Checker（因果与连续性）
 
@@ -71,7 +71,7 @@ logic_check:
 ### Checker 2: Information Leak Checker（信息泄漏）
 
 **检查内容**：
-- [ ] 正文是否触碰了 Story Contract 的 `forbid_touch` 清单？
+- [ ] 正文是否触碰了 CriticBrief 的 `forbid_touch` 清单？
 - [ ] 是否存在「上帝视角」叙述？（角色不知道但旁白说出来的信息）
 - [ ] POV 角色的认知是否超出其已知范围？
 - [ ] 是否存在「作者附身」——旁白跳出来解释设定或人物心理？
@@ -135,7 +135,7 @@ character_check:
 - [ ] 如果品类配方有节奏约束，是否满足？
 
 **检测方法**：
-- 计算每场景字数 → 比较 Scene Contract 的 `word_budget_per_scene`
+- 计算每场景字数 → 比较 CriticBrief 中的 `word_budget_per_scene` 摘要
 - 检查场景功能是否达成（钩子是否真的钩人，爽点是否真的爽）
 - 检查情绪节奏——是否存在连续 3 段同样的情绪
 
@@ -166,7 +166,7 @@ pace_check:
 ### Checker 5: Style Checker（文风）
 
 **检查内容**：
-- [ ] AI 味扫描（按 `references/ai-flavor-catalog.md` 全目录）
+- [ ] AI 味扫描（按 `references/ai-flavor-checklist.md` 精简清单）
 - [ ] 机械罗列检测（第一/第二/首先/其次/综上所述/总之/当然/显然）
 - [ ] 否定句式检测（"不是…。是…"跨句模式、"不是…——是…"破折号模式、"没有…"独立过渡句）
 - [ ] 替读者判断检测（"不像X——像在Y""像是在X"——动作写得薄靠解释句填）
@@ -175,7 +175,7 @@ pace_check:
 - [ ] 角色辨识度——去掉对话标签后能否分清楚谁在说话？
 - [ ] Voice 是否与前 2 章一致？
 - [ ] 是否存在品类禁忌（如番茄系统爽文的奖励无代价）？
-- [ ] 老司机词汇检测（按 `references/double-entendre-catalog.md`）：密度是否超标、是否与角色人设一致、是否为刻意堆梗
+- [ ] 老司机词汇检测（按 `references/lib/double-entendre-catalog.md`）：密度是否超标、是否与角色人设一致、是否为刻意堆梗
 - [ ] **排版合规**（按 `references/web-novel-formatting.md`）：每句≤30字？每段≤3句？系统文字是否用【】包裹？对话是否一人一段？面板字段是否套用 `setting/系统面板.md`（每字段一行、命名统一、数值半角）？
 
 **检测方法**：
@@ -275,7 +275,7 @@ review_report:
 | Logic Checker 或 Info Leak Checker 有硬伤 | **局部修复** → Writer（限制修改范围） |
 | Style/Character/Pace 任一 > 3 个问题 | **局部修复** → Writer |
 | Logic Checker 有骨架级问题 | **骨架失效** → ScenePlanner |
-| Info Leak Checker 发现大面积泄漏（≥3处） | **骨架失效** → Director（重新设计信息释放策略） |
+| Info Leak Checker 发现大面积泄漏（≥3处） | **骨架失效** → Orchestrator（报告用户，重新讨论本章信息释放方向） |
 
 ## 核心原则
 

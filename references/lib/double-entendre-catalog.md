@@ -6,7 +6,7 @@
 
 ## 检索索引
 
-> 按 tag 定位到本库 section 的统一索引见 [`material-index.md`](material-index.md)。写作时先读索引，用行号只读目标段落，不要加载整个素材库。
+> 按 tag 定位到本库 section 的统一索引见 [`material-index.md`](../material-index.md)。写作时先读索引，用行号只读目标段落，不要加载整个素材库。
 
 ## 使用原则
 

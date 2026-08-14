@@ -31,7 +31,7 @@ flowchart TD
 
 | 阶段 | 旧版 | 新版 |
 |------|------|------|
-| 方向确定 | Director 生成 Story Contract | 用户对话替代（3-5 轮方向讨论） |
+| 方向确定 | 自动生成故事合约 | 用户对话替代（3-5 轮方向讨论） |
 | 结构设计 | ScenePlanner 生成 Scene Contract | 用户对话替代（每段前给选项选择推进方向） |
 | 正文写作 | Writer 一次性写完整章 | Writer 逐段写，每段 200-400 字，写完就停 |
 | 质量检查 | Critic 5 Checker 全量检查 | 收尾阶段 Writer 轻量自检（排版+AI味），用户确认 |
@@ -82,21 +82,16 @@ flowchart TD
     Orchestrator --> LocalFix["局部修复"]
     Orchestrator --> DeFlavor["仅去味"]
 
-    FullRewrite -->|"完整流程"| FR_Director["Director → ScenePlanner →<br/>Writer → Critic → StateManager"]
+    FullRewrite -->|"等同 write-chapter 逐段"| FR_User["用户对话定方向 → 逐段写作<br/>→ 锁定 → StateManager"]
 
-    SceneReset -->|"跳过 Director"| SR_Flow["ScenePlanner → Writer →<br/>Critic → StateManager"]
+    SceneReset -->|ScenePlanner 重排场景| SR_Flow["ScenePlanner → Writer →<br/>Critic → StateManager"]
 
-    LocalFix -->|"跳过 Director + ScenePlanner<br/>Writer 限制修改范围"| LF_Flow["Writer → Critic →<br/>StateManager"]
+    LocalFix -->|"跳过 ScenePlanner<br/>Writer 限制修改范围"| LF_Flow["Writer → Critic →<br/>StateManager"]
 
-    DeFlavor -->|"跳过 Director + ScenePlanner<br/>Critic 仅 Style Checker"| DF_Flow["Writer → Critic →<br/>StateManager"]
+    DeFlavor -->|"跳过 ScenePlanner<br/>Critic 仅 Style Checker"| DF_Flow["Writer → Critic →<br/>StateManager"]
 ```
 
-| 用户说 | 修订范围 | 跳过 |
-|--------|---------|------|
-| 「重写第X章」「全部重写」 | 全文重写 | 无 |
-| 「节奏不对」「场景结构有问题」 | 场景重设 | Director |
-| 「有几处写得不好」「对话修一下」 | 局部修复 | Director, ScenePlanner |
-| 「AI味太重」「去味」 | 仅去味 | Director, ScenePlanner |
+修订范围判断与流程的完整定义见 [`workflows/revise-chapter.md`](revise-chapter.md)。
 
 ---
 
@@ -200,10 +195,9 @@ flowchart TD
 | Orchestrator | 全部七条 |
 | Architect | 初始化、世界观构建、工作区升级（内容补全） |
 | Outliner | 大纲设计、工作区升级（大纲重构） |
-| Director | 修订（全文重写） |
-| ScenePlanner | 修订（全文重写/场景重设） |
+| ScenePlanner | 修订（场景重设） |
 | Writer | 写章节（逐段模式）、修订（全部四种范围） |
-| Critic | 修订（全部四种范围）、质量检查 |
+| Critic | 修订（场景重设/局部修复/仅去味）、质量检查 |
 | StateManager | 写章节（逐段模式）、初始化、修订、世界观构建、工作区升级（校验） |
 
 ---
@@ -215,7 +209,7 @@ flowchart TD
 3. **StateManager 是大状态唯一写入口**: 其他 Agent 只标记增量（state_delta），不直接写 `state/` 大状态文件（author/reader/character/foreshadow）
 4. **Writer 不读大纲**: 渐进披露，Writer 只知道当前段的约束和禁止触碰清单
 5. **交接包裁剪**: Orchestrator 按 `runtime/handoff-schema.md` 裁剪交接包，下游 Agent 只收到所需字段
-6. **逐段模式不依赖 Director/ScenePlanner/Critic**: 写章节由用户对话驱动，这三个 Agent 仅在修订流程中使用
+6. **逐段模式不依赖 ScenePlanner/Critic**: 写章节由用户对话驱动，这两个 Agent 仅在修订流程中使用
 
 ---
 
@@ -225,8 +219,7 @@ flowchart TD
 
 | 流转 | 交接包类型 | 说明 |
 |------|-----------|------|
-| Orchestrator → Director | DirectorBrief | 状态摘要（非完整状态文件） |
-| Orchestrator → ScenePlanner | ScenePlannerBrief | 完整 Story Contract + 结构信息 |
+| Orchestrator → ScenePlanner | ScenePlannerBrief | 修订目标 + 现有章节结构 |
 | Orchestrator → Writer | WriterBrief | scenes/five_beats + 约束 + 章尾落点 |
 | Orchestrator → Critic | CriticBrief | 合并检查清单（forbid_touch + canon + pov） |
 | Orchestrator → StateManager | StateManagerBrief | Review Report + state_delta |

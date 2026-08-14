@@ -82,7 +82,4 @@ workflow: check
 
 ## 反模式（禁止）
 
-- ❌ 用户没说要查什么，你就 5 个 Checker 全部跑一遍
-- ❌ 输出所有通过的 Checker（用户不关心通过的，只关心有问题的）
-- ❌ 在 check 中擅自修改正文
-- ❌ 发现一个问题就开始分析深层原因（那是 revise 的事）
+见 `workflows/check.md` 的反模式段。

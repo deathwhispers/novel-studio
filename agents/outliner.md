@@ -19,7 +19,7 @@ Outliner 独立于写章节流水线。在项目初始化和世界观构建之�
 |------|-----|
 | 所有权 | `outline/` |
 | 上下文预算 | ~8K tokens |
-| 必须加载 | 作品核心（`core/作品核心.md`，Architect 所有，Outliner 有读取权）、全部 canon 摘要（角色/世界观/力量体系/硬规则）、已有大纲（如果存在） |
+| 必须加载 | 作品核心（`core/作品核心.md`，Architect 所有，Outliner 有读取权）、canon 摘要（角色/世界观/力量体系/硬规则，裁剪规则见 `runtime/context-budget.md`）、已有大纲（如果存在） |
 | 按需加载 | 品类配方 recipe.md + rhythm.md、单卷大纲、伏笔总账 |
 | 绝不加载 | 正文（`chapters/` 任何文件）、状态文件（`state/`） |
 | 决策权 | 全书结构、分卷规划、故事线设计、伏笔布局、角色弧光映射、卷内节奏地图 |
@@ -214,11 +214,10 @@ character_arcs:
    - 节奏是否有起伏（不能全卷高强度或全卷过渡）？
    - 故事线交错是否合理（不能某条线消失 20 章）？
 
-## 与 Director 的关系
+## 与写作流程的关系
 
-- **Outliner** 设计宏观结构（全书/分卷/故事线）
-- **Director** 在 Outliner 的框架内，为每一章设计 Story Contract
-- Director 写章节时如果发现实际产出偏离大纲 → 微小偏离由 Director 更新大纲，重大偏离标记给 Orchestrator 让用户决策
+- **Outliner** 设计宏观结构（全书/分卷/故事线），章节在写作中由情节节奏自然涌现
+- 写作中发现实际产出偏离大纲 → 微小偏离由用户在逐段检查时即时纠正，重大偏离由 Orchestrator 引导用户 `/novel-studio:outline 调整`
 
 ## 核心原则
 

@@ -16,11 +16,10 @@
 |------|--------|------|
 | 路由层 | Orchestrator | progress.yaml、agent-log.yaml |
 | 结构层 | Outliner | 大纲、故事线、分卷、伏笔、弧光、节奏 |
-| 决策层 | Director（仅修订） | 状态摘要、卷纲、硬规则摘要 |
 | 修订层 | ScenePlanner/Critic（仅修订） | 场景级信息、正文检查 |
 | 执行层 | Writer | 逐段写作（写章节）或受约束重写（修订） |
 
-决策层不加载完整状态文件，执行层不加载上游内部细节。
+修订层不加载完整状态文件，执行层不加载上游内部细节。
 
 ### 交接包机制
 
@@ -44,9 +43,8 @@
 | Orchestrator | ~2K | progress.yaml + agent-log.yaml | 不创作、不检查、不修改大状态文件 |
 | Architect | ~8K | 用户构想 + canon + 品类配方 | 不读正文/大纲/状态文件 |
 | Outliner | ~8K | 作品核心 + canon 摘要 + 已有大纲 + 品类配方 | 不读正文/状态文件 |
-| Director（仅修订） | ~4K | DirectorBrief（状态摘要） | 不读正文、不读完整状态文件 |
-| ScenePlanner（仅修订） | ~3K | ScenePlannerBrief（Story Contract + 结构） | 不读完整大纲/完整 canon |
-| Writer | ~6K | 逐段模式：用户选择的推进方向 + 已写段落<br/>修订模式：WriterBrief + chapter N-1 全文 | 不读大纲/canon/状态文件 |
+| ScenePlanner（仅修订） | ~3K | ScenePlannerBrief（修订目标 + 现有章节结构） | 不读完整大纲/完整 canon |
+| Writer | ~6K（逐段）/ ~10K（修订） | 逐段模式：用户选择的推进方向 + 已写段落<br/>修订模式：WriterBrief + chapter N-1 全文 + 当前章草稿 | 不读大纲/canon/状态文件 |
 | Critic（仅修订/检查） | ~6K | CriticBrief + 当前章正文 + AI 味检测清单 | 不读完整 canon/完整大纲/其他章节 |
 | StateManager | ~2.5K | StateManagerBrief + 状态文件（分段加载） | 不读正文/大纲/canon |
 
@@ -102,50 +100,42 @@
 
 ---
 
-### Director（~4K tokens，仅修订）
+### Outliner（~8K tokens）
 
-Director 仅在修订流程的「全文重写」路径中使用。写章节逐段模式中 Director 不参与——方向确定由用户对话替代。
+**输入来源**：不使用 Brief 格式。Orchestrator 传递用户构想，Outliner 自行加载 canon 摘要。
 
-**输入来源**：`DirectorBrief`（`runtime/handoff-schema.md` 第一节）
+**必须加载**：
+- 作品核心 `core/作品核心.md`（约300 tokens）
+- canon 摘要（角色/世界观/力量体系/硬规则，约1.5-2.5K tokens）
+- 已有大纲（如果存在，约1-2K tokens）
 
-Director 不自行加载完整状态文件。Orchestrator 从状态文件中提取摘要后放入 DirectorBrief。
-
-**交接包内容**（~2.5K tokens）：
-- `user_intent` / `chapter_number` / `genre`
-- `state_summary`：
-  - `secrets`：author.yaml 中 status != revealed 的秘密（仅 id + title + planned_reveal_chapter）
-  - `open_questions`：reader.yaml 中最近 5 条未解答问题
-  - `reading_tension`：四项指标数值
-  - `pov_characters`：POV 角色的 knowledge.unknown + constraints
-  - `active_threads`：foreshadow.yaml 中 active 伏笔（id + content + priority + last_touched）
-- `must_read`：卷纲路径、硬规则路径、品类 rhythm 路径
-
-**交接包外自行加载**（仅路径指定的文件）：
-- 当前卷纲（约1K tokens）
-- 硬规则摘要（约300 tokens）
-- 品类配方 rhythm.md（约500 tokens，如适用）
+**按需加载**：
+- 品类配方 recipe.md + rhythm.md（约1K tokens）
+- 单卷大纲（逐个加载，每个约500 tokens）
+- 伏笔总账（约300 tokens）
 
 **绝不加载**：
 - `chapters/` 任何文件
-- `state/` 完整状态文件（摘要已在交接包中）
+- `state/` 任何文件
 
 **超预算处理**：
-- `active_threads` 超过 10 条时，Orchestrator 只提取 high priority 的伏笔
+- 角色超过 8 个时，只加载主线角色的完整摘要，其他角色仅 ID + 弧光功能
 
 ---
 
 ### ScenePlanner（~3K tokens，仅修订）
 
-ScenePlanner 仅在修订流程（全文重写/场景重设）中使用。写章节逐段模式中 ScenePlanner 不参与——结构设计由用户对话替代。
+ScenePlanner 仅在修订流程（场景重设）中使用，逐段模式不参与（见 workflows/pipeline.md 关键约束）。
 
-**输入来源**：`ScenePlannerBrief`（`runtime/handoff-schema.md` 第二节）
+**输入来源**：`ScenePlannerBrief`（`runtime/handoff-schema.md` 第一节）
 
-ScenePlanner 收到完整 Story Contract + POV 角色摘要 + 最近章节结构。不加载完整状态文件。
+ScenePlanner 收到修订目标 + 现有章节场景结构 + POV 角色摘要。不加载完整状态文件。
 
 **交接包内容**（~1.5K tokens）：
-- `story_contract`：完整 Story Contract（~1K，ScenePlanner 需要全部字段设计场景）
+- `revision_target`：修订目标（scope/problem/keep）
+- `existing_scenes`：现有章节场景结构（每场景 function/word_count/issue）
+- `chapter_end_hook` + `reader_question`：章尾意图（保持原有落点）
 - `pov_character_brief`：POV 角色 name + current_state + speech_pattern + mannerisms
-- `recent_chapters_structure`：最近 2 章的章号/场景数/每场景功能/字数（不含正文）
 
 **交接包外自行加载**：
 - 品类配方 rhythm.md 场景轮换部分（约300 tokens，如适用）
@@ -157,11 +147,11 @@ ScenePlanner 收到完整 Story Contract + POV 角色摘要 + 最近章节结构
 - 完整状态文件
 
 **超预算处理**：
-- 最近 2 章结构超出 500 tokens → 只保留最近 1 章结构
+- 现有场景超过 5 个时 → 只保留前 5 个场景结构
 
 ---
 
-### Writer（~6K tokens，逐段模式）/（~4K tokens，修订模式）
+### Writer（~6K tokens，逐段模式）/（~10K tokens，修订模式）
 
 **逐段模式（写章节）**：
 Writer 不使用交接包。Orchestrator 直接传递用户选择的推进方向 + 已写段落上下文。Writer 只写当前段（200-400字），写完就停，等待用户确认。
@@ -172,9 +162,9 @@ Writer 不使用交接包。Orchestrator 直接传递用户选择的推进方向
 - 整章拼接后的全文（收尾阶段自检用，约4K tokens）
 
 **修订模式**：
-输入来源为 `WriterBrief`（`runtime/handoff-schema.md` 第三节）。交接包 ~1K tokens，Writer 自行加载 chapter N-1 全文 + voice 样本。
+输入来源为 `WriterBrief`（`runtime/handoff-schema.md` 第二节）。交接包 ~1.5K tokens，Writer 自行加载 chapter N-1 全文 + 当前章草稿 + voice 样本。
 
-**交接包内容**（修订模式，~1K tokens）：
+**交接包内容**（修订模式，~1.5K tokens）：
 - `scenes`：每场景的 id/function/pov/narrative_distance/environment/environment_pressure/five_beats
 - `writer_constraints`：must_preserve + must_avoid
 - `chapter_end`：hook + reader_question
@@ -184,21 +174,21 @@ Writer 不使用交接包。Orchestrator 直接传递用户选择的推进方向
 
 **绝不加载**（两种模式通用）：
 - 完整大纲、完整 canon、状态文件
-- 逐段模式：Scene Contract、WriterBrief、Director 的任何产出
+- 逐段模式：Scene Contract、WriterBrief
 
 ---
 
 ### Critic（~6K tokens，仅修订/检查）
 
-Critic 仅在修订流程（revise-chapter）和质量检查（check）中使用。写章节逐段模式中 Critic 不参与——收尾阶段由 Writer 做轻量排版/AI味自检替代。
+Critic 仅在修订流程（revise-chapter）和质量检查（check）中使用，逐段模式不参与（由 Writer 收尾自检替代，见 workflows/pipeline.md 关键约束）。
 
-**输入来源**：`CriticBrief`（`runtime/handoff-schema.md` 第四节）
+**输入来源**：`CriticBrief`（`runtime/handoff-schema.md` 第三节）
 
-Critic 不分别加载 Scene Contract + Story Contract + character.yaml，也不加载完整 AI 味目录——使用精简检测清单。
+Critic 不分别加载 Scene Contract + character.yaml，也不加载完整 AI 味目录——使用精简检测清单。
 
 **交接包内容**（~0.8K tokens）：
 - `chapter_text`：当前章正文路径
-- `forbid_touch`：禁止触碰清单（从 Story Contract 提取）
+- `forbid_touch`：禁止触碰清单（从 author.yaml secrets 提取）
 - `hard_rules_checklist`：硬规则检查清单（从 setting/硬规则.yaml 精简）
 - `pov_constraints`：POV 角色的 cannot_know + cannot_do
 - `genre_taboos`：品类禁忌（如适用）
@@ -210,14 +200,14 @@ Critic 不分别加载 Scene Contract + Story Contract + character.yaml，也不
 
 **绝不加载**：
 - 完整 AI 味目录 `references/ai-flavor-catalog.md`
-- Scene Contract 完整文件、Story Contract 完整文件
+- Scene Contract 完整文件
 - 完整 canon、完整大纲、其他章节正文、完整状态文件
 
 ---
 
 ### StateManager（~2.5K tokens）
 
-**输入来源**：`StateManagerBrief`（`runtime/handoff-schema.md` 第五节）
+**输入来源**：`StateManagerBrief`（`runtime/handoff-schema.md` 第四节）
 
 StateManager 是唯一需要加载状态文件的 Agent。支持两种模式：
 

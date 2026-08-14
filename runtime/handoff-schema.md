@@ -4,117 +4,42 @@
 
 ---
 
-## 一、DirectorBrief
-
-**方向**：Orchestrator → Director
-**预估**：~2.5K tokens
-**用途**：Director 据此生成 Story Contract。不直接加载完整状态文件。
-
-```yaml
-director_brief:
-  from: Orchestrator
-  to: Director
-
-  # 用户意图
-  user_intent: "写第11章，推进主线——主角首次使用新能力"
-  chapter_number: 11
-  genre: "番茄系统爽文"
-
-  # 状态摘要（由 Orchestrator 从状态文件中提取，非完整文件）
-  state_summary:
-    secrets:                          # 从 author.yaml 提取，仅 status != revealed
-      - id: "sec-001"
-        title: "系统的真正来源"
-        planned_reveal_chapter: 50
-      - id: "sec-002"
-        title: "神秘配角的真实身份"
-        planned_reveal_chapter: 35
-
-    open_questions:                   # 从 reader.yaml 提取，最近 5 条
-      - "系统对主角的评价标准是什么？"
-      - "被救者为什么认识主角？"
-
-    reading_tension:                  # 从 reader.yaml 提取
-      主线推进: 70
-      关系期待: 50
-      悬念压力: 65
-      升级期待: 80
-      satisfaction_pending: 3         # 距离上次爽点的章数（Orchestrator 计算）
-
-    pov_characters:                   # 从 character.yaml 提取，仅 POV 角色
-      - id: "char-001"
-        name: "主角"
-        knowledge:
-          unknown:                    # 角色尚不知道的信息
-            - "系统的真正来源"
-            - "神秘配角的身份"
-        constraints:
-          cannot_do: ["暴露系统存在"]
-          cannot_know: ["系统的真正目的"]
-
-    active_threads:                   # 从 foreshadow.yaml 提取，仅 status=active
-      - id: "thr-001"
-        content: "玉佩在关键时刻发烫"
-        priority: "high"
-        last_touched_chapter: 8
-      - id: "thr-003"
-        content: "某角色每次提到某个话题就转移视线"
-        priority: "medium"
-        last_touched_chapter: 5
-
-  # 必读文件路径
-  must_read:
-    volume_outline: "outline/volumes/volume-01.yaml"
-    hard_rules: "setting/硬规则.yaml"
-    genre_rhythm: "genres/番茄系统爽文/rhythm.md"   # 如适用
-
-  # 明确禁止加载
-  must_not_read:
-    - "chapters/ 下任何文件"
-    - "state/ 下完整状态文件（摘要已在上方 state_summary 中）"
-```
-
----
-
-## 二、ScenePlannerBrief
+## 一、ScenePlannerBrief
 
 **方向**：Orchestrator → ScenePlanner
 **预估**：~1.5K tokens
-**用途**：ScenePlanner 据此生成 Scene Contract。只加载 Story Contract 完整内容 + POV 角色摘要 + 最近章节结构。
+**用途**：ScenePlanner 据此重设计 Scene Contract。只加载修订目标 + 现有章节场景结构 + POV 角色摘要。
 
 ```yaml
 sceneplanner_brief:
   from: Orchestrator
   to: ScenePlanner
 
-  # Director 产出的完整 Story Contract（ScenePlanner 需要全部字段）
-  story_contract:
+  # 修订目标（用户要改什么）
+  revision_target:
     chapter: 11
-    chapter_function: "推进"
-    function_detail: "主角首次使用新获得的能力解决实际问题"
-    info_release:
-      can_reveal:
-        - "新能力的名称和基本效果"
-        - "系统对主角完成新手阶段的评价"
-      can_hint:
-        - "新能力的真正代价开始显现"
-      forbid_touch:
-        - "系统的真正来源（sec-001）"
-        - "神秘配角的真实身份（sec-002）"
-    thread_touch:
-      - id: "thr-001"
-        action: "轻碰"
-        detail: "玉佩在主角使用新能力时微微发烫"
-    chapter_end_hook: "主角用新能力解决了眼前危机，但系统弹出了一个他从未见过的任务类型"
-    reader_question: "这个新任务背后隐藏着什么？"
-    must_preserve:
-      - "主角对系统的态度：实用但不完全信任"
-    must_avoid:
-      - "AI 味：解释腔"
-      - "信息泄漏：让读者自己推导玉佩和能力的关联"
-    genre_constraints:
-      must_have_satisfaction_point: true
-      satisfaction_type: "能力兑现"
+    scope: "场景重设"
+    problem: "节奏不对——冲突升级太快，读者来不及紧张就已解决"
+    keep: "本章核心功能（推进主线）不变，只改场景结构"
+
+  # 现有章节场景结构（从当前正文提取）
+  existing_scenes:
+    - id: 1
+      function: "钩子——展示新能力的初次使用"
+      word_count: 950
+      issue: "爽点兑现太快"
+    - id: 2
+      function: "主体——新任务展开，冲突升级"
+      word_count: 800
+      issue: "冲突升级太快，缺少加压过程"
+    - id: 3
+      function: "收束——章尾钩子"
+      word_count: 500
+      issue: null
+
+  # 章尾意图（保持本章原有落点）
+  chapter_end_hook: "主角接受了一个不知深浅的条件，而对方提到的地点让他意识到——系统从一开始就在布局"
+  reader_question: "系统和这个神秘组织到底是什么关系？"
 
   # POV 角色摘要（从 character.yaml 提取，只需名字和当前状态）
   pov_character_brief:
@@ -125,17 +50,6 @@ sceneplanner_brief:
     speech_pattern: "简短/直接/不解释"
     mannerisms: "思考时摸下巴"
 
-  # 最近 2 章结构（不含正文内容）
-  recent_chapters_structure:
-    - chapter: 9
-      scene_count: 3
-      word_count: 2400
-      chapter_function: "揭示"
-    - chapter: 10
-      scene_count: 2
-      word_count: 2100
-      chapter_function: "高潮"
-
   # 明确禁止加载
   must_not_read:
     - "chapters/ 正文全文"
@@ -145,10 +59,10 @@ sceneplanner_brief:
 
 ---
 
-## 三、WriterBrief
+## 二、WriterBrief
 
 **方向**：Orchestrator → Writer
-**预估**：~1K tokens（交接包自身）+ 正文路径（Writer 自行读取）
+**预估**：~1.5K tokens（交接包自身）+ 正文路径（Writer 自行读取）
 **用途**：Writer 据此起草正文。不加载完整 Scene Contract——只拿到 scenes/five_beats/writer_constraints/chapter_end。
 **连续性**：chapter N-1 全文（自行读取）+ chapter N-2 结构摘要（交接包内），跨章连续性由 Critic Logic Checker 补充检查。
 
@@ -243,7 +157,7 @@ writer_brief:
 
 ---
 
-## 四、CriticBrief
+## 三、CriticBrief
 
 **方向**：Orchestrator → Critic
 **预估**：~0.8K tokens（交接包自身）+ 正文全文（Critic 自行读取）
@@ -260,7 +174,7 @@ critic_brief:
   ai_flavor_checklist: "references/ai-flavor-checklist.md"
   system_panel_definition: "setting/系统面板.md"   # 系统爽文品类，面板一致性检查用
 
-  # 信息泄漏检查清单（从 Story Contract 提取）
+  # 信息泄漏检查清单（从 author.yaml secrets 提取）
   forbid_touch:
     - "系统的真正来源"
     - "神秘配角的真实身份"
@@ -281,6 +195,9 @@ critic_brief:
     cannot_do:
       - "暴露系统存在"
 
+  # 节奏数据（从 Scene Contract 提取，Pace Checker 用）
+  word_budget_per_scene: [800, 1200, 500]
+
   # 品类禁忌（从 genre recipe 提取，如适用）
   genre_taboos:
     - "主角不能被动等待——必须主动出击"
@@ -289,7 +206,6 @@ critic_brief:
   # 明确禁止加载
   must_not_read:
     - "Scene Contract 完整文件"
-    - "Story Contract 完整文件"
     - "state/ 完整状态文件"
     - "outline/ 任何文件"
     - "setting/ 完整设定文件（系统面板 `setting/系统面板.md` 除外——面板一致性检查时读取）"
@@ -297,7 +213,7 @@ critic_brief:
 
 ---
 
-## 五、StateManagerBrief
+## 四、StateManagerBrief
 
 **方向**：Orchestrator → StateManager
 **预估**：~0.5K tokens（交接包自身）+ 状态文件（StateManager 自行读取）
@@ -336,6 +252,7 @@ statemanager_brief:
       - character: "主角"
         level_progress: "+10%"
         new_ability_used: "新能力名称"
+        new_relationship: ""
         pressure_change: "+20 (新能力代价开始显现)"
     secrets_touched: []
     threads_touched:
@@ -387,16 +304,14 @@ flowchart TD
     Writer -->|"章尾：汇总 state_delta"| Orchestrator
     Orchestrator -->|"锁定确认"| StateManager
 
-    subgraph ReviseFlow["修订"]
-        DirectorR["📋 Director<br/>← DirectorBrief"]
-        ScenePlannerR["🎬 ScenePlanner<br/>← ScenePlannerBrief"]
+    subgraph ReviseFlow["修订（场景重设/局部修复/仅去味）"]
+        ScenePlannerR["🎬 ScenePlanner<br/>← ScenePlannerBrief（仅场景重设）"]
         WriterR["✍️ Writer<br/>← WriterBrief"]
         CriticR["🔍 Critic<br/>← CriticBrief"]
         StateManagerR["📋 StateManager<br/>← Review Report + state_delta"]
     end
 
-    Orchestrator -->|"/novel-studio:revise"| DirectorR
-    DirectorR --> ScenePlannerR
+    Orchestrator -->|"/novel-studio:revise"| ScenePlannerR
     ScenePlannerR --> WriterR
     WriterR --> CriticR
     CriticR --> StateManagerR
@@ -409,7 +324,7 @@ flowchart TD
 Orchestrator 在准备交接包时遵守：
 
 1. **下游不需要的字段一律移除**：上游完整输出中的内部细节不传递给下游
-2. **摘要而非全文**：Director 需要状态信息但不需要完整文件 → Orchestrator 从状态文件中提取摘要
+2. **摘要而非全文**：下游 Agent 需要状态信息但不需要完整文件 → Orchestrator 从状态文件中提取摘要
 3. **路径而非内容**：正文、voice 样本等大文件 → 传递文件路径，由目标 Agent 自行读取（避免 Orchestrator 上下文膨胀）
 4. **禁止清单是硬约束**：每个 Brief 包含 `must_not_read`，明确禁止 Agent 自行加载额外文件
-5. **写章节逐段模式简化**：不使用 DirectorBrief/ScenePlannerBrief/CriticBrief，Writer 直接接收用户选择的推进方向，StateManager 接收 state_delta + 用户锁定确认
+5. **写章节逐段模式简化**：不使用 ScenePlannerBrief/CriticBrief，Writer 直接接收用户选择的推进方向，StateManager 接收 state_delta + 用户锁定确认

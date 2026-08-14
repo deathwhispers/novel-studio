@@ -1,7 +1,7 @@
 ---
 type: skill
-category: craft
-description: "角色声音一致性检查。确保每个角色的对话方式、注意力偏好、表达习惯保持连贯。纯能力，由 Critic Style Checker 调用。"
+category: analysis
+description: "角色声音一致性检查。确保每个角色的对话方式、注意力偏好、表达习惯保持连贯。纯能力，由 Writer（写前校准）和 Critic Style Checker（写后验证）调用。"
 ---
 
 # 角色声音一致性
@@ -77,3 +77,7 @@ Voice 样本格式：
 ```
 
 Writer 在写前加载 voice 样本。State Manager 每 10 章检查是否需要更新样本（声音可能随人物成长自然演变）。
+
+## 关联
+
+AI 味「角色同声腔」模式见 `references/ai-flavor-catalog.md`；对话去壳修复见 `references/de-flavor-techniques.md`「六、对话去壳」。

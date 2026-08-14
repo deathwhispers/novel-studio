@@ -1,6 +1,6 @@
 # 记忆压缩协议
 
-> State Manager 每 5 章或卷末执行的记忆压缩操作规范。目标：控制 `state/` 总大小在可加载范围内，同时保留足够上下文供 Director 决策。
+> State Manager 每 5 章或卷末执行的记忆压缩操作规范。目标：控制 `state/` 总大小在可加载范围内，同时保留足够上下文供续写决策。
 
 ---
 
@@ -21,7 +21,7 @@
 **操作**：
 1. `status: resolved` 的伏笔保留一行摘要（id + content + resolved_chapter + resolution），删除 `touched_chapters` 详细列表和 `links_to`
 2. `status: abandoned` 的伏笔移到 `state/archive/abandoned-threads.yaml`
-3. 超过 30 章未触碰的 `active` 伏笔 → 标记为 `stale`，在文件中加注释提醒 Director
+3. 超过 30 章未触碰的 `active` 伏笔 → 标记为 `stale`，在文件中加注释提醒 Orchestrator
 
 **压缩后格式**：
 ```yaml

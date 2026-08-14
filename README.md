@@ -1,7 +1,7 @@
 <div align="center">
   <h1>Novel Studio</h1>
   <p><strong>面向中文长篇小说的 AI 写作多智能体系统</strong></p>
-  <p>8 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
+  <p>7 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
     <img src="https://img.shields.io/badge/version-0.0.4-green?style=flat-square" />
@@ -17,7 +17,7 @@
 
 写到第 50 章忘了第 3 章埋的伏笔，角色性格悄然漂移，信息释放节奏混乱，上下文越写越长直到模型崩溃。更致命的是——AI 一次性写完一章，跑偏了整章都得重来。
 
-Novel Studio 把复杂度拆成 **8 个各司其职的 Agent**，每个 Agent 只看到任务所需的最小上下文。写作不再是"一键生成然后祈祷"，而是**多轮深度对话**——你定方向，AI 写一小段，你检查纠偏，确认后再写下一段。跑偏最多偏 400 字。
+Novel Studio 把复杂度拆成 **7 个各司其职的 Agent**，每个 Agent 只看到任务所需的最小上下文。写作不再是"一键生成然后祈祷"，而是**多轮深度对话**——你定方向，AI 写一小段，你检查纠偏，确认后再写下一段。跑偏最多偏 400 字。
 
 > 不是自动流水线。是你和 AI 的协作工作台。
 
@@ -77,7 +77,6 @@ claude plugin uninstall novel-studio
 | **Orchestrator** | 入口、意图识别、信息裁剪 | `progress.yaml`, `agent-log` | 不创作、不检查、不修改大状态 |
 | **Architect** | Canon 唯一所有者 | `core/`, `setting/` | 不读正文、不写大纲 |
 | **Outliner** | 多线叙事大纲 | `outline/` | 不读正文、不改 canon |
-| **Director** | 单章 Story Contract（仅修订） | 章节级故事合约 | 不读全文、不写正文，大纲由 Outliner 维护 |
 | **ScenePlanner** | 场景五拍骨架（仅修订） | 场景节拍 | 不写正文 |
 | **Writer** | 正文唯一执行者（逐段/修订双模式） | `chapters/` | 不知道第 50 章的反转 |
 | **Critic** | 5 Checker 质量门禁（仅修订/检查） | 验收标准 | 只标注不修改正文 |
@@ -117,7 +116,7 @@ my-novel/
 
 ### AI 味检测
 
-三层递进：**目录**（`ai-flavor-catalog.md`，13 类模式+句式/结构/词汇风险索引）→ **清单**（`ai-flavor-checklist.md`，21 项关键词+6 项结构扫描）→ **修复**（`de-flavor-techniques.md`，13 章正面修复技法）。
+三层递进：**目录**（`ai-flavor-catalog.md`，13 类模式）→ **清单**（`ai-flavor-checklist.md`，24 项关键词+9 项结构扫描）→ **修复**（`de-flavor-techniques.md`，13 章正面修复技法）。
 
 不仅做减法（删除解释腔、模板句式、机械罗列），更做加法——**活人感注入**：感官轮换、闲笔、身体反应优先、内心声音、不完美保留。
 
@@ -133,16 +132,24 @@ my-novel/
 
 ### 老司机词汇检测
 
-`double-entendre-catalog.md` — 检测成人向暗示词汇的密度和人设匹配度。不为堆梗，为角色和场景服务。
+`lib/double-entendre-catalog.md` — 检测成人向暗示词汇的密度和人设匹配度。不为堆梗，为角色和场景服务。
 
 ### 描写素材库
 
-`material-index.md` — 描写素材统一检索索引。美女、穿搭、老司机词汇三类素材统一用行号定位：先读索引 → 按 `tag` 命中段落 → 用行号只读目标段落，不整库加载。
+`material-index.md` — 描写素材统一检索索引。人物（美女/性格）、穿搭、资产（汽车/名表/房产/奢侈服饰/神豪消费）、环境、美食、老司机词汇十一类素材统一用行号定位：先读索引 → 按 `tag` 命中段落 → 用行号只读目标段落，不整库加载。
 
 写作时按 tag 命中、即取即用的描写素材，与去味体系配套（每个条目带 tag + 去味示范，避免模板句和陈旧意象）：
 
-- `beauty-description-library.md` — 美女描写（41 类：身份/气质/身材三维度，每类带 `tag` + 200-300 字去味示范）
-- `outfit-description-library.md` — 穿搭描写（30 风格 × 3 示范，按题材/风格打 `tag`）
+- `lib/beauty-description-library.md` — 美女描写（41 类：身份/气质/身材三维度，每类带 `tag` + 200-300 字去味示范）
+- `lib/personality-description-library.md` — 性格描写（15 类人格特质：温度/心机/呈现三维度，每类带 `tag` + 去味示范）
+- `lib/outfit-description-library.md` — 穿搭描写（30 风格 × 3 示范，按题材/风格打 `tag`）
+- `lib/car-description-library.md` — 汽车描写（12 个豪华/超跑品牌：品牌定位 + 代表车型价格带 + 描写示范）
+- `lib/watch-description-library.md` — 名表描写（10 个奢侈名表品牌：品牌定位 + 代表表款价格带 + 描写示范）
+- `lib/property-description-library.md` — 房产描写（7 类资产档次：类型/地段/价格带 + 描写示范）
+- `lib/luxury-fashion-description-library.md` — 奢侈服饰（10 个顶级/高奢品牌：Hermès/Chanel/Dior/LV/Gucci 等，服装+包+鞋+配饰）
+- `lib/luxury-consumption-library.md` — 神豪消费符号（10 类：名酒/雪茄/游艇/私人飞机/会所/马术/高尔夫/高端餐厅）
+- `lib/environment-description-library.md` — 环境描写（19 类都市场景/天气/时段，每类带 `tag` + 去味示范）
+- `lib/food-description-library.md` — 美食描写（8 类：火锅/烧烤/夜宵/小吃/家常/地方菜/甜品）
 - `wenyin-live-platform.md` — 直播平台机制设定（稳音：礼物/特效/等级/神秘商店/展馆）
 
 ## 品类配方
@@ -150,8 +157,9 @@ my-novel/
 当前内置 **番茄系统爽文** 品类（`genres/番茄系统爽文/`）：
 
 - `recipe.md` — 品类核心配方：爽点类型、升级节奏、打脸频率
-- `tropes.md` — 系统文常用桥段：签到、任务、奖励、面板
+- `tropes.md` — 系统文常见变体：签到/抽奖/任务/神豪/吞噬流
 - `rhythm.md` — 节奏约束：爽点密度、章节落点规则
+- `panels.md` — 系统面板模板（init 时实例化为 setting/系统面板.md）
 - `examples.md` — 经典作品参考
 
 扩展品类：复制 `genres/_template/`，按模板填写即可。
@@ -160,11 +168,10 @@ my-novel/
 
 ```
 novel-studio/
-├── agents/                   8 个 Agent 定义
+├── agents/                   7 个 Agent 定义
 │   ├── orchestrator.md       入口路由 + 信息裁剪
 │   ├── architect.md          Canon 唯一所有者
 │   ├── outliner.md           多线大纲设计
-│   ├── director.md           单章故事合约
 │   ├── scene-planner.md      场景五拍骨架
 │   ├── writer.md             正文执行者
 │   ├── critic.md             5 Checker 质量门禁
@@ -177,7 +184,7 @@ novel-studio/
 │   ├── check.md              质量检查
 │   ├── revise.md             章节修订
 │   └── upgrade.md            旧版升级
-├── workflows/                7 个工作流定义
+├── workflows/                8 个文件（pipeline.md 总流水线 + 7 个工作流）
 │   ├── pipeline.md           总流水线
 │   ├── init-project.md       项目初始化
 │   ├── worldbuilding.md      世界观构建
@@ -188,19 +195,28 @@ novel-studio/
 │   └── upgrade-project.md    旧版升级
 ├── references/               参考规范（Agent 运行时加载）
 │   ├── ai-flavor-catalog.md      AI 味模式目录（13 类）
-│   ├── ai-flavor-checklist.md    AI 味检测清单（21+6 项）
+│   ├── ai-flavor-checklist.md    AI 味检测清单（24+9 项）
 │   ├── de-flavor-techniques.md   去味修复技法（13 章）
 │   ├── web-novel-formatting.md   网文排版规范（11 章）
 │   ├── material-index.md         描写素材统一检索索引（行号定位）
-│   ├── double-entendre-catalog.md 老司机词汇总表
-│   ├── beauty-description-library.md 美女描写素材库（41 类）
-│   ├── outfit-description-library.md 穿搭描写素材库（30 风格）
 │   ├── wenyin-live-platform.md   直播平台机制设定（稳音）
-│   └── failure-cases.md          失败案例库
-├── skills/                   14 个纯能力 Skill
-│   ├── analysis/             分析类（AI味/因果/人物/伏笔/信息泄漏/节奏）
-│   ├── craft/                技法类（钩子/文风校准/Voice 检测）
-│   └── narrative/            叙事类（对话/情绪兑现/POV 控制/场景渲染）
+│   ├── failure-cases.md          失败案例库
+│   └── lib/                      描写素材库（11 个，行号定位）
+│       ├── beauty-description-library.md  美女描写素材库（41 类）
+│       ├── personality-description-library.md 性格描写素材库（15 类）
+│       ├── outfit-description-library.md  穿搭描写素材库（30 风格）
+│       ├── car-description-library.md     汽车描写素材库（12 品牌）
+│       ├── watch-description-library.md   名表描写素材库（10 品牌）
+│       ├── property-description-library.md 房产描写素材库（7 类）
+│       ├── luxury-fashion-description-library.md 奢侈服饰品牌素材库（10 品牌）
+│       ├── luxury-consumption-library.md  神豪消费符号素材库（10 类）
+│       ├── environment-description-library.md 环境描写素材库（19 类）
+│       ├── food-description-library.md    美食描写素材库（8 类）
+│       └── double-entendre-catalog.md     老司机词汇总表
+├── skills/                   15 个纯能力 Skill
+│   ├── analysis/             分析类（AI味/因果/人物/伏笔/信息泄漏/节奏/声音）
+│   ├── craft/                技法类（钩子/文风校准）
+│   └── narrative/            叙事类（对话/情绪兑现/POV 控制/场景渲染/动作/描写）
 ├── runtime/                  运行时规范
 │   ├── context-budget.md     上下文预算
 │   ├── handoff-schema.md     交接包 Schema

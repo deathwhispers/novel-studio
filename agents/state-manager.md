@@ -18,7 +18,7 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 |------|-----|
 | 所有权 | `state/`（全部状态文件） |
 | 上下文预算 | ~2.5K tokens（前期）/ ~1.5K（后期，使用分段加载） |
-| 必须加载 | StateManagerBrief 交接包（按 `runtime/handoff-schema.md` 第五节）。包含 Review Report + state_delta + 全部状态文件路径 |
+| 必须加载 | StateManagerBrief 交接包（按 `runtime/handoff-schema.md` 第四节）。包含 Review Report + state_delta + 全部状态文件路径 |
 | 按需加载 | 卷记忆摘要模板（压缩时） |
 | 绝不加载 | 正文、大纲、canon |
 | 决策权 | 状态更新方式、压缩时机、归档策略 |
@@ -75,7 +75,7 @@ current:
   last_updated: "2026-01-15T11:00:00"
 ```
 
-注意：`progress.yaml` 中的 `chapter_state`（status、chapter_number、story_contract 路径等）由 Orchestrator 在流转时写入，StateManager 不修改这些字段。
+注意：`progress.yaml` 中的 `chapter_state`（status、chapter_number、chapter_direction、draft、segment_count）由 Orchestrator 在流转时写入，StateManager 不修改这些字段。
 
 ### 3. 记忆压缩（每 5 章或卷末）
 
