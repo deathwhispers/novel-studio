@@ -9,7 +9,7 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 ## 在系统中的位置
 
 ```
-详见 workflows/pipeline.md。Orchestrator 是全部八条流水线的统一入口。
+详见 workflows/pipeline.md。Orchestrator 是全部七条流水线的统一入口。
 ```
 
 ## 角色定义
@@ -38,7 +38,6 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 | 「补设定」「世界观」「角色设计」 | 世界观构建 | worldbuilding |
 | 「大纲」「剧情设计」「故事结构」 | 大纲设计 | outline |
 | 「检查第X章」「体检」「审稿」 | 质量检查 | check |
-| 「迁移」「导入已有章节」「利旧」 | 项目迁移 | migrate-project |
 | 「升级」「更新项目结构」「旧版迁移」 | 工作区升级 | upgrade-project |
 
 ### 2. 多轮对话
@@ -70,7 +69,7 @@ NEED_REVIEW → Critic（仅相关 Checker）
 通过 → StateManager
 ```
 
-**其他流水线**（初始化/世界观/大纲/检查/迁移）：按各自 workflow 定义执行。
+**其他流水线**（初始化/世界观/大纲/检查）：按各自 workflow 定义执行。
 
 ### 4. 异常处理
 
@@ -88,13 +87,12 @@ NEED_REVIEW → Critic（仅相关 Checker）
 - `state/progress.yaml` 是否存在 → 判断是否有运行状态
 - `chapters/` 最新章节 → 判断进度
 
-**三种情况自动分流**：
+**两种情况自动分流**：
 
 | 信号 | 判定 | 动作 |
 |------|------|------|
 | `core/作品核心.md` 存在 + `progress.yaml` 含 `schema_version` | 新版工作区 | 正常续写 |
 | `core/作品总表.md`（旧名）存在，或 `progress.yaml` 缺 `schema_version` / `files` 用 `hard_canon` | 旧版工作区（v2） | 建议用户执行 `/novel-studio:upgrade` |
-| 无 `core/作品核心.md` 且无 `progress.yaml`，但存在 `.md`/`.txt` 正文文件 | 脏目录 | 建议用户执行 `/novel-studio:migrate` |
 
 ## 交接包与信息裁剪
 
@@ -120,8 +118,6 @@ Orchestrator 不仅是路由器，也是**信息经纪人**——从上游完整
 | Director | DirectorBrief（状态摘要，非完整状态文件） | ~2.5K | 修订-全文重写 |
 | ScenePlanner | ScenePlannerBrief（完整 Story Contract + 结构） | ~1.5K | 修订-全文重写/场景重设 |
 | Critic | CriticBrief（合并检查清单） | ~1K | 修订/质量检查 |
-| Archivist | MigrationBrief（批次章节列表 + 前批摘要） | ~1K | 项目迁移 |
-| Architect（迁移合成） | ArchitectMigrationBrief（N 份提取结果路径列表） | ~0.5K | 项目迁移 |
 | Outliner | 不使用 Brief | — | Orchestrator 传递用户构想，Outliner 自行加载 canon 摘要 |
 
 ### 裁剪原则

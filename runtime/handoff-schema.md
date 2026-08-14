@@ -367,68 +367,6 @@ statemanager_brief:
 
 ---
 
-## 六、MigrationBrief
-
-**方向**：Orchestrator → Archivist
-**预估**：~1K tokens（交接包自身）+ 批次章节正文（Archivist 自行读取）
-**用途**：Archivist 据此分批提取已有章节的结构化信息。仅 migrate-project 流水线使用。
-
-```yaml
-migration_brief:
-  from: Orchestrator
-  to: Archivist
-  batch: "3/10"
-  chapters:
-    - path: "chapters/第011章-章节名.md"
-      chapter_number: 11
-    - path: "chapters/第012章-章节名.md"
-      chapter_number: 12
-    - path: "chapters/第013章-章节名.md"
-      chapter_number: 13
-    - path: "chapters/第014章-章节名.md"
-      chapter_number: 14
-    - path: "chapters/第015章-章节名.md"
-      chapter_number: 15
-
-  # 前一批摘要（第一批为空）
-  previous_batch_summary:
-    last_chapter: 10
-    characters_so_far: ["主角", "配角A", "反派B"]
-    active_thread_hints:
-      - "玉佩发烫已在第3、5、8章出现"
-
-  # 明确禁止加载
-  must_not_read:
-    - "本批之外的任何章节文件"
-    - "outline/ 任何文件（迁移时尚未创建）"
-    - "state/ 任何文件（迁移时尚未创建）"
-```
-
----
-
-## 七、ArchitectMigrationBrief
-
-**方向**：Orchestrator → Architect（迁移合成阶段）
-**预估**：~0.5K tokens
-**用途**：Architect 据此将 N 份 per-batch-extraction.yaml 合成为 migration-extraction.yaml。
-
-```yaml
-architect_migration_brief:
-  from: Orchestrator
-  to: Architect
-  total_batches: 10
-  total_chapters: 50
-  extraction_files:
-    - "per-batch-extraction-batch-01.yaml"
-    - "per-batch-extraction-batch-02.yaml"
-    # ... 全部 N 份
-
-  # 明确禁止加载
-  must_not_read:
-    - "chapters/ 任何文件（Architect 不读正文）"
-    - "state/ 任何文件（迁移时尚未创建）"
-```
-
 ## 交接包流转总图
 
 ```mermaid
@@ -462,15 +400,6 @@ flowchart TD
     ScenePlannerR --> WriterR
     WriterR --> CriticR
     CriticR --> StateManagerR
-
-    subgraph MigrateFlow["项目迁移"]
-        Archivist["📖 Archivist<br/>← MigrationBrief<br/>（批次章节 + 前批摘要）"]
-        ArchMigrate["🏗️ Architect<br/>← ArchitectMigrationBrief<br/>（N 份提取结果路径）"]
-    end
-
-    Orchestrator -->|"/novel-studio:migrate"| Archivist
-    Archivist -->|"N批完成后"| ArchMigrate
-    ArchMigrate -->|"合成完成"| Orchestrator
 ```
 
 ---

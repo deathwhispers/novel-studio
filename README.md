@@ -1,10 +1,10 @@
 <div align="center">
   <h1>Novel Studio</h1>
   <p><strong>面向中文长篇小说的 AI 写作多智能体系统</strong></p>
-  <p>9 个 Agent 各司其职，8 条命令覆盖从立项到成稿的完整创作流程</p>
+  <p>8 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
-    <img src="https://img.shields.io/badge/version-0.0.3-green?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-0.0.4-green?style=flat-square" />
     <img src="https://img.shields.io/badge/platform-Claude%20Code-orange?style=flat-square" />
   </p>
 </div>
@@ -17,7 +17,7 @@
 
 写到第 50 章忘了第 3 章埋的伏笔，角色性格悄然漂移，信息释放节奏混乱，上下文越写越长直到模型崩溃。更致命的是——AI 一次性写完一章，跑偏了整章都得重来。
 
-Novel Studio 把复杂度拆成 **9 个各司其职的 Agent**，每个 Agent 只看到任务所需的最小上下文。写作不再是"一键生成然后祈祷"，而是**多轮深度对话**——你定方向，AI 写一小段，你检查纠偏，确认后再写下一段。跑偏最多偏 400 字。
+Novel Studio 把复杂度拆成 **8 个各司其职的 Agent**，每个 Agent 只看到任务所需的最小上下文。写作不再是"一键生成然后祈祷"，而是**多轮深度对话**——你定方向，AI 写一小段，你检查纠偏，确认后再写下一段。跑偏最多偏 400 字。
 
 > 不是自动流水线。是你和 AI 的协作工作台。
 
@@ -66,7 +66,6 @@ claude plugin uninstall novel-studio
 | `/novel-studio:write <N>` | 写章节 — 多轮对话确定方向 + 逐段写作即时纠偏 | 不限轮次 |
 | `/novel-studio:check <N>` | 质量扫描 — 问清楚用户关注什么，针对性检查，只报问题 | 1-2 轮 |
 | `/novel-studio:revise <N>` | 修订章节 — 理解问题 → 判断范围 → 告知影响 → 等待确认，支持范围升级 | 2-4 轮 |
-| `/novel-studio:migrate <path>` | 存量导入 — 已有章节逆向提取为结构化状态文件 | 逐章 |
 | `/novel-studio:upgrade` | 旧版升级 — v2 旧结构无损升级到 v3，保留续写状态 | 2-3 轮 |
 
 ## 架构：Agent 体系
@@ -83,7 +82,6 @@ claude plugin uninstall novel-studio
 | **Writer** | 正文唯一执行者（逐段/修订双模式） | `chapters/` | 不知道第 50 章的反转 |
 | **Critic** | 5 Checker 质量门禁（仅修订/检查） | 验收标准 | 只标注不修改正文 |
 | **StateManager** | 状态更新 + 记忆压缩 | `state/`（大状态唯一写入口） | 写章节：用户锁定确认；修订：Critic 通过 |
-| **Archivist** | 正文逆向归档 | 迁移期间临时分析 | 仅迁移时使用 |
 
 ## 工作区结构
 
@@ -137,6 +135,14 @@ my-novel/
 
 `double-entendre-catalog.md` — 检测成人向暗示词汇的密度和人设匹配度。不为堆梗，为角色和场景服务。
 
+### 描写素材库
+
+写作时按 tag 命中、即取即用的描写素材，与去味体系配套（每个条目带 tag + 去味示范，避免模板句和陈旧意象）：
+
+- `beauty-description-library.md` — 美女描写（41 类：身份/气质/身材三维度，每类带 `tag` + 200-300 字去味示范）
+- `outfit-description-library.md` — 穿搭描写（30 风格 × 3 示范，按题材/风格打 `tag`）
+- `wenyin-live-platform.md` — 直播平台机制设定（稳音：礼物/特效/等级/神秘商店/展馆）
+
 ## 品类配方
 
 当前内置 **番茄系统爽文** 品类（`genres/番茄系统爽文/`）：
@@ -152,7 +158,7 @@ my-novel/
 
 ```
 novel-studio/
-├── agents/                   9 个 Agent 定义
+├── agents/                   8 个 Agent 定义
 │   ├── orchestrator.md       入口路由 + 信息裁剪
 │   ├── architect.md          Canon 唯一所有者
 │   ├── outliner.md           多线大纲设计
@@ -160,8 +166,7 @@ novel-studio/
 │   ├── scene-planner.md      场景五拍骨架
 │   ├── writer.md             正文执行者
 │   ├── critic.md             5 Checker 质量门禁
-│   ├── state-manager.md      状态持久化
-│   └── archivist.md          正文逆向归档（迁移）
+│   └── state-manager.md      状态持久化
 ├── commands/                 7 个用户命令
 │   ├── init.md               项目初始化
 │   ├── world.md              世界观构建
@@ -169,7 +174,7 @@ novel-studio/
 │   ├── write.md              章节写作
 │   ├── check.md              质量检查
 │   ├── revise.md             章节修订
-│   └── migrate.md            存量导入
+│   └── upgrade.md            旧版升级
 ├── workflows/                7 个工作流定义
 │   ├── pipeline.md           总流水线
 │   ├── init-project.md       项目初始化
@@ -177,14 +182,17 @@ novel-studio/
 │   ├── outline.md            大纲设计
 │   ├── write-chapter.md      章节写作
 │   ├── check.md              质量检查
-│   └── revise-chapter.md     章节修订
-│   └── migrate-project.md    存量导入
+│   ├── revise-chapter.md     章节修订
+│   └── upgrade-project.md    旧版升级
 ├── references/               参考规范（Agent 运行时加载）
 │   ├── ai-flavor-catalog.md      AI 味模式目录（13 类）
 │   ├── ai-flavor-checklist.md    AI 味检测清单（21+6 项）
 │   ├── de-flavor-techniques.md   去味修复技法（13 章）
 │   ├── web-novel-formatting.md   网文排版规范（11 章）
 │   ├── double-entendre-catalog.md 老司机词汇总表
+│   ├── beauty-description-library.md 美女描写素材库（41 类）
+│   ├── outfit-description-library.md 穿搭描写素材库（30 风格）
+│   ├── wenyin-live-platform.md   直播平台机制设定（稳音）
 │   └── failure-cases.md          失败案例库
 ├── skills/                   14 个纯能力 Skill
 │   ├── analysis/             分析类（AI味/因果/人物/伏笔/信息泄漏/节奏）

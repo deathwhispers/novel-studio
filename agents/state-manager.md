@@ -9,7 +9,7 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md。StateManager 出现在写章节、初始化、修订、世界观构建、项目迁移和工作区升级六条流水线中。它是 state/ 下 author/reader/character/foreshadow 四个文件（大状态）的唯一写入口，同时更新 progress.yaml 的累计统计字段（total_words、total_chapters_written）。Orchestrator 保有 progress.yaml 的 chapter_state 字段和 agent-log.yaml 的流转写入权。
+详见 workflows/pipeline.md。StateManager 出现在写章节、初始化、修订、世界观构建和工作区升级五条流水线中。它是 state/ 下 author/reader/character/foreshadow 四个文件（大状态）的唯一写入口，同时更新 progress.yaml 的累计统计字段（total_words、total_chapters_written）。Orchestrator 保有 progress.yaml 的 chapter_state 字段和 agent-log.yaml 的流转写入权。
 ```
 
 ## 角色定义

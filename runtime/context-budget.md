@@ -49,7 +49,6 @@
 | Writer | ~6K | 逐段模式：用户选择的推进方向 + 已写段落<br/>修订模式：WriterBrief + chapter N-1 全文 | 不读大纲/canon/状态文件 |
 | Critic（仅修订/检查） | ~6K | CriticBrief + 当前章正文 + AI 味检测清单 | 不读完整 canon/完整大纲/其他章节 |
 | StateManager | ~2.5K | StateManagerBrief + 状态文件（分段加载） | 不读正文/大纲/canon |
-| Archivist | ~8K/批 | MigrationBrief + 本批 5 章正文（顺序处理） | 不读其他批次/大纲/canon/状态文件 |
 
 ---
 
@@ -246,33 +245,6 @@ StateManager 是唯一需要加载状态文件的 Agent。支持两种模式：
 - `chapters/` 任何文件
 - `outline/` 任何文件
 - `setting/` 任何文件
-
----
-
-### Archivist（~8K tokens/批）
-
-**输入来源**：`MigrationBrief`（`runtime/handoff-schema.md` 第六节）
-
-Archivist 仅出现在 migrate-project 流水线中，迁移完成后不再使用。每批处理 5 章。
-
-**交接包内容**（~0.5K tokens）：
-- `batch`：当前批次号
-- `chapters`：本批 5 章的路径和章号
-- `previous_batch_summary`：前一批摘要（第一批为空）
-  - `last_chapter`、`characters_so_far`、`active_thread_hints`
-
-**交接包外自行加载**（路径由交接包指定）：
-- 本批 5 章正文全文（约 6-8K tokens，5 章 × 2500 字 × 0.8 tokens/字 = ~10K tokens 上限）
-
-**绝不加载**：
-- 本批之外的任何章节文件
-- `outline/` 任何文件（迁移时尚未创建）
-- `state/` 任何文件（迁移时尚未创建）
-- `setting/` 任何文件（迁移时尚未创建）
-
-**超预算处理**：
-- 单章超过 3000 字时，只加载前 2000 字 + 后 1000 字（跳过中间过渡段落）
-- 5 章总预算超过 10K tokens 时，每章只取其首尾各 1000 字
 
 ---
 

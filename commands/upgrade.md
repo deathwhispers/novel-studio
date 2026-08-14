@@ -49,4 +49,3 @@ workflow: upgrade-project
 - 升级是**结构迁移**，不会重写已写章节，也不会重建角色/伏笔状态
 - `state/` 下 author/reader/character/foreshadow 一律不动，续写上下文完整保留
 - 升级前自动备份，确认无误后删除 `_upgrade-backup/`
-- 如果项目是「裸正文目录」（从没初始化过），请用 `/novel-studio:migrate` 而不是 upgrade
