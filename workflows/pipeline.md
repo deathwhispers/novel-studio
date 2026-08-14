@@ -182,9 +182,10 @@ flowchart TD
 
     User --> Orchestrator
 
-    Orchestrator -->|"备份完成"| Rename["🔧 结构改名<br/>• 作品总表→作品核心<br/>• 硬设定→硬规则<br/>• progress.yaml 字段改写"]
+    Orchestrator -->|"备份完成"| Rename["🔧 结构改名<br/>• 作品总表→作品核心<br/>• 硬设定→硬规则<br/>• 全书总纲.md→.yaml<br/>• progress.yaml 字段改写"]
     Rename --> Architect["🏗️ Architect<br/><b>内容补全</b><br/>• core 灵魂契约补全<br/>• 硬设定拆分<br/>（作者确认）"]
-    Architect --> StateManager["📋 StateManager<br/>校验 + 写 schema_version"]
+    Architect --> Outliner["🧭 Outliner<br/><b>大纲重构</b><br/>• 主线/支线→角色故事线<br/>• 卷级规划<br/>（作者确认）"]
+    Outliner --> StateManager["📋 StateManager<br/>校验 + 写 schema_version"]
     StateManager --> Done(["✅ 升级完成<br/>state/ 已保留，可续写"])
 ```
 
@@ -198,7 +199,7 @@ flowchart TD
 |-------|-------------|
 | Orchestrator | 全部七条 |
 | Architect | 初始化、世界观构建、工作区升级（内容补全） |
-| Outliner | 大纲设计 |
+| Outliner | 大纲设计、工作区升级（大纲重构） |
 | Director | 修订（全文重写） |
 | ScenePlanner | 修订（全文重写/场景重设） |
 | Writer | 写章节（逐段模式）、修订（全部四种范围） |

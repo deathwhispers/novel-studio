@@ -92,7 +92,7 @@ NEED_REVIEW → Critic（仅相关 Checker）
 | 信号 | 判定 | 动作 |
 |------|------|------|
 | `core/作品核心.md` 存在 + `progress.yaml` 含 `schema_version` | 新版工作区 | 正常续写 |
-| `core/作品总表.md`（旧名）存在，或 `progress.yaml` 缺 `schema_version` / `files` 用 `hard_canon` | 旧版工作区（v2） | 建议用户执行 `/novel-studio:upgrade` |
+| `core/作品总表.md`（旧名）存在，或 `progress.yaml` 缺 `schema_version` / `files` 用 `hard_canon` / `files.outline` 指向 `.md` | 旧版工作区（v2） | 建议用户执行 `/novel-studio:upgrade` |
 
 ## 交接包与信息裁剪
 

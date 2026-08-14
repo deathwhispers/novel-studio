@@ -287,8 +287,8 @@ last_checkpoint:
 | schema_version | 特征 | 状态 |
 |----------------|------|------|
 | 1 | 中文数字目录（`00-书核/`、`90-状态/`）+ 作品总表 + 硬设定 | 已废弃 |
-| 2 | 英文目录 + `core/作品总表.md` + `setting/硬设定.yaml` + `files.hard_canon` | 需升级 |
-| 3（当前） | `core/作品核心.md` + `setting/硬规则.yaml` + `files.hard_rules` + `workspace.chapter_word_target` | 当前 |
+| 2 | 英文目录 + `core/作品总表.md` + `setting/硬设定.yaml` + `files.hard_canon` + `outline/全书总纲.md` | 需升级 |
+| 3（当前） | `core/作品核心.md` + `setting/硬规则.yaml` + `files.hard_rules` + `outline/全书总纲.yaml` + `workspace.chapter_word_target` | 当前 |
 
 ### 兼容规则
 
@@ -299,6 +299,6 @@ last_checkpoint:
 
 ### 升级触发
 
-- `progress.yaml` **缺失 `schema_version` 字段**（且 `files` 块使用旧字段 `hard_canon`）→ 判定为 v2 旧工作区，Orchestrator 检测到后引导用户执行 `/novel-studio:upgrade`（见 `workflows/upgrade-project.md`）
-- 升级只改 `core/`、`setting/` 路径与 `progress.yaml` 结构，**保留 `state/` 下 author/reader/character/foreshadow 大文件**（续写上下文不可丢）
+- `progress.yaml` **缺失 `schema_version` 字段**（且 `files` 块使用旧字段 `hard_canon`、`files.outline` 指向 `.md`）→ 判定为 v2 旧工作区，Orchestrator 检测到后引导用户执行 `/novel-studio:upgrade`（见 `workflows/upgrade-project.md`）
+- 升级只改 `core/`、`setting/`、`outline/` 路径与 `progress.yaml` 结构，**保留 `state/` 下 author/reader/character/foreshadow 大文件**（续写上下文不可丢）
 - 升级完成后写入 `schema_version: 3`
