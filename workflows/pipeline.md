@@ -131,22 +131,23 @@ flowchart TD
 
     User --> Orchestrator
 
-    Orchestrator --> Create["创建大纲<br/>四层递进"]
+    Orchestrator --> Create["创建大纲<br/>五层递进"]
     Orchestrator --> Adjust["调整大纲<br/>定位目标层"]
     Orchestrator --> Review["检查大纲<br/>6项扫描"]
 
     Create --> Layer1["第一层：全书总纲<br/>核心冲突→故事线→分卷"]
-    Layer1 --> Layer2["第二层：逐卷细化<br/>节拍→交错→节奏"]
-    Layer2 --> Layer3["第三层：伏笔布局<br/>埋设→轻碰→回收"]
-    Layer3 --> Layer4["第四层：角色弧光<br/>状态变化→催化剂事件"]
-    Layer4 --> OutlinerGen["Outliner 写入文件"]
+    Layer1 --> Layer2["第二层：逐卷细化<br/>关键节拍→节奏检查"]
+    Layer2 --> Layer3["第三层：故事线交错<br/>卷内各段主次线分配"]
+    Layer3 --> Layer4["第四层：伏笔布局<br/>埋设→轻碰→回收"]
+    Layer4 --> Layer5["第五层：角色弧光<br/>状态变化→催化剂事件"]
+    Layer5 --> OutlinerGen["Outliner 写入文件"]
     Adjust --> OutlinerGen
     Review --> OutlinerCheck["Outliner 全面检查"]
     OutlinerCheck --> OutlinerGen
     OutlinerGen --> Done(["✅ 大纲就绪"])
 ```
 
-**输出文件**: `outline/全书总纲.yaml`、`outline/volumes/`、`outline/伏笔地图.yaml`、`outline/角色弧光.yaml`、`outline/故事线交错.yaml`
+**输出文件**: `outline/全书总纲.yaml`、`outline/volumes/`、`outline/故事线交错.yaml`、`outline/伏笔地图.yaml`、`outline/角色弧光.yaml`
 
 详见 [`workflows/outline.md`](outline.md)。
 

@@ -128,7 +128,25 @@ turning_points:
 volume_end_hook: ""
 ```
 
-### 3. 伏笔地图
+### 3. 故事线交错图
+
+```yaml
+# outline/故事线交错.yaml
+interweave_map:
+  volume_1:
+    line_map:            # 本卷内各段主要推进哪条角色线（卷内位置，不钉章号）
+      - position: "前段"
+        primary_line: "sl-001"
+        secondary_line: null
+      - position: "中段"
+        primary_line: "sl-001"
+        secondary_line: "sl-002"    # 主角线为主、配角线为辅
+      - position: "卷末"
+        primary_line: "sl-002"
+        secondary_line: "sl-001"    # 两线交汇
+```
+
+### 4. 伏笔地图
 
 ```yaml
 # outline/伏笔地图.yaml
@@ -156,7 +174,7 @@ foreshadows:
     status: "planned"
 ```
 
-### 4. 角色弧光映射
+### 5. 角色弧光映射
 
 ```yaml
 # outline/角色弧光.yaml
@@ -178,24 +196,6 @@ character_arcs:
         event: "两人的价值观发生激烈冲突"
 ```
 
-### 5. 故事线交错图
-
-```yaml
-# outline/故事线交错.yaml
-interweave_map:
-  volume_1:
-    line_map:            # 本卷内各段主要推进哪条角色线（卷内位置，不钉章号）
-      - position: "前段"
-        primary_line: "sl-001"
-        secondary_line: null
-      - position: "中段"
-        primary_line: "sl-001"
-        secondary_line: "sl-002"    # 主角线为主、配角线为辅
-      - position: "卷末"
-        primary_line: "sl-002"
-        secondary_line: "sl-001"    # 两线交汇
-```
-
 ## 工作流程
 
 ### 接收 Orchestrator 指令后
@@ -204,9 +204,10 @@ interweave_map:
 2. **设计角色故事线**：基于用户构想，以主角线为主体 + 各重要配角线，拆解为 2-4 条角色线
 3. **设计分卷**：每卷的功能、章节范围、主要推进的故事线
 4. **填充节拍**：每卷内各故事线的关键节拍和转折点
-5. **布局伏笔**：标注埋设点和回收点
-6. **映射弧光**：角色状态变化的时间线
-7. **检查一致性**：
+5. **设计交错**：各卷内各段的角色线主次分配，确保每条线不长时间消失
+6. **布局伏笔**：标注埋设点和回收点
+7. **映射弧光**：角色状态变化的时间线
+8. **检查一致性**：
    - 每条故事线是否有头有尾？
    - 伏笔埋设和回收是否匹配？
    - 角色弧光是否有催化剂事件？
