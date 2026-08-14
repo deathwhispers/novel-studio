@@ -137,6 +137,8 @@ my-novel/
 
 ### 描写素材库
 
+`material-index.md` — 描写素材统一检索索引。美女、穿搭、老司机词汇三类素材统一用行号定位：先读索引 → 按 `tag` 命中段落 → 用行号只读目标段落，不整库加载。
+
 写作时按 tag 命中、即取即用的描写素材，与去味体系配套（每个条目带 tag + 去味示范，避免模板句和陈旧意象）：
 
 - `beauty-description-library.md` — 美女描写（41 类：身份/气质/身材三维度，每类带 `tag` + 200-300 字去味示范）
@@ -189,6 +191,7 @@ novel-studio/
 │   ├── ai-flavor-checklist.md    AI 味检测清单（21+6 项）
 │   ├── de-flavor-techniques.md   去味修复技法（13 章）
 │   ├── web-novel-formatting.md   网文排版规范（11 章）
+│   ├── material-index.md         描写素材统一检索索引（行号定位）
 │   ├── double-entendre-catalog.md 老司机词汇总表
 │   ├── beauty-description-library.md 美女描写素材库（41 类）
 │   ├── outfit-description-library.md 穿搭描写素材库（30 风格）

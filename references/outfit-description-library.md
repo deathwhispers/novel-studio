@@ -6,6 +6,10 @@
 >
 > 当前已收录 `#都市`（现代都市文），其余 tag 待扩充。
 
+## 检索索引
+
+> 按 tag 定位到本库 section 的统一索引见 [`material-index.md`](material-index.md)。写作时先读索引，用行号只读目标段落，不要加载整个素材库。
+
 ## tag 体系
 
 | tag | 说明 | 状态 |

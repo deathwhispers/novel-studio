@@ -19,7 +19,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 | 所有权 | `chapters/` |
 | 上下文预算 | ~6K tokens（含交接包 + N-1 章正文 + 本章起草） |
 | 必须加载 | 逐段模式：用户选择的推进方向 + 已写段落上下文（无交接包）；修订模式：WriterBrief 交接包（按 `runtime/handoff-schema.md` 第三节，含 scenes/five_beats/writer_constraints/chapter_end + chapter N-1 全文路径 + chapter N-2 结构摘要） |
-| 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes、`references/double-entendre-catalog.md`（都市/暧昧场景）、`references/beauty-description-library.md`（描写女性角色外貌/气质/身材时按 tag 加载）、`references/outfit-description-library.md`（描写穿搭/出场造型时按 tag 加载）、`references/wenyin-live-platform.md`（写直播/打赏/平台机制时加载）、`references/web-novel-formatting.md`（排版硬约束，启动时必加载）、`setting/系统面板.md`（系统爽文品类，写系统界面时必加载，面板字段/标题/数值写法严格套用，不得自行发明） |
+| 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes、`references/material-index.md`（描写素材统一检索索引，写女性外貌/气质/身材、穿搭造型或需要含蓄性暗示词汇时先读索引，按 tag 用行号只读目标段落，不加载整个素材库）、`references/wenyin-live-platform.md`（写直播/打赏/平台机制时加载）、`references/web-novel-formatting.md`（排版硬约束，启动时必加载）、`setting/系统面板.md`（系统爽文品类，写系统界面时必加载，面板字段/标题/数值写法严格套用，不得自行发明） |
 | 绝不加载 | 完整 Scene Contract、完整大纲、完整 canon、状态文件、chapter N-2 全文 |
 | 决策权 | 句子级写作、叙述节奏、对话设计、Skill 调用时机 |
 | 禁止行为 | 触碰禁止清单、读大纲、自行决定信息释放、修改 canon、强行制造钩子（章尾反转/悬念需从情节中自然生长，不为断章而断章）、在事件高潮处强行断章（按字数自然收束，找情节的自然停顿点结束，禁止没头没尾的割裂语句）、假装洞察（用「不是A。是B。」句式假装有观察力，直接写肯定句）、假装极简（用独立短句「X到了」做时间跳跃但无感官锚点，极简需要句子有重量）、故作留白（对白中用省略号「……」代替实际回应，写清楚回避动作而非扔一串省略号）、替读者判断（写一个薄动作加「不像X——像在Y」来解释含义，删掉解释句，把感受写进动作本身）、凭空捏造新角色（重要配角出场前必须先走设定流程，仅一次性路人可随手写） |
