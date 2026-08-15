@@ -4,7 +4,7 @@
   <p>7 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
-    <img src="https://img.shields.io/badge/version-0.0.5-green?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-0.0.6-green?style=flat-square" />
     <img src="https://img.shields.io/badge/platform-Claude%20Code-orange?style=flat-square" />
   </p>
 </div>
@@ -228,6 +228,12 @@ novel-studio/
 ```
 
 ## 更新日志
+
+### 0.0.6
+
+- **角色标签**：角色档案新增 `tags` 字段（阵营 / 与主角关系 / 故事功能三维固定 + 自由关键词），写作与检查时由 Orchestrator 提取进交接包 `character_tags`，快速把握角色定位，省去重读完整档案。
+- **素材库检索工程化**：`material-index.md` 去行号硬绑定，改用 `grep -n` 动态定位段落行号；素材库增删条目不再导致索引错位，仅条目标题重命名/增删时才需同步索引。
+- **状态对象生命周期**：`state/` 下所有状态文件统一为「活跃对象表」，对象走 `active → settled` 生命周期，判定只有一句「下一章还用得上吗」；settled 降级为 `id + 一句话 + 章节号` 指针进 `archive/`，不复制详情，归档永不膨胀。记忆压缩从四节分文件规则收敛为统一结算协议。
 
 ### 0.0.5
 
