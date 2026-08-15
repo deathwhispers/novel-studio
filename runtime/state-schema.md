@@ -11,6 +11,7 @@
 ```yaml
 # progress.yaml
 schema_version: 3             # 结构版本号，见「七、文件版本与兼容」。缺失或 <3 → 触发 upgrade 流程
+state_version: 15             # 事务版本号（整数递增），StateManager 每次状态更新 +1。缺失视为 1，首次更新时补齐。见「八」
 workspace:
   name: "作品名称"
   genre: "番茄系统爽文"         # 品类标识，关联 genres/ 下的配方
@@ -49,6 +50,7 @@ next_milestone:
 - `chapter_state.status` 枚举值：DIRECTION | WRITING | COMPLETED
 - `chapter_state` 由 Orchestrator 在写章节过程中写入
 - `current` 的累计统计字段（total_words、total_chapters_written）由 StateManager 在章节锁定后更新
+- `state_version` 由 StateManager 独占维护，每次状态事务 +1；Orchestrator 不修改此字段
 
 ---
 
@@ -308,9 +310,64 @@ last_checkpoint:
 - 字段新增向后兼容——读取方忽略未知字段
 - 字段删除需在 State Manager 中做迁移（旧字段 → 归档）
 - 必填字段缺失时，Agent 拒绝启动并报告 Orchestrator
+- `schema_version`（结构版本，v1/v2/v3）与 `state_version`（事务版本，整数递增）是两个独立字段：前者只在工作区升级时变更，后者每次状态更新都递增。区分详见「八」
 
 ### 升级触发
 
 - `progress.yaml` **缺失 `schema_version` 字段**（且 `files` 块使用旧字段 `hard_canon`、`files.outline` 指向 `.md`）→ 判定为 v2 旧工作区，Orchestrator 检测到后引导用户执行 `/novel-studio:upgrade`（见 `workflows/upgrade-project.md`）
 - 升级只改 `core/`、`setting/`、`outline/` 路径与 `progress.yaml` 结构，**保留 `state/` 下 author/reader/character/foreshadow 大文件**（续写上下文不可丢）
 - 升级完成后写入 `schema_version: 3`
+
+---
+
+## 八、事务版本与变更日志
+
+> 状态系统用「事务版本」对抗历史记忆干扰——过时状态残留、多文件更新不同步、无版本可回溯、旧状态覆盖新状态。机制只有两项：一个版本号 + 一份变更日志。
+
+### 8.1 两个概念
+
+| 概念 | 文件 | 字段 | 维护者 | 含义 |
+|------|------|------|--------|------|
+| 全局事务版本号 | progress.yaml | `state_version` | StateManager | 状态系统总版本，每次状态更新 +1 |
+| 事务日志 | transaction-log.yaml | `transactions` | StateManager | 每次事务改了什么（何时/因哪章/改了哪些文件） |
+
+**与 `schema_version` 的区别**：`schema_version` 是文件**结构**版本（v1/v2/v3），只在工作区升级时变；`state_version` 是状态**内容**的事务版本，每次状态更新都递增。二者互不影响。
+
+### 8.2 transaction-log.yaml
+
+StateManager 独占写入。与 `agent-log.yaml` 的职责边界：`agent-log` 由 Orchestrator 记录**流转**（谁调了谁、进行到哪步），本文件由 StateManager 记录**状态变更**（改了什么）。
+
+```yaml
+# transaction-log.yaml
+transactions:
+  - txn: 15                     # 事务号，与 progress.state_version 一致
+    chapter: 11                 # 触发事务的章节；init/compress 事务为 null
+    trigger: "write"            # write | revise | worldbuild | init | compress
+    files_changed:              # 本次事务改动的文件
+      - character.yaml
+      - foreshadow.yaml
+      - reader.yaml
+    summary: "主角进阶，thr-001 轻碰，读者获知新线索"   # 一句话改动摘要
+```
+
+**约束**：
+- `transactions[].txn` 从 1 起递增，与 `progress.state_version` 保持一致
+- `summary` 是一句话摘要，不做字段级 diff——精细的章节锚点由各状态文件自带的 `touched_chapters`/`last_change_chapter`/`hinted_at` 承担
+- 事务日志同样会瘦身（见 `memory-compress.md`），只保留最近 30 章记录，更早归档到 `state/archive/transaction-log-archive.yaml`
+
+### 8.3 一致性核对（写前）
+
+StateManager 每次写入前核对：`transaction-log` 最后一条 `txn` 是否等于 `progress.state_version`。
+
+- 不等 → 上次事务没写完（中断），报告 Orchestrator 重新执行 state_delta（幂等），不做精细回滚
+- 相等 → 事务正常开始
+
+**四种干扰的应对**：
+- 过时状态残留：变更日志可追溯「哪个文件/条目最后一次是哪章改的」，压缩时据此清理 stale
+- 多文件更新不同步：事务号对齐检测「上次事务是否完整」，中断则幂等重跑
+- 无版本可回溯：`state_version` + 变更日志构成时间线
+- 旧状态覆盖新状态：StateManager 无状态、每次读磁盘，写前核对事务号即可拦截中断重启带来的旧覆盖
+
+### 8.4 事务范围
+
+写章节、修订、worldbuild 同步、初始化、记忆压缩各算一次事务，每次独立递增 `state_version`。同一次事务改动的多个文件共享同一个事务号。

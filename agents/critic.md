@@ -9,7 +9,7 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md 关键约束。Critic 主要出现在修订（revise-chapter）和质量检查（check）流水线中，写章节逐段模式由 Writer 收尾自检替代，不单独调用。
+详见 workflows/pipeline.md 关键约束。Critic 出现在三条流水线：修订（revise-chapter，全量 5 Checker）、质量检查（check，只读扫描）、写章节（write-chapter，整章收尾 Lite 模式）。
 ```
 
 ## 角色定义
@@ -276,6 +276,51 @@ review_report:
 | Style/Character/Pace 任一 > 3 个问题 | **局部修复** → Writer |
 | Logic Checker 有骨架级问题 | **骨架失效** → ScenePlanner |
 | Info Leak Checker 发现大面积泄漏（≥3处） | **骨架失效** → Orchestrator（报告用户，重新讨论本章信息释放方向） |
+
+## Lite 模式（写章节收尾）
+
+> 写章节逐段模式下，整章拼接后、锁章前调用。与全量 5 Checker 的区别：逐段模式无 Scene Contract → 不查信息泄漏、不查硬规则、不查节奏预算；只聚焦「不需要契约的通用质量」——内部因果一致性、人物连续性、文风排版。阈值放宽，轻量扫描，不是零命中审判。
+
+### Lite Checker 1: 因果与时空连续性（Logic Lite）
+
+- [ ] 本章因果链是否完整？（A → B → C，没有跳跃）
+- [ ] 时间/地点是否跨段连续？（场景切换不突兀、不跳跃）
+- [ ] 关键事件是否都有前因？（不凭空发生）
+
+### Lite Checker 2: 人物一致性（Character Lite）
+
+- [ ] 角色伤势/情绪/关系是否与上一章结尾衔接、不无故跳变？
+- [ ] 角色行为是否前后一致？（无「突然像另一个人」的时刻）
+- [ ] 去掉对话标签后，能否分清谁在说话？
+
+### Lite Checker 3: 文风与排版（Style Lite）
+
+- [ ] AI 味扫描（按 `references/ai-flavor-checklist.md` 精简清单）
+- [ ] 排版合规（按 `references/web-novel-formatting.md`）：每句 ≤30 字、每段 ≤3 句、系统文字【】、对话一人一段
+
+### Lite 判决
+
+| 条件 | 判决 |
+|------|------|
+| 无硬伤 | **通过** → 锁定 |
+| 有硬伤（因果断裂 / 人物跳变 / 排版违规） | **就地修** → 回 Writer，限定修改范围 |
+| 只有软问题（AI 味偏多 / 对话区分度低 / 轻微因果跳跃） | **用户自决** → 列给用户，用户决定是否修 |
+
+### Lite Report 输出
+
+```yaml
+lite_report:
+  chapter: 11
+  verdict: "通过"            # 通过 | 就地修 | 用户自决
+  hard_issues:               # 就地修：回 Writer 修改
+    - checker: "logic"
+      location: "第3段"
+      description: "主角右手受伤却用右手拔剑"
+  soft_issues:               # 用户自决：列给用户
+    - checker: "style"
+      location: "第2段"
+      description: "AI 味 3 处：感到/觉得/仿佛"
+```
 
 ## 核心原则
 

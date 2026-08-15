@@ -9,7 +9,7 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md。StateManager 出现在写章节、初始化、修订、世界观构建和工作区升级五条流水线中。它是 state/ 下 author/reader/character/foreshadow 四个文件（大状态）的唯一写入口，同时更新 progress.yaml 的累计统计字段（total_words、total_chapters_written）。Orchestrator 保有 progress.yaml 的 chapter_state 字段和 agent-log.yaml 的流转写入权。
+详见 workflows/pipeline.md。StateManager 出现在写章节、初始化、修订、世界观构建和工作区升级五条流水线中。它是 state/ 下 author/reader/character/foreshadow 四个文件（大状态）的唯一写入口，同时更新 progress.yaml 的累计统计字段（total_words、total_chapters_written）和顶层 state_version（事务版本号），并独占维护 transaction-log.yaml（事务日志）。Orchestrator 保有 progress.yaml 的 chapter_state 字段和 agent-log.yaml 的流转写入权。
 ```
 
 ## 角色定义
@@ -19,7 +19,7 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 | 所有权 | `state/`（全部状态文件） |
 | 上下文预算 | ~2.5K tokens（前期）/ ~1.5K（后期，使用分段加载） |
 | 必须加载 | StateManagerBrief 交接包（按 `runtime/handoff-schema.md` 第四节）。包含 Review Report + state_delta + 全部状态文件路径 |
-| 按需加载 | 卷记忆摘要模板（压缩时） |
+| 按需加载 | `state/transaction-log.yaml`（写前核对事务号读最后一条）、卷记忆摘要模板（压缩时） |
 | 绝不加载 | 正文、大纲、canon |
 | 决策权 | 状态更新方式、压缩时机、归档策略 |
 | 禁止行为 | 判断质量、修改正文、决定剧情方向、在 Critic 未通过时更新状态 |
@@ -98,9 +98,18 @@ state/archive/
 ├── resolved-threads-summary.yaml # 已回收的伏笔摘要
 ├── inactive-characters.yaml      # 超过30章未出场的非活跃角色
 ├── author-notes-archive.md       # 历史作者备忘
+├── transaction-log-archive.yaml  # 超过30章的历史事务日志
 └── volume-summaries/             # 各卷摘要
     └── volume-01-summary.md
 ```
+
+### 5. 事务版本管理
+
+每次状态更新作为一次「事务」执行（定义见 `runtime/state-schema.md` 第八节）：
+
+1. **写前核对**：`transaction-log` 最后一条 `txn` 是否等于 `progress.state_version`；不等说明上次事务没写完，报告 Orchestrator 重新执行 state_delta（幂等）
+2. **写后递增**：更新状态文件 → `progress.state_version` +1 → 追加 `transaction-log` 一条记录（含 files_changed + 一句话 summary）
+3. **每次事务 +1**：写章节、修订、世界观同步、初始化、记忆压缩各算一次事务，独立递增
 
 ## 状态更新协议
 
@@ -115,22 +124,27 @@ flowchart TD
     Validate{"校验输入完整性"}
     Reject["⛔ 拒绝执行<br/>报告 Orchestrator"]
 
-    Read["读取当前 4 个状态文件"]
+    Read["读取当前状态文件<br/>+ transaction-log 最后一条"]
+    VersionCheck{"写前核对<br/>txn == state_version?"}
+    VersionReject["⛔ 不一致<br/>报告 Orchestrator 重跑 state_delta"]
+
     Update["按 state_delta 逐项更新<br/>• author.yaml<br/>• reader.yaml<br/>• character.yaml<br/>• foreshadow.yaml"]
     Progress["更新 progress.yaml<br/>total_words += 本章字数<br/>total_chapters_written += 1<br/>（chapter_state 由 Orchestrator 写入）"]
-    Log["追加 agent-log 条目<br/>标记状态更新完成"]
+    Commit["提交事务<br/>state_version +1<br/>追加 transaction-log 记录"]
 
     Compress{"需要压缩?<br/>每5章 / 卷末 / >50KB"}
-    RunCompress["执行压缩协议"]
+    RunCompress["执行压缩协议<br/>（本身也是一次事务）"]
     Done["📤 输出<br/>更新后的状态文件<br/>（如有压缩）归档 + 卷摘要"]
 
     Input --> Validate
     Validate -->|"✗ 缺少必要输入"| Reject
     Validate -->|"✓ 输入完整"| Read
-    Read --> Update
+    Read --> VersionCheck
+    VersionCheck -->|"✗ 不一致"| VersionReject
+    VersionCheck -->|"✓ 一致"| Update
     Update --> Progress
-    Progress --> Log
-    Log --> Compress
+    Progress --> Commit
+    Commit --> Compress
     Compress -->|"是"| RunCompress
     Compress -->|"否"| Done
     RunCompress --> Done
@@ -140,6 +154,7 @@ flowchart TD
 
 每次写入前执行：
 
+- [ ] 版本一致性：`transaction-log` 最后一条 `txn` 等于 `progress.state_version`？（不等 = 上次事务没写完，见 state-schema 第八节）
 - [ ] author.yaml 中 `status: revealed` 的秘密是否已从 `secrets` 中移出？
 - [ ] character.yaml 和 reader.yaml 中同一事实的状态是否一致？（角色已知 ≠ 读者已知 是正常的，但角色已知 > 读者已知 则不是）
 - [ ] foreshadow.yaml 的 `stats` 是否与实际 `threads` 列表一致？
@@ -150,8 +165,9 @@ flowchart TD
 
 ## 核心原则
 
-1. **大状态唯一写入口**：author/reader/character/foreshadow 文件仅 StateManager 写入。progress.yaml 的累计统计字段（total_words、total_chapters_written）也由 StateManager 更新
-2. **输入校验不依赖 Critic**：逐段写作模式没有 Critic Review Report，StateManager 校验 state_delta 完整性即可执行；修订模式仍需 Review Report 通过
+1. **大状态唯一写入口**：author/reader/character/foreshadow 文件仅 StateManager 写入。progress.yaml 的累计统计字段（total_words、total_chapters_written）和顶层 `state_version`（事务版本号）也由 StateManager 更新；`transaction-log.yaml` 由 StateManager 独占写入
+2. **输入校验不依赖 Critic**：逐段写作模式只产出 lite_report（写章收尾的轻量检查，不传入 StateManager），StateManager 校验 state_delta 完整性即可执行；修订模式仍需 Review Report 通过
 3. **增量更新而非全量覆盖**：只更新变化的部分，不重写整个文件
 4. **压缩是常态不是例外**：每 5 章例行压缩，不让状态文件无限制增长
 5. **不判断质量**：StateManager 消费 state_delta，不评估写作质量
+6. **每次更新是版本化事务**：写前核对事务号，写后递增 `state_version` 并记 transaction-log。见 `runtime/state-schema.md` 第八节

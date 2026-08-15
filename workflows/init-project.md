@@ -124,11 +124,12 @@ flowchart TD
 
 ```
 创建 state/ 下所有文件:
-  - progress.yaml: chapter=0, chapter_state.status=COMPLETED
+  - progress.yaml: chapter=0, chapter_state.status=COMPLETED, state_version=1
   - author.yaml: 空模板
   - reader.yaml: 空模板
   - character.yaml: 从 setting/characters/ 导入
   - foreshadow.yaml: 空模板（stats全部=0）
+  - transaction-log.yaml: 首条 init 事务记录（txn: 1）
   - agent-log.yaml: 首条记录 "project initialized"
 ```
 

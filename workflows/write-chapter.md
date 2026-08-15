@@ -37,7 +37,7 @@ flowchart TD
     MoreSegments -->|"是"| GiveOptions
     MoreSegments -->|"用户说「结束」"| Phase3
 
-    Phase3["第三阶段：整章收尾<br/>排版自检→AI味速检→锁定"]
+    Phase3["第三阶段：整章收尾<br/>Critic Lite 三项检查→锁定"]
 
     Phase3 --> Summarize["第四阶段：状态更新<br/>Writer汇总state_delta→<br/>StateManager更新全部状态文件"]
 
@@ -51,7 +51,7 @@ flowchart TD
 | 方向确定 | 自动生成故事合约 | 由用户对话替代（方向讨论即方向确定） |
 | ScenePlanner | 自动切分场景五拍 | 由用户对话替代（每段前给选项，用户选择推进方向） |
 | Writer | 一次性写完整章 | 逐段写，每段 200-400 字，写完就停 |
-| Critic | 写完后的全量检查 | 收尾阶段的轻量排版/格式检查 |
+| Critic | 写完后的全量检查（5 Checker） | 收尾阶段的 Critic Lite 轻量检查（Logic/Character/Style 三项） |
 | 用户参与 | 仅方向选择时参与 | 每段都参与——选方向、检查、纠偏 |
 
 ## 详细步骤
@@ -131,19 +131,22 @@ STEP 5 — 用户检查：
 - Architect 写入 setting/characters/，StateManager 同步 character.yaml
 - 设定完成 → 回到写作，Writer 按新设定续写
 
-### 第三阶段：整章收尾
+### 第三阶段：整章收尾（Critic Lite）
 
 ```
 用户说「可以了」「结束」后：
 
 1. 整章拼接，统计字数
-2. 快速自检：
-   - 排版：超30字句？超3句段？系统文字用【】？对话一人一段？
-   - AI味：感到/觉得/仿佛/在这一刻 等关键词
-   - 对话标签：是否有多余的「XX说」
-   - 章尾：是否在事件半途强行切断？是否出现没头没尾的句子？→ 如果是，往前找一个自然停顿点作为章尾
-3. 如有问题，列出建议让用户确认是否修复
-4. 用户确认 → 锁定章节
+2. Orchestrator 组装 CriticBrief-Lite，调度 Critic 做三项轻量检查：
+   - Logic：因果链完整？时间/地点/人物状态跨段连续？伤势情绪无故跳变？
+   - Character：角色行为可理解？无突然像另一个人？对话区分度？
+   - Style：AI味扫描 + 排版合规（超30字句/超3句段/系统文字【】/对话一人一段）
+3. 按 lite_report 判决处理：
+   - 「通过」→ 进入第四阶段锁定
+   - 「就地修」→ 硬伤（因果断裂/人物跳变/排版违规）回 Writer 限定范围修改，改完再判
+   - 「用户自决」→ 软问题（AI味偏多等）列给用户；用户决定修则回 Writer 修改，不修则锁定
+4. 章尾检查：是否在事件半途强行切断？是否出现没头没尾的句子？→ 如果是，往前找一个自然停顿点作为章尾
+5. 用户确认 → 锁定章节
 ```
 
 ### 第四阶段：状态更新
@@ -162,12 +165,13 @@ STEP 5 — 用户检查：
 2. Orchestrator 组装 StateManagerBrief（state_delta）
    并调度 StateManager
 
-3. StateManager 更新：
+3. StateManager 更新（作为一个版本化事务）：
    - author.yaml（秘密状态）
    - reader.yaml（读者知识/疑问/张力）
    - character.yaml（角色状态/关系/压力）
    - foreshadow.yaml（伏笔追踪）
-   - progress.yaml（total_words、total_chapters_written）
+   - progress.yaml（total_words、total_chapters_written，state_version +1）
+   - transaction-log.yaml（追加事务记录）
 
 4. Orchestrator 更新：
    - progress.yaml（chapter_state 标记完成）

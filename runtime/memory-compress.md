@@ -1,6 +1,6 @@
 # 记忆压缩协议
 
-> State Manager 每 5 章或卷末执行的记忆压缩操作规范。目标：控制 `state/` 总大小在可加载范围内，同时保留足够上下文供续写决策。
+> State Manager 每 5 章或卷末执行的记忆压缩操作规范。目标：控制 `state/` 总大小在可加载范围内，同时保留足够上下文供续写决策。压缩本身也是一次状态事务（trigger: compress）——执行完成后递增 `progress.state_version`、记 transaction-log（见 state-schema 第八节）。
 
 ---
 
@@ -118,6 +118,7 @@ reading_summary: |
 2. `character.yaml` 非 POV 角色摘要超过 15 个 → 超过 30 章未出场的角色移入 `state/archive/inactive-characters.yaml`
 3. 所有 YAML 文件的总行数控制在 500 行以内（含卷记忆摘要引用）
 4. 超出部分移入 `state/archive/`，在状态文件中保留引用路径
+5. `transaction-log.yaml` 只保留最近 30 章的事务记录，更早的移入 `state/archive/transaction-log-archive.yaml`
 
 ---
 
@@ -128,5 +129,6 @@ State Manager 完成压缩后执行：
 - [ ] `state/` 下所有文件总大小 < 50KB
 - [ ] 每个 YAML 文件可正常解析
 - [ ] 所有文件间的引用路径有效（不指向已删除文件）
-- [ ] agent-log.yaml 记录本次压缩操作
+- [ ] 版本一致：`transaction-log` 最后一条 `txn` 等于 `state_version`（压缩事务已完整提交）
+- [ ] transaction-log.yaml 已记录本次压缩事务（trigger: compress，state_version 已递增）
 - [ ] 归档目录 `state/archive/` 创建完成（如首次）

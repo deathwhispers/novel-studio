@@ -161,7 +161,7 @@ writer_brief:
 
 **方向**：Orchestrator → Critic
 **预估**：~0.8K tokens（交接包自身）+ 正文全文（Critic 自行读取）
-**用途**：Critic 据此执行 5 个 Checker。不从多个文件拼凑——收到一份合并的检查清单。AI 味检测使用精简版 `ai-flavor-checklist.md`（~250 tokens）替代完整目录。
+**用途**：Critic 据此执行 5 个 Checker。不从多个文件拼凑——收到一份合并的检查清单。AI 味检测使用精简版 `ai-flavor-checklist.md`（~250 tokens）替代完整目录。写章节逐段模式的轻量变体见第五节 CriticBrief-Lite。
 
 ```yaml
 critic_brief:
@@ -274,10 +274,45 @@ statemanager_brief:
     - "state/character.yaml"
     - "state/foreshadow.yaml"
     - "state/progress.yaml"
+    - "state/transaction-log.yaml"   # 写前核对事务号（最后一条 txn 对齐 state_version）
 
   # 明确禁止加载
   must_not_read:
     - "chapters/ 任何文件"
+    - "outline/ 任何文件"
+    - "setting/ 任何文件"
+```
+
+---
+
+## 五、CriticBrief-Lite（写章节收尾）
+
+**方向**：Orchestrator → Critic（Lite 模式）
+**预估**：~0.5K tokens（交接包自身）+ 正文全文（Critic 自行读取）
+**用途**：写章节逐段模式整章拼接后，Critic 以 Lite 模式做轻量检查。逐段模式无 Scene Contract，故不含 forbid_touch / hard_rules / pov_constraints / word_budget；只做「不需要契约的通用质量」检查（Logic/Character/Style 三项）。
+
+```yaml
+critic_brief_lite:
+  from: Orchestrator
+  to: Critic
+  mode: "lite"          # 写章节收尾
+  chapter: 11
+
+  # 需自行读取
+  chapter_text: "chapters/第011章-章节名.md"
+  ai_flavor_checklist: "references/ai-flavor-checklist.md"
+
+  # 连续性上下文（用于 Logic/Character 检查，从上一章结尾状态提取）
+  previous_chapter_end_state:
+    location: "XX城训练场"
+    protagonist_condition: "右手轻伤未愈，情绪警觉"
+    key_characters_status:
+      - "被救者：伤势严重，意识模糊"
+
+  # 明确禁止加载
+  must_not_read:
+    - "Scene Contract（逐段模式无此文件）"
+    - "state/ 完整状态文件"
     - "outline/ 任何文件"
     - "setting/ 任何文件"
 ```
@@ -297,11 +332,14 @@ flowchart TD
 
     subgraph WriteFlow["写章节（逐段模式）"]
         Writer["✍️ Writer<br/>← 用户选择的推进方向<br/>（逐段：给选项 → 写200-400字 → 检查）"]
+        CriticLite["🔍 Critic Lite<br/>← CriticBrief-Lite<br/>（整章收尾：Logic/Character/Style）"]
         StateManager["📋 StateManager<br/>← StateManagerBrief<br/>（state_delta + 用户锁定确认）"]
     end
 
     Orchestrator -->|"/novel-studio:write"| Writer
-    Writer -->|"章尾：汇总 state_delta"| Orchestrator
+    Writer -->|"整章完成"| Orchestrator
+    Orchestrator -->|"CriticBrief-Lite"| CriticLite
+    CriticLite -->|"lite_report：通过/就地修/用户自决"| Orchestrator
     Orchestrator -->|"锁定确认"| StateManager
 
     subgraph ReviseFlow["修订（场景重设/局部修复/仅去味）"]
@@ -327,4 +365,4 @@ Orchestrator 在准备交接包时遵守：
 2. **摘要而非全文**：下游 Agent 需要状态信息但不需要完整文件 → Orchestrator 从状态文件中提取摘要
 3. **路径而非内容**：正文、voice 样本等大文件 → 传递文件路径，由目标 Agent 自行读取（避免 Orchestrator 上下文膨胀）
 4. **禁止清单是硬约束**：每个 Brief 包含 `must_not_read`，明确禁止 Agent 自行加载额外文件
-5. **写章节逐段模式简化**：不使用 ScenePlannerBrief/CriticBrief，Writer 直接接收用户选择的推进方向，StateManager 接收 state_delta + 用户锁定确认
+5. **写章节逐段模式简化**：不使用 ScenePlannerBrief 和全量 CriticBrief，Writer 直接接收用户选择的推进方向；整章收尾用 CriticBrief-Lite 调度 Critic 做轻量检查；StateManager 接收 state_delta + 用户锁定确认

@@ -20,7 +20,7 @@ flowchart TD
 
     Orchestrator --> Phase1["第一阶段：确认本章方向<br/>报告状态 → 2-3个方向选项 → 用户选择 → 提炼节拍"]
     Phase1 --> Phase2["第二阶段：逐段写作循环<br/>每段：给选项 → 用户选 → Writer写200-400字 → 用户检查/纠偏"]
-    Phase2 --> Phase3["第三阶段：整章收尾<br/>拼接 → 排版/AI味自检 → 锁定"]
+    Phase2 --> Phase3["第三阶段：整章收尾<br/>拼接 → Critic Lite（Logic/Character/Style）→ 锁定"]
 
     Phase3 --> Summarize["📊 汇总 state_delta<br/>Writer 整章级别状态变更"]
     Summarize --> StateManager["📋 StateManager<br/>更新全部状态文件"]
@@ -34,14 +34,16 @@ flowchart TD
 | 方向确定 | 自动生成故事合约 | 用户对话替代（3-5 轮方向讨论） |
 | 结构设计 | ScenePlanner 生成 Scene Contract | 用户对话替代（每段前给选项选择推进方向） |
 | 正文写作 | Writer 一次性写完整章 | Writer 逐段写，每段 200-400 字，写完就停 |
-| 质量检查 | Critic 5 Checker 全量检查 | 收尾阶段 Writer 轻量自检（排版+AI味），用户确认 |
+| 质量检查 | Critic 5 Checker 全量检查 | 收尾阶段 Critic Lite 轻量检查（Logic/Character/Style 三项） |
 | 状态更新 | StateManager（Critic 通过后） | StateManager（用户锁定章节后，Writer 汇总 state_delta） |
 
 **交接包流转**（逐段模式简化）：
 | 步骤 | 交接包 |
 |------|--------|
 | Orchestrator → Writer（逐段） | 用户选择的推进方向 + 已写段落上下文 |
-| Writer → Orchestrator（章尾） | 整章正文 + state_delta 汇总 |
+| Writer → Orchestrator（整章完成） | 整章正文 |
+| Orchestrator → Critic（Lite） | CriticBrief-Lite（正文路径 + 连续性上下文） |
+| Critic → Orchestrator | lite_report（通过/就地修/用户自决） |
 | Orchestrator → StateManager | StateManagerBrief（state_delta + 锁定确认） |
 
 ---
@@ -197,7 +199,7 @@ flowchart TD
 | Outliner | 大纲设计、工作区升级（大纲重构） |
 | ScenePlanner | 修订（场景重设） |
 | Writer | 写章节（逐段模式）、修订（全部四种范围） |
-| Critic | 修订（场景重设/局部修复/仅去味）、质量检查 |
+| Critic | 写章节（收尾 Lite）、修订（场景重设/局部修复/仅去味）、质量检查 |
 | StateManager | 写章节（逐段模式）、初始化、修订、世界观构建、工作区升级（校验） |
 
 ---
@@ -206,10 +208,11 @@ flowchart TD
 
 1. **Agent 不自选后继**: 下一步由 workflow 定义和用户确认决定，不由 Agent 推荐
 2. **Orchestrator 是唯一中转站**: Agent 之间不直接通信，所有信息经 Orchestrator 传递
-3. **StateManager 是大状态唯一写入口**: 其他 Agent 只标记增量（state_delta），不直接写 `state/` 大状态文件（author/reader/character/foreshadow）
+3. **StateManager 是大状态唯一写入口**: 其他 Agent 只标记增量（state_delta），不直接写 `state/` 大状态文件（author/reader/character/foreshadow）。StateManager 同时维护事务版本（progress.state_version + transaction-log.yaml）
 4. **Writer 不读大纲**: 渐进披露，Writer 只知道当前段的约束和禁止触碰清单
 5. **交接包裁剪**: Orchestrator 按 `runtime/handoff-schema.md` 裁剪交接包，下游 Agent 只收到所需字段
-6. **逐段模式不依赖 ScenePlanner/Critic**: 写章节由用户对话驱动，这两个 Agent 仅在修订流程中使用
+6. **逐段模式不依赖 ScenePlanner 和全量 Critic**: 写章节由用户对话驱动，ScenePlanner 仅在修订使用；Critic 在整章收尾以 Lite 模式兜底（无 Scene Contract，不查信息泄漏）
+7. **状态更新是版本化事务**: StateManager 每次更新递增 `state_version`、记 transaction-log；写前核对事务号。定义见 `runtime/state-schema.md` 第八节
 
 ---
 
@@ -222,6 +225,7 @@ flowchart TD
 | Orchestrator → ScenePlanner | ScenePlannerBrief | 修订目标 + 现有章节结构 |
 | Orchestrator → Writer | WriterBrief | scenes/five_beats + 约束 + 章尾落点 |
 | Orchestrator → Critic | CriticBrief | 合并检查清单（forbid_touch + canon + pov） |
+| Orchestrator → Critic（Lite） | CriticBrief-Lite | 正文路径 + 连续性上下文（写章节收尾） |
 | Orchestrator → StateManager | StateManagerBrief | Review Report + state_delta |
 | Orchestrator → Architect | 直接传递用户构想 | 不使用 Brief 格式（仅 init/worldbuilding） |
 

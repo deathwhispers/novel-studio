@@ -59,7 +59,7 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 - 第一阶段：Orchestrator 与用户多轮对话确认方向（本章功能/信息释放/伏笔轻碰由方向讨论确定）
 - 第二阶段：Orchestrator 给出选项 → 用户选择 → 调度 Writer 写一段 → 用户检查 → 循环
 - 写作中若需引入新重要角色（非一次性路人）→ 暂停写作，走 worldbuilding「添加角色」分支设定后继续
-- 第三阶段：用户确认完成 → Writer 汇总 state_delta → 调度 StateManager 更新所有状态文件
+- 第三阶段：用户确认完成 → 调度 Critic 做 Lite 检查（Logic/Character/Style）→ Writer 汇总 state_delta → 调度 StateManager 更新所有状态文件
 - 无 NEED_PLAN/NEED_SCENE/NEED_REVIEW 等中间状态枚举，用户对话驱动流转
 
 **修订章节**：
@@ -117,6 +117,7 @@ Orchestrator 不仅是路由器，也是**信息经纪人**——从上游完整
 | StateManager | StateManagerBrief（state_delta） | ~0.5K | 写章节/修订 |
 | ScenePlanner | ScenePlannerBrief（修订目标 + 现有章节结构） | ~1.5K | 修订-场景重设 |
 | Critic | CriticBrief（合并检查清单） | ~0.8K | 修订/质量检查 |
+| Critic（Lite） | CriticBrief-Lite（正文路径 + 连续性上下文） | ~0.5K | 写章节收尾 |
 | Outliner | 不使用 Brief | — | Orchestrator 传递用户构想，Outliner 自行加载 canon 摘要 |
 
 ### 裁剪原则
@@ -141,4 +142,4 @@ Orchestrator 启动时：
 - **Agent 不自选后继**：下一步由 Orchestrator 按 workflow 定义调度，不由 Agent 推荐
 - **用户可见的是进度，不是 Agent 名**：报告「正在重排场景结构…」而不是「正在调用 ScenePlanner」
 - **对话流程在 command 文件中**：Orchestrator 不重复定义具体的多轮对话流程，command 文件是对话流程的唯一权威来源
-- **状态文件写入分工**：Orchestrator 写入 `progress.yaml`（章节进度）和 `agent-log.yaml`（流转日志）；StateManager 写入 `author.yaml`、`reader.yaml`、`character.yaml`、`foreshadow.yaml`（大状态），以及 `progress.yaml` 的累计统计字段（total_words、total_chapters_written）
+- **状态文件写入分工**：Orchestrator 写入 `progress.yaml`（章节进度 chapter_state）和 `agent-log.yaml`（流转日志）；StateManager 写入 `author.yaml`、`reader.yaml`、`character.yaml`、`foreshadow.yaml`（大状态）、`transaction-log.yaml`（事务日志），以及 `progress.yaml` 的累计统计字段（total_words、total_chapters_written）和顶层 `state_version`（事务版本号）

@@ -45,7 +45,7 @@
 | Outliner | ~8K | 作品核心 + canon 摘要 + 已有大纲 + 品类配方 | 不读正文/状态文件 |
 | ScenePlanner（仅修订） | ~3K | ScenePlannerBrief（修订目标 + 现有章节结构） | 不读完整大纲/完整 canon |
 | Writer | ~6K（逐段）/ ~10K（修订） | 逐段模式：用户选择的推进方向 + 已写段落<br/>修订模式：WriterBrief + chapter N-1 全文 + 当前章草稿 | 不读大纲/canon/状态文件 |
-| Critic（仅修订/检查） | ~6K | CriticBrief + 当前章正文 + AI 味检测清单 | 不读完整 canon/完整大纲/其他章节 |
+| Critic（修订/检查）/ Lite（写章收尾） | ~6K / ~3K | 修订/检查：CriticBrief + 当前章正文 + AI 味检测清单<br/>写章收尾：CriticBrief-Lite + 当前章正文 + 连续性上下文 | 不读完整 canon/完整大纲/其他章节 |
 | StateManager | ~2.5K | StateManagerBrief + 状态文件（分段加载） | 不读正文/大纲/canon |
 
 ---
@@ -178,9 +178,9 @@ Writer 不使用交接包。Orchestrator 直接传递用户选择的推进方向
 
 ---
 
-### Critic（~6K tokens，仅修订/检查）
+### Critic（~6K tokens，修订/检查；~3K tokens，写章收尾 Lite）
 
-Critic 仅在修订流程（revise-chapter）和质量检查（check）中使用，逐段模式不参与（由 Writer 收尾自检替代，见 workflows/pipeline.md 关键约束）。
+Critic 出现在三条流水线：修订（revise-chapter，全量 5 Checker）、质量检查（check，只读扫描）、写章节（write-chapter，整章收尾 Lite 模式）。
 
 **输入来源**：`CriticBrief`（`runtime/handoff-schema.md` 第三节）
 
@@ -203,6 +203,12 @@ Critic 不分别加载 Scene Contract + character.yaml，也不加载完整 AI �
 - Scene Contract 完整文件
 - 完整 canon、完整大纲、其他章节正文、完整状态文件
 
+**Lite 模式（写章收尾，~3K tokens）**：
+- 输入来源为 `CriticBrief-Lite`（`runtime/handoff-schema.md` 第五节）
+- 交接包含：正文路径 + `previous_chapter_end_state`（上一章结尾状态，用于连续性检查）+ AI 味清单路径
+- 不含 forbid_touch / hard_rules / pov_constraints / word_budget（逐段模式无 Scene Contract）
+- 只做 Logic/Character/Style 三项轻量检查，产出 `lite_report`（通过/就地修/用户自决）
+
 ---
 
 ### StateManager（~2.5K tokens）
@@ -217,7 +223,7 @@ StateManager 是唯一需要加载状态文件的 Agent。支持两种模式：
 **交接包内容**（~0.5K tokens）：
 - `review_report`：完整 Review Report
 - `state_delta`：完整 state_delta
-- `must_read`：4 个状态文件路径 + progress.yaml
+- `must_read`：4 个状态文件路径 + progress.yaml + transaction-log.yaml
 
 **交接包外自行加载**（路径由交接包指定，使用分段加载）：
 - `state/author.yaml`：仅 `status != revealed` 的秘密（约300 tokens）
@@ -225,6 +231,7 @@ StateManager 是唯一需要加载状态文件的 Agent。支持两种模式：
 - `state/character.yaml`：仅 POV 角色 + state_delta 涉及的角色的完整条目（约500 tokens）
 - `state/foreshadow.yaml`：仅 `status: active | touched` 的伏笔（约300 tokens）
 - `state/progress.yaml`（约200 tokens）
+- `state/transaction-log.yaml`：仅最后一条（约50 tokens，写前核对事务号用）
 
 **分段加载触发条件**：状态文件中任一超过 300 行时启用。前期（<100章）全量加载也基本不超预算，后期省 ~1K tokens。
 

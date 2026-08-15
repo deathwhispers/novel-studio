@@ -96,12 +96,11 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 
 ### 第五步：交稿前自检
 
-整章起草完成后，交付前做一次快速自检。逐段模式下没有 Critic，这个自检就是本章的质量门禁。
+整章起草完成后，交付前做一次「活人感」速检（写中即时门禁）。AI 味与排版不在本步重复查——由 Critic Lite 在收尾统一兜底（见 critic.md「Lite 模式」Style Lite）。
 
-1. **AI 味自检**：调用 `skills/analysis/ai-flavor-detect.md`——按 `references/ai-flavor-checklist.md` 的 24 项关键词扫描 + 9 项结构扫描逐项检查，命中即修。修复技法见 `references/de-flavor-techniques.md` 对应章节。
-2. **活人感速检**：按 `references/de-flavor-techniques.md`「五、活人感注入」5 种手法自查（闲笔/感官轮换/身体反应优先/内心声音/不完美保留）——AI 味检测告诉你「删了什么」，活人感速检告诉你「缺了什么」。
+按 `references/de-flavor-techniques.md`「五、活人感注入」5 种手法自查（闲笔/感官轮换/身体反应优先/内心声音/不完美保留）——这是「加法」维度，Critic Lite 不查，由 Writer 在交稿前自查补足。
 
-Writer 自检是轻量门禁，不是 Critic 的严格扫描：只修命中项，不追求零命中。逐段模式下用户逐段确认，正式质量检查由 Critic 在 `/novel-studio:check` 或修订时执行。
+Writer 自检是写中即时门禁，只补命中项，不追求全覆盖。整章的 AI 味/排版/因果/人物一致性由 Critic Lite 在收尾执行，全量检查由 Critic 在 `/novel-studio:check` 或修订时执行。
 
 ### 第六步：产出
 
@@ -169,7 +168,6 @@ writer_output:
 | `skills/narrative/scene-render.md` | 通过感官/环境压力/空间构造让场景生动 |
 | `skills/narrative/action-scene.md` | 写动作/打斗场面，控制节奏与空间感 |
 | `skills/narrative/description.md` | 写人物外貌、物品道具描写 |
-| `skills/analysis/ai-flavor-detect.md` | 交稿前 AI 味自检（见第五步） |
 
 调用示例（`dialogue`）：
 

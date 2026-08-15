@@ -177,12 +177,12 @@ Architect 读旧 `硬设定.yaml`，把条目归位：
 1. core/作品核心.md 存在，且 6 字段齐全（缺失项已明确标注「待补充」）
 2. setting/硬规则.yaml 存在，力量等级/身份条目已归位
 3. outline/全书总纲.yaml 存在，角色故事线已重构（无法映射的标注「待 Outliner 细化」）
-4. progress.yaml 含 schema_version: 3、files.hard_rules、files.outline（指向 .yaml）、workspace.chapter_word_target
-5. state/ 下 5 个大文件原样存在，未被改动
+4. progress.yaml 含 schema_version: 3、state_version（缺失则初始化为 1）、files.hard_rules、files.outline（指向 .yaml）、workspace.chapter_word_target
+5. state/ 下 5 个大文件原样存在，未被改动；新增 transaction-log.yaml（首条 upgrade 事务记录）
 6. 无残留旧路径（grep 无 作品总表 / 硬设定 / hard_canon / 全书总纲.md）
 ```
 
-校验通过 → StateManager 写 `agent-log.yaml` 一条 `upgrade v2→v3 completed` 记录。
+校验通过 → StateManager 写 `agent-log.yaml` 一条 `upgrade v2→v3 completed` 记录；初始化 `state_version: 1`（若缺失）与 `transaction-log.yaml`（首条 upgrade 事务，txn: 1）。
 
 输出：
 
