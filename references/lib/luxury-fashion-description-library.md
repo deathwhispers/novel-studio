@@ -1,6 +1,6 @@
 # 奢侈服饰品牌描写素材库
 
-> 使用说明：奢侈服饰品牌向描写素材库，服务都市文、神豪文、豪门文、名媛文。写奢侈品牌（服装/包/鞋/配饰）时按需加载，先读 [`material-index.md`](../material-index.md) 索引用 `tag` 定位行号，再 `Read` 目标段落，不要整库加载。
+> 使用说明：奢侈服饰品牌向描写素材库，服务都市文、神豪文、豪门文、名媛文。写奢侈品牌（服装/包/鞋/配饰）时按需加载，先读 [`material-index.md`](../material-index.md) 索引用 `tag` 定位条目标题，再 `grep -n` 拿行号 `Read` 目标段落，不要整库加载。
 >
 > 写奢侈品牌的核心不是报价格型号——是**通过品牌写人**：一个牌子亮出来，内行一眼就知道这人「什么段位、什么审美、是真名媛还是硬撑」。本库与车/表库（[`car-description-library.md`](car-description-library.md)、[`watch-description-library.md`](watch-description-library.md)）同属「通过资产写人」体系。
 >

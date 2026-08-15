@@ -1,6 +1,6 @@
 # 环境描写素材库
 
-> 使用说明：都市向环境描写素材库。写场景时按需加载，先读 [`material-index.md`](../material-index.md) 索引用 `tag` 定位行号，再 `Read` 目标段落，不要整库加载。
+> 使用说明：都市向环境描写素材库。写场景时按需加载，先读 [`material-index.md`](../material-index.md) 索引用 `tag` 定位条目标题，再 `grep -n` 拿行号 `Read` 目标段落，不要整库加载。
 >
 > 环境不是背景板，是**施加在角色身上的力**（配合 [`../skills/narrative/scene-render.md`](../skills/narrative/scene-render.md) 的「环境压力」使用）。同样的环境，不同的人、不同的心境，看到的完全是两样东西——写环境，其实是在写「谁在看」。
 >

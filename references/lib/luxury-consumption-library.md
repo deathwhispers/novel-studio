@@ -1,6 +1,6 @@
 # 神豪消费符号描写素材库
 
-> 使用说明：神豪向消费符号描写素材库，服务神豪文、都市文、商战文。写名酒、雪茄、游艇、私人飞机、私人会所、马术、高尔夫、高端餐厅时按需加载，先读 [`material-index.md`](../material-index.md) 索引用 `tag` 定位行号，再 `Read` 目标段落，不要整库加载。
+> 使用说明：神豪向消费符号描写素材库，服务神豪文、都市文、商战文。写名酒、雪茄、游艇、私人飞机、私人会所、马术、高尔夫、高端餐厅时按需加载，先读 [`material-index.md`](../material-index.md) 索引用 `tag` 定位条目标题，再 `grep -n` 拿行号 `Read` 目标段落，不要整库加载。
 >
 > 写消费符号的核心不是报价格型号——是**通过排面写人**：一个符号亮出来，内行一眼就知道这人「什么段位、什么圈层、是真有钱还是硬撑」。本库与车/表/房库（[`car-description-library.md`](car-description-library.md)、[`watch-description-library.md`](watch-description-library.md)、[`property-description-library.md`](property-description-library.md)）同属「通过资产写人」体系，本库补齐**酒、烟、移动资产、圈层、餐饮**五块。
 >

@@ -137,7 +137,7 @@ my-novel/
 
 ### 描写素材库
 
-`material-index.md` — 描写素材统一检索索引。人物（美女/性格）、穿搭、资产（汽车/名表/房产/奢侈服饰/神豪消费）、环境、美食、老司机词汇十一类素材统一用行号定位：先读索引 → 按 `tag` 命中段落 → 用行号只读目标段落，不整库加载。
+`material-index.md` — 描写素材统一检索索引。人物（美女/性格）、穿搭、资产（汽车/名表/房产/奢侈服饰/神豪消费）、环境、美食、老司机词汇十一类素材统一用 tag 检索：先读索引 → 按 `tag` 命中条目标题 → `grep -n` 拿行号只读目标段落，不整库加载。
 
 写作时按 tag 命中、即取即用的描写素材，与去味体系配套（每个条目带 tag + 去味示范，避免模板句和陈旧意象）：
 
@@ -199,10 +199,10 @@ novel-studio/
 │   ├── ai-flavor-checklist.md    AI 味检测清单（24+9 项）
 │   ├── de-flavor-techniques.md   去味修复技法（13 章）
 │   ├── web-novel-formatting.md   网文排版规范（11 章）
-│   ├── material-index.md         描写素材统一检索索引（行号定位）
+│   ├── material-index.md         描写素材统一检索索引（tag 检索）
 │   ├── wenyin-live-platform.md   直播平台机制设定（稳音）
 │   ├── failure-cases.md          失败案例库
-│   └── lib/                      描写素材库（11 个，行号定位）
+│   └── lib/                      描写素材库（11 个，tag 检索）
 │       ├── beauty-description-library.md  美女描写素材库（41 类）
 │       ├── personality-description-library.md 性格描写素材库（15 类）
 │       ├── outfit-description-library.md  穿搭描写素材库（30 风格）
