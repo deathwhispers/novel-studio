@@ -194,7 +194,7 @@ characters:
 - `surface` 与 `constraints` 为静态属性，由 StateManager 在初始化/世界观构建时从 `setting/characters/xxx.yaml` 同步；worldbuilding 新增/修改角色时同步更新
 - `tags` 为静态属性，仅存于 `setting/characters/xxx.yaml`（见 architect 角色档案模板），**不冗余进 character.yaml**；写作/检查时由 Orchestrator 从静态档案提取进交接包（见 handoff-schema 的 `character_tags`）
 - 非 POV 角色可省略 `constraints`（Critic 的 pov_constraints 只针对 POV 角色）
-- State Manager 每 5 章压缩非 POV 角色状态
+- 生命周期结算见「九」：连续 30 章未出场的非 POV 角色指针化进 `state/archive/`
 
 ---
 
@@ -245,7 +245,7 @@ stats:
 **约束**：
 - `status` 只能取 `active | touched | revealed | resolved | abandoned | stale`（`stale` = 超过 30 章未触碰的活跃伏笔，由 State Manager 标记）
 - Writer 每章从 `active + touched` 中选择 0-2 条进行轻碰
-- State Manager 在伏笔 resolve 后保留一行摘要，删除详细描述
+- 生命周期结算见「九」：`resolved` / `abandoned` / `stale` 指针化进 `state/archive/`
 - 每 5 章检查是否有超过 30 章未触碰的活跃伏笔
 
 ---
@@ -372,3 +372,37 @@ StateManager 每次写入前核对：`transaction-log` 最后一条 `txn` 是否
 ### 8.4 事务范围
 
 写章节、修订、worldbuild 同步、初始化、记忆压缩各算一次事务，每次独立递增 `state_version`。同一次事务改动的多个文件共享同一个事务号。
+
+---
+
+## 九、状态对象生命周期
+
+> 状态文件的定位：**活跃索引**，不是历史档案。它只回答一个问题——「下一章还用得上吗」。完整历史在正文 `chapters/`（唯一真相）和卷记忆（结构化摘要），状态文件只保留活跃集。这条原则适用于现在与未来的所有状态文件，膨胀问题统一归结到同一个判断。
+
+### 9.1 统一模型
+
+所有状态文件都是「活跃对象表」，每个对象走同一条生命周期：
+
+```
+active（完整条目）──「下一章还用得上吗？」──> settled（指针）
+```
+
+- **active**：下一章可能用到的对象 → 留在主文件，保留完整条目。
+- **settled**：用不上了 → 降级为一行指针进 `state/archive/`，**不复制详情**。
+
+指针固定三项：`id + 一句话摘要 + 最后相关章节号`。需要完整细节时，按章节号回查正文/卷记忆重建，不回写状态文件。
+
+### 9.2 各文件结算时机
+
+| 文件 | 保留（active） | 指针化（settled） |
+|------|---------------|------------------|
+| foreshadow.yaml | `active` / `touched`（未收束） | `resolved` / `abandoned` / `stale` |
+| character.yaml | POV 角色完整 + 本卷出场配角 | 连续 30 章未出场（含退场） |
+| reader.yaml | 读者现在在猜/在问的 | 已解答疑问 / 已落定猜测 |
+| author.yaml | 未揭示秘密 + 未发生未来事件 | `revealed` 秘密 / 已发生未来事件 |
+
+### 9.3 三条配套规则
+
+1. **结算一句话判断**：「下一章还用得上吗」。用 → 留；不用 → 指针化。
+2. **残留信息不归压缩管**：伏笔收束后仍影响后文的「影响」，不靠压缩反向推断，由日常 `state_delta` 自然落到 `reader.known_facts` / `author.secrets`。压缩只做「指针化」，不猜语义。
+3. **归档指针化，永不膨胀**：archive 条目固定 `id + 一句话 + 章节号`（几十字节），不存第二份真相。

@@ -1,6 +1,8 @@
 # 记忆压缩协议
 
 > State Manager 每 5 章或卷末执行的记忆压缩操作规范。目标：控制 `state/` 总大小在可加载范围内，同时保留足够上下文供续写决策。压缩本身也是一次状态事务（trigger: compress）——执行完成后递增 `progress.state_version`、记 transaction-log（见 state-schema 第八节）。
+>
+> **压缩 = 生命周期结算**：把「下一章用不上」的对象从主文件指针化进 `state/archive/`。统一模型见 state-schema 第九节，本文件只讲「怎么执行」。
 
 ---
 
@@ -14,65 +16,55 @@
 
 ---
 
-## 二、压缩操作
+## 二、结算规则
 
-### 2.1 foreshadow.yaml 压缩
+对每个状态文件，逐对象问一句：**「下一章还用得上吗」**。
 
-**操作**：
-1. `status: resolved` 的伏笔保留一行摘要（id + content + resolved_chapter + resolution），删除 `touched_chapters` 详细列表和 `links_to`
-2. `status: abandoned` 的伏笔移到 `state/archive/abandoned-threads.yaml`
-3. 超过 30 章未触碰的 `active` 伏笔 → 标记为 `stale`，在文件中加注释提醒 Orchestrator
+| 文件 | 保留（active） | 指针化（settled → archive） |
+|------|---------------|---------------------------|
+| foreshadow.yaml | `active` / `touched` | `resolved` / `abandoned` / `stale` |
+| character.yaml | POV 完整 + 本卷出场配角 | 连续 30 章未出场（含退场） |
+| reader.yaml | 读者现在在猜/在问的 | 已解答疑问 / 已落定猜测 |
+| author.yaml | 未揭示秘密 + 未发生未来事件 | `revealed` 秘密 / 已发生未来事件 |
 
-**压缩后格式**：
+**指针格式**（archive 统一条目，固定三项）：
+
 ```yaml
-resolved_summary:
-  - id: "thr-003"
-    content: "XX角色每次提到某个话题就转移视线"
-    resolved: "第20章——该角色是XX势力的卧底"
+- id: "thr-003"
+  summary: "XX角色是XX势力的卧底，怕被识破"
+  chapter: 20          # 最后相关章节，回查正文/卷记忆用
 ```
 
-### 2.2 character.yaml 压缩
-
-**操作**：
-1. 非 POV 角色的完整 `knowledge` 块压缩为一段摘要（已知/不知各一行）
-2. 非 POV 角色的 `pressures` 只保留 level > 50 的项
-3. POV 角色保留完整状态
-4. 所有角色的 `relationships` 只保留 `dynamic` 和 `last_change_chapter`，删除详细描述
-
-**压缩后格式**（非 POV 角色）：
-```yaml
-- id: "char-003"
-  name: "配角名"
-  is_pov: false
-  summary: "XX城城主，对主角态度从敌对转为中立。已知主角拥有系统。当前无高压力。"
-```
-
-### 2.3 reader.yaml 压缩
-
-**操作**：
-1. `suspicions` 中 `confidence > 70` 的猜测 → 移到 `known_facts`
-2. `suspicions` 中 `confidence < 20` 且超过 10 章未更新 → 删除
-3. `open_questions` 中已被正文解答的问题 → 移到 `state/archive/answered-questions.yaml`
-4. 将 `known_facts` 中超过 20 章的事实合并为一段摘要
-
-**压缩后新增**：
-```yaml
-reading_summary: |
-  读者已了解：主角拥有XX系统，可使用基本功能，系统正在引导主角完成进阶任务。
-  读者最关心：系统的真正目的、神秘配角的身份。
-  当前追读张力：主线推进70%，悬念压力65%。
-```
-
-### 2.4 author.yaml 压缩
-
-**操作**：
-1. `status: revealed` 的秘密 → 移到 `state/archive/revealed-secrets.yaml`
-2. `planned_reveal_chapter` 已过的秘密 → 更新计划或标记延期
-3. `author_notes` 超过 500 字 → 提取摘要，详细内容移到 `state/archive/author-notes-archive.yaml`
+不复制完整详情——细节按 `chapter` 回查正文，状态文件不是第二份真相。
 
 ---
 
-## 三、卷记忆生成
+## 三、结算执行
+
+### 3.1 foreshadow.yaml
+
+`resolved` / `abandoned` / `stale` 的伏笔 → 指针化进 `state/archive/`；`active` / `touched` 保留完整条目。
+
+### 3.2 character.yaml
+
+- 非 POV 角色连续 30 章未出场 → 指针化进 `state/archive/inactive-characters.yaml`
+- POV 角色与本卷出场配角保留完整条目
+
+### 3.3 reader.yaml
+
+- `open_questions` 已被正文解答 → 指针化进 `state/archive/answered-questions.yaml`
+- `suspicions` 已落定 → 证实（confidence > 70）的移入 `known_facts`，证伪（confidence < 20 且 10 章未更新）的指针化
+- `known_facts` 超 20 章 → 合并为一段 `reading_summary`
+
+### 3.4 author.yaml
+
+- `secrets` 中 `revealed` → 指针化进 `state/archive/revealed-secrets.yaml`
+- `future_events` 已发生 → 指针化
+- `author_notes` 超 500 字 → 提取摘要，详细内容指针化进 `state/archive/author-notes-archive.yaml`
+
+---
+
+## 四、卷记忆生成
 
 每卷结束时生成 `state/卷记忆/第X卷-摘要.md`：
 
@@ -110,19 +102,13 @@ reading_summary: |
 
 ---
 
-## 四、状态文件瘦身
+## 五、事务日志瘦身
 
-每次压缩后执行：
-
-1. `foreshadow.yaml` 中 `resolved_summary` 超过 10 条 → 最旧的移入归档
-2. `character.yaml` 非 POV 角色摘要超过 15 个 → 超过 30 章未出场的角色移入 `state/archive/inactive-characters.yaml`
-3. 所有 YAML 文件的总行数控制在 500 行以内（含卷记忆摘要引用）
-4. 超出部分移入 `state/archive/`，在状态文件中保留引用路径
-5. `transaction-log.yaml` 只保留最近 30 章的事务记录，更早的移入 `state/archive/transaction-log-archive.yaml`
+`transaction-log.yaml` 是日志（不适用对象生命周期），只保留最近 30 章记录，更早的移入 `state/archive/transaction-log-archive.yaml`。
 
 ---
 
-## 五、压缩后验证
+## 六、结算后验证
 
 State Manager 完成压缩后执行：
 
