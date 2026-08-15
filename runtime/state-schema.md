@@ -192,6 +192,7 @@ characters:
 - 非 POV 角色只需 `surface`、`current_state` 和简要 `knowledge`
 - `pressures[].level` 范围 0-100
 - `surface` 与 `constraints` 为静态属性，由 StateManager 在初始化/世界观构建时从 `setting/characters/xxx.yaml` 同步；worldbuilding 新增/修改角色时同步更新
+- `tags` 为静态属性，仅存于 `setting/characters/xxx.yaml`（见 architect 角色档案模板），**不冗余进 character.yaml**；写作/检查时由 Orchestrator 从静态档案提取进交接包（见 handoff-schema 的 `character_tags`）
 - 非 POV 角色可省略 `constraints`（Critic 的 pov_constraints 只针对 POV 角色）
 - State Manager 每 5 章压缩非 POV 角色状态
 

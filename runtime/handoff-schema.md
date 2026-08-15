@@ -195,6 +195,14 @@ critic_brief:
     cannot_do:
       - "暴露系统存在"
 
+  # 本章关键角色标签（从 setting/characters/xxx.yaml 的 tags 提取，写作辅助：快速把握角色定位/阵营/与主角关系）
+  character_tags:
+    - name: "被救者"
+      camp: "神秘势力"
+      relation: "待揭示"
+      role_fn: "线索提供者"
+      keywords: ["伪装身份", "说话古怪"]
+
   # 节奏数据（从 Scene Contract 提取，Pace Checker 用）
   word_budget_per_scene: [800, 1200, 500]
 
@@ -309,6 +317,14 @@ critic_brief_lite:
     key_characters_status:
       - "被救者：伤势严重，意识模糊"
 
+  # 本章关键角色标签（从 setting/characters/xxx.yaml 的 tags 提取，Character Lite 快速把握角色定位）
+  character_tags:
+    - name: "被救者"
+      camp: "神秘势力"
+      relation: "待揭示"
+      role_fn: "线索提供者"
+      keywords: ["伪装身份"]
+
   # 明确禁止加载
   must_not_read:
     - "Scene Contract（逐段模式无此文件）"
@@ -366,3 +382,4 @@ Orchestrator 在准备交接包时遵守：
 3. **路径而非内容**：正文、voice 样本等大文件 → 传递文件路径，由目标 Agent 自行读取（避免 Orchestrator 上下文膨胀）
 4. **禁止清单是硬约束**：每个 Brief 包含 `must_not_read`，明确禁止 Agent 自行加载额外文件
 5. **写章节逐段模式简化**：不使用 ScenePlannerBrief 和全量 CriticBrief，Writer 直接接收用户选择的推进方向；整章收尾用 CriticBrief-Lite 调度 Critic 做轻量检查；StateManager 接收 state_delta + 用户锁定确认
+6. **角色标签从静态档案提取**：交接包中的 `character_tags` 由 Orchestrator 从 `setting/characters/xxx.yaml` 的 `tags` 字段提取（不冗余进 `state/character.yaml`），供下游快速把握角色定位，省去重读完整角色档案
