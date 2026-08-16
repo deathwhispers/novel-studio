@@ -141,8 +141,8 @@ my-novel/
 
 写作时按 tag 命中、即取即用的描写素材，与去味体系配套（每个条目带 tag + 去味示范，避免模板句和陈旧意象）：
 
-- `lib/beauty-description-library.md` — 美女描写（41 类：身份/气质/身材三维度，每类带 `tag` + 200-300 字去味示范）
-- `lib/personality-description-library.md` — 性格描写（15 类人格特质：温度/心机/呈现三维度，每类带 `tag` + 去味示范）
+- `lib/beauty-description-library.md` — 美女描写（89 类：身份/气质/身材/局部焦点四维度，每类带 `tag` + 完整示范 + 短句速写 + 侧面反应三种写法；眼睛/五官部位专题为要点式）
+- `lib/personality-description-library.md` — 性格描写（23 类人格特质：温度/心机/呈现/底色四维度，每类带 `tag` + 完整示范 + 短句速写 + 侧面反应三种写法）
 - `lib/outfit-description-library.md` — 穿搭描写（30 风格 × 3 示范，按题材/风格打 `tag`）
 - `lib/car-description-library.md` — 汽车描写（12 个豪华/超跑品牌：品牌定位 + 代表车型价格带 + 描写示范）
 - `lib/watch-description-library.md` — 名表描写（10 个奢侈名表品牌：品牌定位 + 代表表款价格带 + 描写示范）
@@ -203,8 +203,8 @@ novel-studio/
 │   ├── wenyin-live-platform.md   直播平台机制设定（稳音）
 │   ├── failure-cases.md          失败案例库
 │   └── lib/                      描写素材库（11 个，tag 检索）
-│       ├── beauty-description-library.md  美女描写素材库（41 类）
-│       ├── personality-description-library.md 性格描写素材库（15 类）
+│       ├── beauty-description-library.md  美女描写素材库（89 类）
+│       ├── personality-description-library.md 性格描写素材库（23 类）
 │       ├── outfit-description-library.md  穿搭描写素材库（30 风格）
 │       ├── car-description-library.md     汽车描写素材库（12 品牌）
 │       ├── watch-description-library.md   名表描写素材库（10 品牌）
