@@ -137,13 +137,14 @@ my-novel/
 
 ### 描写素材库
 
-`material-index.md` — 描写素材统一检索索引。人物（美女/男性/性格）、穿搭、爽点场景范式、资产（汽车/名表/房产/奢侈服饰/神豪消费）、环境、美食、老司机词汇十三类素材统一用 tag 检索：先读索引 → 按 `tag` 命中条目标题 → `grep -n` 拿行号只读目标段落，不整库加载。
+`material-index.md` — 描写素材统一检索索引。人物（美女/男性/性格）、穿搭、爽点场景范式、情绪状态、资产（汽车/名表/房产/奢侈服饰/神豪消费）、环境、美食、老司机词汇十四类素材统一用 tag 检索：先读索引 → 按 `tag` 命中条目标题 → `grep -n` 拿行号只读目标段落，不整库加载。
 
 写作时按 tag 命中、即取即用的描写素材，与去味体系配套（每个条目带 tag + 去味示范，避免模板句和陈旧意象）：
 
 - `lib/beauty-description-library.md` — 美女描写（116 类：身份/气质/身材/局部焦点/身段姿态/发型/声音七维度，每类带 `tag` + 完整示范 + 短句速写 + 侧面反应三种写法；眼睛/五官/身段/发型/声音专题为要点式）
 - `lib/male-description-library.md` — 男性角色描写（65 类：男主类型/气质气场/身材体型/局部焦点/神态表情/身段姿态/声音七维度，每类带 `tag` + 完整示范 + 短句速写 + 侧面反应三种写法；身材/局部/神态/身段/声音专题为要点式）
 - `lib/scene-pattern-library.md` — 爽点场景范式（10 类：打脸反派/扮猪吃虎/神豪炫富/系统奖励/绝境反杀/众目睽睽反转/打脸绿茶/名场面装逼/当众认主下跪/巨头低头，前 8 类给「场景结构四段式 + 必备元素清单 + 反 AI 味要点 + 完整示范段 + 短句速写 + 侧面反应」，后 2 类用要点式）
+- `lib/emotion-state-library.md` — 情绪状态描写（12 类：震惊/愤怒/心碎/绝望/委屈/尴尬/余悸/羞愧/冷冽/得意/慌张/期待，按强烈反应/温反应/隐性特殊状态三维度，每类给「`tag` + 身体反应 + 思维特征 + 完整示范段 + 短句速写 + 侧面反应」——情绪写法的特色是拆"身体反应"和"思维特征"两部分写，避免重复造句）
 - `lib/personality-description-library.md` — 性格描写（23 类人格特质：温度/心机/呈现/底色四维度，每类带 `tag` + 完整示范 + 短句速写 + 侧面反应三种写法）
 - `lib/outfit-description-library.md` — 穿搭描写（30 风格 × 3 示范，按题材/风格打 `tag`）
 - `lib/car-description-library.md` — 汽车描写（12 个豪华/超跑品牌：品牌定位 + 代表车型价格带 + 描写示范）
@@ -204,10 +205,11 @@ novel-studio/
 │   ├── material-index.md         描写素材统一检索索引（tag 检索）
 │   ├── wenyin-live-platform.md   直播平台机制设定（稳音）
 │   ├── failure-cases.md          失败案例库
-│   └── lib/                      描写素材库（13 个，tag 检索）
+│   └── lib/                      描写素材库（14 个，tag 检索）
 │       ├── beauty-description-library.md  美女描写素材库（116 类）
 │       ├── male-description-library.md    男性角色描写素材库（65 类）
 │       ├── scene-pattern-library.md       爽点场景范式素材库（10 类）
+│       ├── emotion-state-library.md       情绪状态描写素材库（12 类）
 │       ├── personality-description-library.md 性格描写素材库（23 类）
 │       ├── outfit-description-library.md  穿搭描写素材库（30 风格）
 │       ├── car-description-library.md     汽车描写素材库（12 品牌）
