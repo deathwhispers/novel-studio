@@ -1,6 +1,6 @@
 # 美女描写素材库
 
-> 使用说明：这是「美女描写」的专项素材库，与 [`ai-flavor-catalog.md`](ai-flavor-catalog.md)、[`de-flavor-techniques.md`](de-flavor-techniques.md) 配套。美女描写是 AI 味最集中的重灾区——成语堆砌、模板句式、陈旧意象、机械修辞都在这里高频出现。Writer 描写女性角色时按需加载，先查「高频 AI 味速查表」排雷，再按 `tag` 命中对应类型。
+> 使用说明：这是「美女描写」的专项素材库，与 [`ai-flavor-catalog.md`](../ai-flavor-catalog.md)、[`de-flavor-techniques.md`](../de-flavor-techniques.md) 配套。美女描写是 AI 味最集中的重灾区——成语堆砌、模板句式、陈旧意象、机械修辞都在这里高频出现。Writer 描写女性角色时按需加载，先查「高频 AI 味速查表」排雷，再按 `tag` 命中对应类型。
 >
 > 组织方式按四个维度分层，对应「定位 → 立人设 → 细节爽点 → 记忆点」的写作顺序：
 > 1. **身份关系**（她在故事里是谁）→ 决定叙事功能
