@@ -4,7 +4,7 @@
   <p>7 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
-    <img src="https://img.shields.io/badge/version-0.0.7-green?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-0.0.8-green?style=flat-square" />
     <img src="https://img.shields.io/badge/platform-Claude%20Code-orange?style=flat-square" />
   </p>
 </div>
@@ -232,6 +232,11 @@ novel-studio/
 ```
 
 ## 更新日志
+
+### 0.0.8
+
+- **爽点场景范式素材库**：补全神豪/系统/赘婿/都市打脸文最核心的爽点描写维度。`lib/scene-pattern-library.md` 10 类（打脸反派/扮猪吃虎/神豪炫富/系统奖励/绝境反杀/众目睽睽反转/打脸绿茶/名场面装逼/当众认主下跪/巨头低头），前 8 类给「场景结构四段式 + 必备元素清单 + 反 AI 味要点 + 完整示范段」，后 2 类用要点式。`material-index.md` 新增十三段索引，tag 双向精确对齐。
+- **节奏提醒**：3-5 章一个重头爽点是稳妥节奏，避免读者麻掉。
 
 ### 0.0.7
 
