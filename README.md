@@ -4,7 +4,7 @@
   <p>7 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
-    <img src="https://img.shields.io/badge/version-0.0.8-green?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-0.0.9-green?style=flat-square" />
     <img src="https://img.shields.io/badge/platform-Claude%20Code-orange?style=flat-square" />
   </p>
 </div>
@@ -234,6 +234,11 @@ novel-studio/
 ```
 
 ## 更新日志
+
+### 0.0.9
+
+- **情绪状态描写素材库**：补全情绪层描写。`lib/emotion-state-library.md` 12 类（震惊/愤怒/心碎/绝望/委屈/尴尬/余悸/羞愧/冷冽/得意/慌张/期待），按强烈反应/温反应/隐性特殊状态三维度。每条给「tag + 身体反应 + 思维特征 + 完整示范段 + 短句速写 + 侧面反应」——情绪写法的特色是拆"身体反应"和"思维特征"两部分写，避免重复造句。`material-index.md` 新增十四段索引。
+- **决策说明**：分析后跳过「动作/对峙/气场」「通用神态」两个优先级——动作层已有 skills/narrative/action.md，神态层已被男性库 10 类+美女库覆盖；情绪层与神态「内在驱动 vs 外在可见」互补，存在真空白，合并为一个库补足。
 
 ### 0.0.8
 
