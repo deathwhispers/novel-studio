@@ -146,6 +146,25 @@ writer_brief:
       - "snippets/主角-voice.md"
     system_panels: "setting/系统面板.md"   # 系统爽文品类，写系统界面时读取
 
+  # 素材库检索指引（Orchestrator 在交接包中预填，Writer 按需 grep -n 拿行号只读目标段落）
+  # 命中场景 → 推荐素材库条目（标题级，不写行号——行号 grep 动态定位）。未命中场景则该段为空。
+  # 检索流程：grep -n "^### .*标题" 库名 → Read offset=行号，只读到下一个 ### / --- 前 → 读完即弃。
+  material_refs:
+    beauty_refs: []              # 女性角色外貌/气质/身材/局部/姿态/发型/声音 → lib/beauty-description-library.md
+    male_refs: []                # 男性角色外貌/气场/身材/局部/神态/姿态/声音 → lib/male-description-library.md
+    personality_refs: []         # 人物性格表现 → lib/personality-description-library.md
+    outfit_refs: []              # 穿搭 → lib/outfit-description-library.md
+    luxury_fashion_refs: []      # 奢侈服饰品牌 → lib/luxury-fashion-description-library.md
+    car_refs: []                 # 豪车 → lib/car-description-library.md
+    watch_refs: []               # 名表 → lib/watch-description-library.md
+    property_refs: []            # 房产 → lib/property-description-library.md
+    luxury_consumption_refs: []  # 神豪消费符号 → lib/luxury-consumption-library.md
+    environment_refs: []         # 环境 → lib/environment-description-library.md
+    food_refs: []                # 美食 → lib/food-description-library.md
+    scene_pattern_refs: []       # 爽点场景 → lib/scene-pattern-library.md（场景结构四段式 + 必备元素清单）
+    emotion_state_refs: []       # 强烈情绪 → lib/emotion-state-library.md（身体反应 + 思维特征）
+    double_entendre_refs: []     # 含蓄性暗示词汇 → lib/double-entendre-catalog.md
+
   # 明确禁止加载
   must_not_read:
     - "chapters/第009章 正文全文（摘要已在上方 previous_chapter_summary 中）"

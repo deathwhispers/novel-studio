@@ -4,7 +4,7 @@
   <p>7 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
-    <img src="https://img.shields.io/badge/version-0.0.9-green?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-0.1.0-green?style=flat-square" />
     <img src="https://img.shields.io/badge/platform-Claude%20Code-orange?style=flat-square" />
   </p>
 </div>
@@ -234,6 +234,12 @@ novel-studio/
 ```
 
 ## 更新日志
+
+### 0.1.0
+
+- **写作素材库强制检索**：Writer 启动后新增「第一步半：素材库强制检索」——按触发条件（写到外貌/性格/穿搭/资产/环境/美食/爽点桥段/强烈情绪/性暗示词汇）调用对应素材库，空命中场景跳过。检索走 `references/material-index.md` 统一入口，**不加载整个素材库**。
+- **WriterBrief 新增 `material_refs` 字段**：Orchestrator 在交接包中预填命中场景对应的素材库条目（标题级），Writer 按 `grep -n "^### .*标题" 库名` 动态拿行号、只读目标段落。14 类素材库全部纳入检索指引。
+- **description skill 列举扩展**：补全「爽点桥段、强烈情绪」两类场景。
 
 ### 0.0.9
 

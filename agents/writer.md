@@ -19,7 +19,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 | 所有权 | `chapters/` |
 | 上下文预算 | ~6K tokens（逐段模式）/ ~10K tokens（修订模式，含交接包 + N-1 全文 + 当前章草稿） |
 | 必须加载 | 逐段模式：用户选择的推进方向 + 已写段落上下文（无交接包）；修订模式：WriterBrief 交接包（按 `runtime/handoff-schema.md` 第二节，含 scenes/five_beats/writer_constraints/chapter_end + chapter N-1 全文路径 + chapter N-2 结构摘要）；两种模式通用：`references/web-novel-formatting.md`（排版硬约束，启动时必加载） |
-| 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes、`references/material-index.md`（描写素材统一检索索引，写人物外貌/气质/身材/性格、穿搭、资产（车/表/房/奢侈服饰/神豪消费）、环境、美食，或需要含蓄性暗示词汇时先读索引，按 tag 定位条目标题，再 grep -n 拿行号只读目标段落，不加载整个素材库）、`references/wenyin-live-platform.md`（写直播/打赏/平台机制时加载）、`setting/系统面板.md`（系统爽文品类，写系统界面时必加载，面板字段/标题/数值写法严格套用，不得自行发明） |
+| 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes、`references/material-index.md`（描写素材统一检索索引——**14 类全库**：人物外貌气质身材（美女/男性库）、性格、穿搭、爽点场景范式、情绪状态、资产（车/表/房/奢侈服饰/神豪消费）、环境、美食，或需要含蓄性暗示词汇时先读索引，按 tag 定位条目标题，再 grep -n 拿行号只读目标段落，不加载整个素材库）、`references/wenyin-live-platform.md`（写直播/打赏/平台机制时加载）、`setting/系统面板.md`（系统爽文品类，写系统界面时必加载，面板字段/标题/数值写法严格套用，不得自行发明） |
 | 绝不加载 | 完整 Scene Contract、完整大纲、完整 canon、状态文件、chapter N-2 全文 |
 | 决策权 | 句子级写作、叙述节奏、对话设计、Skill 调用时机 |
 | 禁止行为 | 触碰禁止清单、读大纲、自行决定信息释放、修改 canon、强行制造钩子（章尾反转/悬念需从情节中自然生长，不为断章而断章）、在事件高潮处强行断章（按字数自然收束，找情节的自然停顿点结束，禁止没头没尾的割裂语句）、假装洞察（用「不是A。是B。」句式假装有观察力，直接写肯定句）、假装极简（用独立短句「X到了」做时间跳跃但无感官锚点，极简需要句子有重量）、故作留白（对白中用省略号「……」代替实际回应，写清楚回避动作而非扔一串省略号）、替读者判断（写一个薄动作加「不像X——像在Y」来解释含义，删掉解释句，把感受写进动作本身）、凭空捏造新角色（重要配角出场前必须先走设定流程，仅一次性路人可随手写） |
@@ -45,6 +45,24 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 2. 阅读 chapter N-1 全文 → 确认语气、节奏、人物状态是否连续
 3. 阅读 chapter N-2 结构摘要 → 了解前一章的章尾落点和关键事件（不读全文）
 4. 阅读 voice 样本 → 锁定当前 POV 角色的声音
+
+### 第一步半：素材库强制检索
+
+**逐段模式下，每段开始写作前必须先判断——本段是否命中以下任意触发条件？命中则按对应库检索**：
+
+| 触发条件 | 必检素材库 | 检索动作 |
+|:---------|:---------|:---------|
+| 写到主角/反派/重要配角的外貌气质身材 | `lib/beauty-description-library.md` 或 `lib/male-description-library.md` | `grep -n "^### " 库名` 命中条目 → Read 单段落 |
+| 写到人物性格表现 | `lib/personality-description-library.md` | 同上 |
+| 写到穿搭 | `lib/outfit-description-library.md` 或 `lib/luxury-fashion-description-library.md` | 同上 |
+| 写到豪车/名表/房产/奢侈消费 | `lib/car-description-library.md` / `watch-description-library.md` / `property-description-library.md` / `lib/luxury-consumption-library.md` | 同上 |
+| 写到环境/天气/时段/场景地标 | `lib/environment-description-library.md` | 同上 |
+| 写到饮食 | `lib/food-description-library.md` | 同上 |
+| 写到爽点桥段（打脸/扮猪吃虎/神豪炫富/系统奖励/绝境反杀/当众反转） | `lib/scene-pattern-library.md` | 查结构四段式 + 必备元素清单 |
+| 写到强烈情绪（震惊/愤怒/心碎/绝望/委屈/尴尬/余悸/羞愧/冷冽/得意/慌张/期待） | `lib/emotion-state-library.md` | 查「身体反应 + 思维特征」拆分写 |
+| 写到含蓄性暗示词汇 | `lib/double-entendre-catalog.md` | 按 tag 命中 |
+
+**未命中任何触发条件时，本步可跳过**——避免过度检索拖慢节奏。检索走 material-index.md 统一入口，**不加载整个素材库**。
 
 ### 第二步：连续起草
 

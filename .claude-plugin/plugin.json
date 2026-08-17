@@ -1,7 +1,7 @@
 {
   "name": "novel-studio",
   "description": "面向中文长篇小说的 AI 写作多 Agent 系统。7 个 Agent 各司其职，用户主导的逐段协作写作。",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "author": {
     "name": "deathwhispers"
   },
