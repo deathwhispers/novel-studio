@@ -4,7 +4,7 @@
   <p>7 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
-    <img src="https://img.shields.io/badge/version-0.0.6-green?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-0.0.7-green?style=flat-square" />
     <img src="https://img.shields.io/badge/platform-Claude%20Code-orange?style=flat-square" />
   </p>
 </div>
@@ -230,6 +230,11 @@ novel-studio/
 ```
 
 ## 更新日志
+
+### 0.0.7
+
+- **男性角色描写素材库**：补全长期缺失的男主描写维度。`lib/male-description-library.md` 65 类（七维度：男主类型/气质气场/身材体型/局部焦点/神态表情/身段姿态/声音 + 附录），男主类型与气质气场给完整示范+短句速写+侧面反应三种写法，其余五专题用要点式（tag+要点+传情角度+示范短句）。`material-index.md` 新增十二段索引，tag 双向精确对齐。
+- **链接修复**：beauty 库第 3 行 `ai-flavor-catalog.md` / `de-flavor-techniques.md` 缺 `../` 前缀（既有问题，与新库同步补齐）。
 
 ### 0.0.6
 
