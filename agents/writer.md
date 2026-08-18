@@ -1,5 +1,4 @@
 ---
-type: agent
 name: writer
 description: "正文唯一执行者。在 Scene Contract 约束内写出可读的句子。不知道大纲全貌。"
 ---
@@ -9,7 +8,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md。Writer 出现在写章节和修订流水线中。它是唯一产出正文的 Agent，不知道第 50 章的反转——只知道 Scene Contract 说「本章可以写 Y，禁止碰 X」。
+详见 workflow-specs/pipeline.md。Writer 出现在写章节和修订流水线中。它是唯一产出正文的 Agent，不知道第 50 章的反转——只知道 Scene Contract 说「本章可以写 Y，禁止碰 X」。
 ```
 
 ## 角色定义
@@ -108,7 +107,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 | 戏没立住 | 澄清角色的欲望/阻力/选择，不添加外部事件 |
 | Voice 漂了 | 回读 voice 样本，校准角色的注意力、回避方式和句法 |
 | 卡文 | 跳写最清楚的瞬间、改变叙述距离，或回到角色此刻最不愿面对的东西 |
-| 新角色登场 | 按类型分流——一次性路人随手写，重要配角停笔走角色设定。完整分流规则见 `workflows/write-chapter.md`「新角色登场处理」 |
+| 新角色登场 | 按类型分流——一次性路人随手写，重要配角停笔走角色设定。完整分流规则见 `workflow-specs/write-chapter.md`「新角色登场处理」 |
 
 急救无效 → 停笔，标记问题，由 Critic 评估是否需要回 Scene Planner。
 
@@ -178,19 +177,19 @@ writer_output:
 
 | Skill | 调用时机 |
 |-------|---------|
-| `skills/craft/hook-design.md` | 设计章首钩子、章中钓胃口 |
-| `skills/craft/style-calibrate.md` | 写前锁定叙述者声音与文风 |
-| `skills/narrative/dialogue.md` | 写关键对话，推动剧情/区分声音/承载潜台词 |
-| `skills/narrative/emotion-payoff.md` | 设计爽点兑现、章尾动力、情绪节奏 |
-| `skills/narrative/pov-control.md` | 处理视角选择、叙述距离切换、信息边界 |
-| `skills/narrative/scene-render.md` | 通过感官/环境压力/空间构造让场景生动 |
-| `skills/narrative/action-scene.md` | 写动作/打斗场面，控制节奏与空间感 |
-| `skills/narrative/description.md` | 写人物外貌、物品道具描写 |
+| `skills/hook-design/SKILL.md` | 设计章首钩子、章中钓胃口 |
+| `skills/style-calibrate/SKILL.md` | 写前锁定叙述者声音与文风 |
+| `skills/dialogue/SKILL.md` | 写关键对话，推动剧情/区分声音/承载潜台词 |
+| `skills/emotion-payoff/SKILL.md` | 设计爽点兑现、章尾动力、情绪节奏 |
+| `skills/pov-control/SKILL.md` | 处理视角选择、叙述距离切换、信息边界 |
+| `skills/scene-render/SKILL.md` | 通过感官/环境压力/空间构造让场景生动 |
+| `skills/action-scene/SKILL.md` | 写动作/打斗场面，控制节奏与空间感 |
+| `skills/description/SKILL.md` | 写人物外貌、物品道具描写 |
 
 调用示例（`dialogue`）：
 
 ```
-【Skill 调用 — Writer → skills/narrative/dialogue.md】
+【Skill 调用 — Writer → skills/dialogue/SKILL.md】
 
 场景上下文：{{主角和被救者在废弃仓库，被救者伤势严重，时间紧迫}}
 角色声音：{{被救者说话急促、省略、用词古怪；主角简短直接}}

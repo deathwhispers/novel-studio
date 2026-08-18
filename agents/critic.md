@@ -1,5 +1,4 @@
 ---
-type: agent
 name: critic
 description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Review Report（通过/局部修复/骨架失效）。"
 ---
@@ -9,7 +8,7 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md 关键约束。Critic 出现在三条流水线：修订（revise-chapter，全量 5 Checker）、质量检查（check，只读扫描）、写章节（write-chapter，整章收尾 Lite 模式）。
+详见 workflow-specs/pipeline.md 关键约束。Critic 出现在三条流水线：修订（revise-chapter，全量 5 Checker）、质量检查（check，只读扫描）、写章节（write-chapter，整章收尾 Lite 模式）。
 ```
 
 ## 角色定义
@@ -30,11 +29,11 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 
 | Checker | 对应 Skill |
 |---------|-----------|
-| Logic Checker | `skills/analysis/causality-check.md` + `skills/analysis/foreshadow-check.md` |
-| Info Leak Checker | `skills/analysis/info-leak-check.md` |
-| Character Checker | `skills/analysis/character-check.md` |
-| Pace Checker | `skills/analysis/pacing-check.md` |
-| Style Checker | `skills/analysis/ai-flavor-detect.md` + `skills/craft/style-calibrate.md` + `skills/analysis/voice-check.md` |
+| Logic Checker | `skills/causality-check/SKILL.md` + `skills/foreshadow-check/SKILL.md` |
+| Info Leak Checker | `skills/info-leak-check/SKILL.md` |
+| Character Checker | `skills/character-check/SKILL.md` |
+| Pace Checker | `skills/pacing-check/SKILL.md` |
+| Style Checker | `skills/ai-flavor-detect/SKILL.md` + `skills/style-calibrate/SKILL.md` + `skills/voice-check/SKILL.md` |
 
 ### Checker 1: Logic Checker（因果与连续性）
 

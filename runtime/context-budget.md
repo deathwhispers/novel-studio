@@ -125,7 +125,7 @@
 
 ### ScenePlanner（~3K tokens，仅修订）
 
-ScenePlanner 仅在修订流程（场景重设）中使用，逐段模式不参与（见 workflows/pipeline.md 关键约束）。
+ScenePlanner 仅在修订流程（场景重设）中使用，逐段模式不参与（见 workflow-specs/pipeline.md 关键约束）。
 
 **输入来源**：`ScenePlannerBrief`（`runtime/handoff-schema.md` 第一节）
 

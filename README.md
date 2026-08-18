@@ -188,7 +188,7 @@ novel-studio/
 │   ├── check.md              质量检查
 │   ├── revise.md             章节修订
 │   └── upgrade.md            旧版升级
-├── workflows/                8 个文件（pipeline.md 总流水线 + 7 个工作流）
+├── workflow-specs/                8 个文件（pipeline.md 总流水线 + 7 个工作流）
 │   ├── pipeline.md           总流水线
 │   ├── init-project.md       项目初始化
 │   ├── worldbuilding.md      世界观构建
@@ -220,10 +220,22 @@ novel-studio/
 │       ├── environment-description-library.md 环境描写素材库（19 类）
 │       ├── food-description-library.md    美食描写素材库（8 类）
 │       └── double-entendre-catalog.md     老司机词汇总表
-├── skills/                   15 个纯能力 Skill
-│   ├── analysis/             分析类（AI味/因果/人物/伏笔/信息泄漏/节奏/声音）
-│   ├── craft/                技法类（钩子/文风校准）
-│   └── narrative/            叙事类（对话/情绪兑现/POV 控制/场景渲染/动作/描写）
+├── skills/                   15 个纯能力 Skill（每个为目录 + SKILL.md）
+│   ├── ai-flavor-detect/     AI 味检测（分析）
+│   ├── causality-check/      因果链检测（分析）
+│   ├── character-check/      人物一致性检查（分析）
+│   ├── foreshadow-check/     伏笔追踪检查（分析）
+│   ├── info-leak-check/      信息泄漏检测（分析）
+│   ├── pacing-check/         节奏分析（分析）
+│   ├── voice-check/          角色声音一致性（分析）
+│   ├── hook-design/          钩子设计（技法）
+│   ├── style-calibrate/      文风校准（技法）
+│   ├── action-scene/         动作与打斗（叙事）
+│   ├── description/          通用描写（叙事）
+│   ├── dialogue/             对话（叙事）
+│   ├── emotion-payoff/       情绪兑现（叙事）
+│   ├── pov-control/          POV 控制（叙事）
+│   └── scene-render/         场景渲染（叙事）
 ├── runtime/                  运行时规范
 │   ├── context-budget.md     上下文预算
 │   ├── handoff-schema.md     交接包 Schema
@@ -244,7 +256,7 @@ novel-studio/
 ### 0.0.9
 
 - **情绪状态描写素材库**：补全情绪层描写。`lib/emotion-state-library.md` 12 类（震惊/愤怒/心碎/绝望/委屈/尴尬/余悸/羞愧/冷冽/得意/慌张/期待），按强烈反应/温反应/隐性特殊状态三维度。每条给「tag + 身体反应 + 思维特征 + 完整示范段 + 短句速写 + 侧面反应」——情绪写法的特色是拆"身体反应"和"思维特征"两部分写，避免重复造句。`material-index.md` 新增十四段索引。
-- **决策说明**：分析后跳过「动作/对峙/气场」「通用神态」两个优先级——动作层已有 skills/narrative/action.md，神态层已被男性库 10 类+美女库覆盖；情绪层与神态「内在驱动 vs 外在可见」互补，存在真空白，合并为一个库补足。
+- **决策说明**：分析后跳过「动作/对峙/气场」「通用神态」两个优先级——动作层已有 skills/action-scene/SKILL.md，神态层已被男性库 10 类+美女库覆盖；情绪层与神态「内在驱动 vs 外在可见」互补，存在真空白，合并为一个库补足。
 
 ### 0.0.8
 

@@ -1,5 +1,4 @@
 ---
-type: agent
 name: state-manager
 description: "状态更新唯一执行者。Critic 通过后更新所有持久化状态。每 5 章执行记忆压缩。不判断质量、不修改正文。"
 ---
@@ -9,7 +8,7 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md。StateManager 出现在写章节、初始化、修订、世界观构建和工作区升级五条流水线中。它是 state/ 下 author/reader/character/foreshadow 四个文件（大状态）的唯一写入口，同时更新 progress.yaml 的累计统计字段（total_words、total_chapters_written）和顶层 state_version（事务版本号），并独占维护 transaction-log.yaml（事务日志）。Orchestrator 保有 progress.yaml 的 chapter_state 字段和 agent-log.yaml 的流转写入权。
+详见 workflow-specs/pipeline.md。StateManager 出现在写章节、初始化、修订、世界观构建和工作区升级五条流水线中。它是 state/ 下 author/reader/character/foreshadow 四个文件（大状态）的唯一写入口，同时更新 progress.yaml 的累计统计字段（total_words、total_chapters_written）和顶层 state_version（事务版本号），并独占维护 transaction-log.yaml（事务日志）。Orchestrator 保有 progress.yaml 的 chapter_state 字段和 agent-log.yaml 的流转写入权。
 ```
 
 ## 角色定义

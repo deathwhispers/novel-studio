@@ -1,5 +1,4 @@
 ---
-type: agent
 name: outliner
 description: "故事大纲唯一所有者。设计多线叙事结构、分卷规划、伏笔布局、角色弧光映射、节奏地图。不接触正文。"
 ---

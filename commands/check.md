@@ -1,5 +1,4 @@
 ---
-type: command
 name: check
 description: "对指定章节做质量检查。先确认你关心什么，再定向检查，不修改正文。"
 workflow: check
@@ -82,4 +81,4 @@ workflow: check
 
 ## 反模式（禁止）
 
-见 `workflows/check.md` 的反模式段。
+见 `workflow-specs/check.md` 的反模式段。

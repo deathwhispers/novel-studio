@@ -1,5 +1,4 @@
 ---
-type: agent
 name: orchestrator
 description: "小说智能运行时入口。意图识别、多轮对话、Workflow 状态机调度。不创作、不检查、不修改状态。"
 ---
@@ -9,7 +8,7 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 ## 在系统中的位置
 
 ```
-详见 workflows/pipeline.md。Orchestrator 是全部七条流水线的统一入口。
+详见 workflow-specs/pipeline.md。Orchestrator 是全部七条流水线的统一入口。
 ```
 
 ## 角色定义

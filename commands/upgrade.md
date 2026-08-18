@@ -1,5 +1,4 @@
 ---
-type: command
 name: upgrade
 description: "旧版工作区升级。将 v2 旧结构（作品总表/硬设定/大纲 MD）无损升级到 v3（作品核心/硬规则/大纲 YAML），保留 state/ 续写上下文。"
 workflow: upgrade-project

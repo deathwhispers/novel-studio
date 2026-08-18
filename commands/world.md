@@ -1,5 +1,4 @@
 ---
-type: command
 name: world
 description: "打开世界观构建会话。每个设定都经过深度多轮对话 + 多选项选择，直到完全确认。"
 workflow: worldbuilding

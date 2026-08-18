@@ -1,5 +1,4 @@
 ---
-type: command
 name: write
 description: "写指定章节。多轮对话确定方向，逐段写作即时纠偏，一段确认后再写下一段。"
 workflow: write-chapter
@@ -229,4 +228,4 @@ Critic Lite 三项检查：
 
 ## 反模式（禁止）
 
-见 `workflows/write-chapter.md` 的反模式段。
+见 `workflow-specs/write-chapter.md` 的反模式段。

@@ -1,5 +1,4 @@
 ---
-type: command
 name: outline
 description: "设计故事大纲。多轮深度对话构建多线叙事结构、分卷规划、伏笔布局、角色弧光、节奏地图。"
 workflow: outline

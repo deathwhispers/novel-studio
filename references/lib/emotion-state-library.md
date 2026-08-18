@@ -1,10 +1,10 @@
 # 情绪状态描写素材库
 
-> 使用说明：这是「情绪状态描写」的专项素材库，与 [`ai-flavor-catalog.md`](ai-flavor-catalog.md)、[`de-flavor-techniques.md`](de-flavor-techniques.md) 配套，服务都市文、爽文、虐文、纯爱文。Writer 写到角色陷入某个情绪状态时按需加载，按 `tag` 命中对应类型。
+> 使用说明：这是「情绪状态描写」的专项素材库，与 [`../ai-flavor-catalog.md`](../ai-flavor-catalog.md)、[`../de-flavor-techniques.md`](../de-flavor-techniques.md) 配套，服务都市文、爽文、虐文、纯爱文。Writer 写到角色陷入某个情绪状态时按需加载，按 `tag` 命中对应类型。
 >
 > 与其他描写库的分工：美女/男性/性格库写"人长什么样/怎么待人"，爽点场景库写"情节怎么推得爽"，本库写"人在某个情绪里是什么样子"——**情绪状态**是内在驱动，神态动作是外在可见，两者互补，本库专注于前者。神态动作（如抬眼/冷笑/勾唇）已在 [male-description-library](male-description-library.md) 神态表情维度覆盖；本库聚焦**情绪**——震惊/愤怒/得意/冷冽/心碎/委屈/尴尬/绝望/慌张/羞愧/余悸/期待，十二类最常见情绪状态的"如何写"。
 >
-> 与现有 skill 的分工：情绪怎么写得动人，写得不出戏，已由 `skills/narrative/emotional-payoff.md`（情绪兑现）、`skills/narrative/description.md`（描写技法）、`skills/analysis/voice-check.md`（同声腔检测）覆盖。本库给"哪些情绪要写出来"——具体到每一个情绪状态，给「`tag` + 核心 + 身体反应 + 思维特征 + 反 AI 味 + 完整示范段（200-300 字）+ 短句速写 + 侧面反应」，让 Writer 写到对应情绪时能立刻拿到"那一刻人是什么样"的范本。
+> 与现有 skill 的分工：情绪怎么写得动人，写得不出戏，已由 `skills/emotion-payoff/SKILL.md`（情绪兑现）、`skills/description/SKILL.md`（描写技法）、`skills/voice-check/SKILL.md`（同声腔检测）覆盖。本库给"哪些情绪要写出来"——具体到每一个情绪状态，给「`tag` + 核心 + 身体反应 + 思维特征 + 反 AI 味 + 完整示范段（200-300 字）+ 短句速写 + 侧面反应」，让 Writer 写到对应情绪时能立刻拿到"那一刻人是什么样"的范本。
 >
 > 组织方式按情绪的强度与极性分三个维度：
 > 1. **强烈反应**（重头戏用）—— 震惊 / 愤怒 / 心碎 / 绝望

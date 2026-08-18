@@ -1,5 +1,4 @@
 ---
-type: command
 name: revise
 description: "修订指定章节。先确认你想改什么、改到什么程度，再最小改动精准修复。"
 workflow: revise-chapter
@@ -43,7 +42,7 @@ workflow: revise-chapter
 
 ### 第二步：判断范围（内部决策）
 
-根据用户描述，判断修订范围并**告知用户**（修订范围映射见 `workflows/revise-chapter.md`）：
+根据用户描述，判断修订范围并**告知用户**（修订范围映射见 `workflow-specs/revise-chapter.md`）：
 
 ```
 我的判断是：[修订范围]——[用一句话解释为什么]。
@@ -83,4 +82,4 @@ workflow: revise-chapter
 
 ## 修订范围详情与规则
 
-四种修订范围（局部修复/去味/场景重设/全文重写）的流程、强制规则与反模式，见 `workflows/revise-chapter.md`。
+四种修订范围（局部修复/去味/场景重设/全文重写）的流程、强制规则与反模式，见 `workflow-specs/revise-chapter.md`。

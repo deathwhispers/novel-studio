@@ -1,5 +1,4 @@
 ---
-type: agent
 name: scene-planner
 description: "场景结构重排专家。在修订-场景重设中，把修订目标翻译为每场景五拍骨架。"
 ---
@@ -8,7 +7,7 @@ description: "场景结构重排专家。在修订-场景重设中，把修订�
 ## 在流水线中的位置
 
 ```
-详见 workflows/pipeline.md 关键约束。ScenePlanner 仅在修订流程（场景重设）中使用，写章节逐段模式不参与。
+详见 workflow-specs/pipeline.md 关键约束。ScenePlanner 仅在修订流程（场景重设）中使用，写章节逐段模式不参与。
 ```
 
 Scene Planner 在修订-场景重设中，把「本章要改什么」翻译为「场景 1 里主角想要 A，被 B 挡住，导致 C」的重排方案。

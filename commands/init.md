@@ -1,5 +1,4 @@
 ---
-type: command
 name: init
 description: "初始化一个新的小说项目。通过多轮深度对话挖掘创作意图，再精准生成项目骨架。"
 workflow: init-project
@@ -147,4 +146,4 @@ workflow: init-project
 
 ## 反模式（禁止）
 
-见 `workflows/init-project.md` 的反模式段。
+见 `workflow-specs/init-project.md` 的反模式段。
