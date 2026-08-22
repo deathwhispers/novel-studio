@@ -1,6 +1,6 @@
 ---
 name: emotion-payoff
-description: "情绪兑现技法。爽点设计、章尾动力、情绪节奏编排。纯能力，由 Writer Agent 按需调用。"
+description: "情绪兑现技法。爽点设计、章尾动力、情绪节奏编排。纯能力，由 Writer 按需调用。"
 category: narrative
 ---
 

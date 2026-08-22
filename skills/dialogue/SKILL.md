@@ -1,6 +1,6 @@
 ---
 name: dialogue
-description: "对话写作技法。如何让对话推动剧情、区分角色声音、承载潜台词。纯能力，由 Writer Agent 按需调用。"
+description: "对话写作技法。如何让对话推动剧情、区分角色声音、承载潜台词。纯能力，由 Writer 按需调用。"
 category: narrative
 ---
 

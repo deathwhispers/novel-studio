@@ -1,6 +1,6 @@
 ---
 name: scene-render
-description: "场景渲染技法。如何通过感官细节、环境压力和空间构造让场景生动。纯能力，由 Writer Agent 按需调用。"
+description: "场景渲染技法。如何通过感官细节、环境压力和空间构造让场景生动。纯能力，由 Writer 按需调用。"
 category: narrative
 ---
 
