@@ -137,7 +137,7 @@ my-novel/
 
 ### 描写素材库
 
-`material-index.md` — 描写素材统一检索索引。人物（美女/男性/性格）、穿搭、爽点场景范式、情绪状态、资产（汽车/名表/房产/奢侈服饰/神豪消费）、环境、美食、老司机词汇十四类素材统一用 tag 检索：先读索引 → 按 `tag` 命中条目标题 → `grep -n` 拿行号只读目标段落，不整库加载。
+`material-index.md` — 描写素材统一检索索引。人物（美女/男性/性格）、穿搭、爽点场景范式、情绪状态、资产（汽车/名表/房产/奢侈服饰/神豪消费）、环境、美食、老司机词汇、网络热梗十五类素材统一用 tag 检索：先读索引 → 按 `tag` 命中条目标题 → `grep -n` 拿行号只读目标段落，不整库加载。
 
 写作时按 tag 命中、即取即用的描写素材，与去味体系配套（每个条目带 tag + 去味示范，避免模板句和陈旧意象）：
 
@@ -154,6 +154,7 @@ my-novel/
 - `lib/luxury-consumption-library.md` — 神豪消费符号（10 类：名酒/雪茄/游艇/私人飞机/会所/马术/高尔夫/高端餐厅）
 - `lib/environment-description-library.md` — 环境描写（19 类都市场景/天气/时段，每类带 `tag` + 去味示范）
 - `lib/food-description-library.md` — 美食描写（8 类：火锅/烧烤/夜宵/小吃/家常/地方菜/甜品）
+- `lib/internet-meme-catalog.md` — 网络热梗素材库（6 功能类：搞笑吐槽/名场面金句/阴阳怪气/自嘲立人设/口头禅/双关谐音，每条目带 tag + 出处/背景含热度状态 + 网文用法 + ✅ 示范 + ❌ 滥用，主类目 tag `#热梗`，支持动态扩展）
 - `wenyin-live-platform.md` — 直播平台机制设定（稳音：礼物/特效/等级/神秘商店/展馆）
 
 ## 品类配方
@@ -213,7 +214,7 @@ novel-studio/
 │   ├── material-index.md         描写素材统一检索索引（tag 检索）
 │   ├── wenyin-live-platform.md   直播平台机制设定（稳音）
 │   ├── failure-cases.md          失败案例库
-│   └── lib/                      描写素材库（14 个，tag 检索）
+│   └── lib/                      描写素材库（15 个，tag 检索）
 │       ├── beauty-description-library.md  美女描写素材库（116 类）
 │       ├── male-description-library.md    男性角色描写素材库（65 类）
 │       ├── scene-pattern-library.md       爽点场景范式素材库（10 类）
@@ -227,7 +228,8 @@ novel-studio/
 │       ├── luxury-consumption-library.md  神豪消费符号素材库（10 类）
 │       ├── environment-description-library.md 环境描写素材库（19 类）
 │       ├── food-description-library.md    美食描写素材库（8 类）
-│       └── double-entendre-catalog.md     老司机词汇总表
+│       ├── double-entendre-catalog.md     老司机词汇总表
+│       └── internet-meme-catalog.md     网络热梗素材库（6 功能类，tag 检索动态扩展）
 ├── skills/                   15 个纯能力 Skill（每个为目录 + SKILL.md）
 │   ├── ai-flavor-detect/     AI 味检测（分析）
 │   ├── causality-check/      因果链检测（分析）
@@ -254,6 +256,13 @@ novel-studio/
 ```
 
 ## 更新日志
+
+### 0.1.1
+
+- **新增网络热梗素材库**：`lib/internet-meme-catalog.md`（6 功能章：搞笑吐槽/名场面金句/阴阳怪气/自嘲立人设/口头禅/双关谐音，一梗一条，条目带 出处/背景含热度状态 + 网文用法 + ✅ 示范 + ❌ 滥用）。主类目 tag `#热梗`，与老司机库 `#网络梗`（性暗示向）明确区隔；附「开放扩展流程」，Writer 可按同格式补充当下爆款梗。
+- **Writer 触发表新增热梗行**：写到玩梗桥段时按 tag 检索热梗库（**非必检**，只用于立人设/推爽点/造记忆点，防堆梗）。
+- **WriterBrief `material_refs` 新增 `meme_refs` 字段**：Orchestrator 预填热梗命中条目（标题级）。
+- **Critic 双轨门禁**：Style Checker 新增网络热梗检测（密度/人设/品类/攻击性），与老司机词汇同规格；`material-index.md` 新增「十五、网络热梗」章节。
 
 ### 0.1.0
 

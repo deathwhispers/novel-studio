@@ -164,6 +164,7 @@ writer_brief:
     scene_pattern_refs: []       # 爽点场景 → lib/scene-pattern-library.md（场景结构四段式 + 必备元素清单）
     emotion_state_refs: []       # 强烈情绪 → lib/emotion-state-library.md（身体反应 + 思维特征）
     double_entendre_refs: []     # 含蓄性暗示词汇 → lib/double-entendre-catalog.md
+    meme_refs: []                # 网络热梗（搞笑吐槽/名场面金句/阴阳怪气/自嘲/口头禅/双关谐音）→ lib/internet-meme-catalog.md
 
   # 明确禁止加载
   must_not_read:
