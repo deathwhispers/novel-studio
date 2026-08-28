@@ -4,7 +4,7 @@
   <p>7 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
-    <img src="https://img.shields.io/badge/version-0.1.0-green?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-0.1.1-green?style=flat-square" />
     <img src="https://img.shields.io/badge/platform-Claude%20Code-orange?style=flat-square" />
   </p>
 </div>
@@ -259,8 +259,9 @@ novel-studio/
 
 ### 0.1.1
 
+- **新增迪化流品类**：`genres/迪化流/`（recipe.md 矛盾机制 + tropes.md 五变体 + rhythm.md 单章法 + panels.md + examples.md）。配角疯狂脑补 + 自我攻略，把主角的反常解读成隐藏大佬；主角澄清被越描越黑，换招反方向兑现。
 - **新增网络热梗素材库**：`lib/internet-meme-catalog.md`（6 功能章：搞笑吐槽/名场面金句/阴阳怪气/自嘲立人设/口头禅/双关谐音，一梗一条，条目带 出处/背景含热度状态 + 网文用法 + ✅ 示范 + ❌ 滥用）。主类目 tag `#热梗`，与老司机库 `#网络梗`（性暗示向）明确区隔；附「开放扩展流程」，Writer 可按同格式补充当下爆款梗。
-- **Writer 触发表新增热梗行**：写到玩梗桥段时按 tag 检索热梗库（**非必检**，只用于立人设/推爽点/造记忆点，防堆梗）。
+- **Writer 触发表新增热梗行**：写到玩梗桥段时按 tag 检索热梗库，仅用于立人设/推爽点/造记忆点（密度/人设/品类约束见库内「使用原则」，够不着合适热梗不堆）。
 - **WriterBrief `material_refs` 新增 `meme_refs` 字段**：Orchestrator 预填热梗命中条目（标题级）。
 - **Critic 双轨门禁**：Style Checker 新增网络热梗检测（密度/人设/品类/攻击性），与老司机词汇同规格；`material-index.md` 新增「十五、网络热梗」章节。
 
