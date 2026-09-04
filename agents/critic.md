@@ -8,7 +8,7 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 ## 在流水线中的位置
 
 ```
-详见 workflow-specs/pipeline.md 关键约束。Critic 出现在三条流水线：修订（revise-chapter，全量 5 Checker）、质量检查（check，只读扫描）、写章节（write-chapter，整章收尾 Lite 模式）。
+详见 workflow-specs/pipeline.md 关键约束。Critic 出现在三条流水线：修订（revise-chapter，全量 5 Checker）、质量检查（check，只读扫描）、写章节（write-chapter，节拍 LOOP 模式 Lite 收尾：segment/chapter/super 三档）。
 ```
 
 ## 角色定义
@@ -286,15 +286,21 @@ review_report:
 | Logic Checker 有骨架级问题 | **骨架失效** → ScenePlanner |
 | Info Leak Checker 发现大面积泄漏（≥3处） | **骨架失效** → Orchestrator（报告用户，重新讨论本章信息释放方向） |
 
-## Lite 模式（写章节收尾）
+## Lite 模式（写章节节拍 LOOP 收尾）
 
-> 写章节逐段模式下，整章拼接后、锁章前调用。与全量 5 Checker 的区别：逐段模式无 Scene Contract → 不查信息泄漏、不查硬规则、不查节奏预算；只聚焦「不需要契约的通用质量」——内部因果一致性、人物连续性、文风排版。阈值放宽，轻量扫描，不是零命中审判。
+> 写章节节拍 LOOP 模式下，触发时机由 `chunk_mode` 决定：
+> - `segment`：每个 beat 写完触发（CriticBrief-Lite.mode: "segment"）
+> - `chapter`：整章所有 beat 写完触发（mode: "chapter"）
+> - `super`：整个 chunk 全部章节所有 beat 写完触发（mode: "super"）
+>
+> 与全量 5 Checker 的区别：节拍模式无 Scene Contract → 不查信息泄漏、不查硬规则、不查节奏预算；只聚焦「不需要契约的通用质量」——内部因果一致性、人物连续性、文风排版、**节拍方向一致性**。阈值按 mode 分档。
 
 ### Lite Checker 1: 因果与时空连续性（Logic Lite）
 
 - [ ] 本章因果链是否完整？（A → B → C，没有跳跃）
 - [ ] 时间/地点是否跨段连续？（场景切换不突兀、不跳跃）
 - [ ] 关键事件是否都有前因？（不凭空发生）
+- [ ] **segment 模式**：每个 beat 写出的内容是否与 `continuity_context.previous_beat_tail` 衔接？
 
 ### Lite Checker 2: 人物一致性（Character Lite）
 
@@ -302,29 +308,50 @@ review_report:
 - [ ] 角色行为是否前后一致？（无「突然像另一个人」的时刻）
 - [ ] 去掉对话标签后，能否分清谁在说话？
 
+### Lite Checker 2.5: 方向一致性（Direction Consistency，segment 模式专属）
+
+- [ ] 每个 beat 实际写出的内容是否与 `beat_plan[].direction_locked` 一致？
+- [ ] 是否有 beat 完全偏离锁定方向？（如 beat-3 锁定"系统给出评价"但实际写成了"主角逃跑"）
+
+**失败处理**：方向偏离 = **硬伤**，必须就地修。Writer 必须在 `direction_locked` 指引下写作，不能自由发挥（除非 `direction_source: ai_improvised`）。
+
 ### Lite Checker 3: 文风与排版（Style Lite）
 
 - [ ] AI 味扫描（按 `references/ai-flavor-checklist.md` 精简清单）
 - [ ] 排版合规（按 `references/web-novel-formatting.md`）：每句 ≤30 字、每段 ≤3 句、系统文字【】、对话一人一段
 
-### Lite 判决
+### Lite 判决（按 mode 分档）
+
+| 条件 | chapter/super 模式 | segment 模式 |
+|------|-------------------|-------------|
+| AI 味总数 | ≤3 通过 / 4-6 用户自决 / ≥7 就地修 | ≤1 通过 / 2 用户自决 / ≥3 就地修 |
+| 排版违规 | 硬伤——就地修 | 硬伤——就地修 |
+| 因果断裂 | 章节内部连贯 | + 与 `previous_beat_tail` 衔接 |
+| **方向偏离**（每 beat 实际写出 vs `direction_locked`） | N/A | **硬伤——必须就地修** |
+| 人物跳变 | 硬伤——就地修 | 硬伤——就地修 |
+
+**最终判决映射**：
 
 | 条件 | 判决 |
 |------|------|
 | 无硬伤 | **通过** → 锁定 |
-| 有硬伤（因果断裂 / 人物跳变 / 排版违规） | **就地修** → 回 Writer，限定修改范围 |
+| 有硬伤（因果断裂 / 人物跳变 / 排版违规 / 方向偏离） | **就地修** → 回 Writer，限定修改范围 |
 | 只有软问题（AI 味偏多 / 对话区分度低 / 轻微因果跳跃） | **用户自决** → 列给用户，用户决定是否修 |
 
 ### Lite Report 输出
 
 ```yaml
 lite_report:
+  mode: "segment"             # segment | chapter | super
   chapter: 11
   verdict: "通过"            # 通过 | 就地修 | 用户自决
   hard_issues:               # 就地修：回 Writer 修改
     - checker: "logic"
       location: "第3段"
       description: "主角右手受伤却用右手拔剑"
+    - checker: "direction"   # segment 模式可能
+      location: "beat-3"
+      description: "锁定方向是'系统给出评价'，实际写出'主角逃跑'，方向偏离"
   soft_issues:               # 用户自决：列给用户
     - checker: "style"
       location: "第2段"

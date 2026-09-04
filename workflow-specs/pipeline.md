@@ -9,40 +9,46 @@
 
 **触发**: `/novel-studio:write <N>` | `/novel-studio:write next`
 
-**当前模式**：逐段写作 + 用户协作。详见 [`workflow-specs/write-chapter.md`](write-chapter.md)。
+**当前模式**：节拍批量确认 LOOP。详见 [`workflow-specs/write-chapter.md`](write-chapter.md)。
 
 ```mermaid
 flowchart TD
     User["👤 User"]
-    Orchestrator["🎯 Orchestrator<br/>状态回顾 + 方向讨论"]
+    Orchestrator["🎯 Orchestrator<br/>工作区检测 + chunk 加载"]
 
     User --> Orchestrator
 
-    Orchestrator --> Phase1["第一阶段：确认本章方向<br/>报告状态 → 2-3个方向选项 → 用户选择 → 提炼节拍"]
-    Phase1 --> Phase2["第二阶段：逐段写作循环<br/>每段：给选项 → 用户选 → Writer写200-400字 → 用户检查/纠偏"]
-    Phase2 --> Phase3["第三阶段：整章收尾<br/>拼接 → Critic Lite（Logic/Character/Style）→ 锁定"]
-
-    Phase3 --> Summarize["📊 汇总 state_delta<br/>Writer 整章级别状态变更"]
-    Summarize --> StateManager["📋 StateManager<br/>更新全部状态文件"]
-    StateManager --> Completed(["✅ COMPLETED<br/>报告用户"])
+    Orchestrator --> Loop0["阶段 0：节拍 LOOP<br/>逐个 beat 展示选项 → 用户批量确认<br/>→ 选 chunk_mode"]
+    Loop0 --> Write1["阶段 1：节拍驱动写作<br/>Writer 按 WriterBrief-Beat<br/>节拍内连续写 200-400 字"]
+    Write1 --> Check{"chunk_mode?"}
+    Check -->|"segment"| BeatReview["每 beat 写完停下检查"]
+    Check -->|"chapter/super"| Auto["连续写完本粒度内所有 beat"]
+    BeatReview --> Write1
+    Auto --> CriticLite["阶段 2：Critic Lite<br/>segment/chapter/super 三档"]
+    CriticLite --> Lock["阶段 3：用户锁定<br/>Writer 汇总 state_delta"]
+    Lock --> StateManager["阶段 4：StateManager<br/>章节事务：+字数 +章节数<br/>不改 confirmed_beats"]
+    StateManager --> NextChapter{"当前章 =<br/>chunk 最后一章?"}
+    NextChapter -->|"否"| User
+    NextChunk["否 → User 写下一章"] --> User
+    NextChapter -->|"是"| ChunkClose["阶段 5：chunk 收尾事务<br/>archive + 清空 chunk_plan"]
+    ChunkClose --> Completed(["✅ chunk LOCKED"])
 ```
 
-**关键变化（vs 旧版自动流水线）**：
+**关键变化（vs 旧版逐段流水线）**：
 
 | 阶段 | 旧版 | 新版 |
 |------|------|------|
-| 方向确定 | 自动生成故事合约 | 用户对话替代（3-5 轮方向讨论） |
-| 结构设计 | ScenePlanner 生成 Scene Contract | 用户对话替代（每段前给选项选择推进方向） |
-| 正文写作 | Writer 一次性写完整章 | Writer 逐段写，每段 200-400 字，写完就停 |
-| 质量检查 | Critic 5 Checker 全量检查 | 收尾阶段 Critic Lite 轻量检查（Logic/Character/Style 三项） |
-| 状态更新 | StateManager（Critic 通过后） | StateManager（用户锁定章节后，Writer 汇总 state_delta） |
+| 方向确定 | 3-5 轮对话讨论本章方向 | LOOP 一次性展示所有 beat 选项，用户逐个确认（含自定义/跳到/回 LOOP） |
+| 写作流程 | 逐段：给选项 → 写200-400字 → 检查 | 节拍内一次写完 200-400 字；节拍间按 chunk_mode 决定停/续 |
+| 质量检查 | Critic Lite 整章收尾（Logic/Character/Style） | Critic Lite 三档：segment（单 beat）/ chapter（整章）/ super（整 chunk） |
+| 状态源 | `progress.yaml` 的 `chapter_state` + segment 临时状态 | `progress.yaml` 的 `chunk_plan` 块（单一源） |
 
-**交接包流转**（逐段模式简化）：
+**交接包流转**（节拍模式）：
 | 步骤 | 交接包 |
 |------|--------|
-| Orchestrator → Writer（逐段） | 用户选择的推进方向 + 已写段落上下文 |
-| Writer → Orchestrator（整章完成） | 整章正文 |
-| Orchestrator → Critic（Lite） | CriticBrief-Lite（正文路径 + 连续性上下文） |
+| Orchestrator → Writer（节拍） | WriterBrief-Beat（current_beat + 已锁方向 + 约束 + 不传 chunk 文件路径） |
+| Writer → Orchestrator（beat 完成） | writer_beat_output（节拍 ID + 正文 + 字数 + hard_gate） |
+| Orchestrator → Critic（Lite） | CriticBrief-Lite（mode: segment/chapter/super + 正文路径 + 连续性 + beat_plan） |
 | Critic → Orchestrator | lite_report（通过/就地修/用户自决） |
 | Orchestrator → StateManager | StateManagerBrief（state_delta + 锁定确认） |
 
@@ -209,9 +215,9 @@ flowchart TD
 1. **Agent 不自选后继**: 下一步由 workflow 定义和用户确认决定，不由 Agent 推荐
 2. **Orchestrator 是唯一中转站**: Agent 之间不直接通信，所有信息经 Orchestrator 传递
 3. **StateManager 是大状态唯一写入口**: 其他 Agent 只标记增量（state_delta），不直接写 `state/` 大状态文件（author/reader/character/foreshadow）。StateManager 同时维护事务版本（progress.state_version + transaction-log.yaml）
-4. **Writer 不读大纲**: 渐进披露，Writer 只知道当前段的约束和禁止触碰清单
+4. **Writer 不知道大纲全貌**：渐进披露，Writer 只知道当前 beat 的约束和禁止触碰清单（节拍模式） / 当前段的 Scene Contract（修订模式）
 5. **交接包裁剪**: Orchestrator 按 `runtime/handoff-schema.md` 裁剪交接包，下游 Agent 只收到所需字段
-6. **逐段模式不依赖 ScenePlanner 和全量 Critic**: 写章节由用户对话驱动，ScenePlanner 仅在修订使用；Critic 在整章收尾以 Lite 模式兜底（无 Scene Contract，不查信息泄漏）
+6. **节拍模式不依赖 ScenePlanner 和全量 Critic**：写章节由 LOOP + 节拍驱动，ScenePlanner 仅在修订使用；Critic 在节拍/整章/整 chunk 收尾以 Lite 模式兜底（无 Scene Contract，不查信息泄漏）
 7. **状态更新是版本化事务**: StateManager 每次更新递增 `state_version`、记 transaction-log；写前核对事务号。定义见 `runtime/state-schema.md` 第八节
 
 ---

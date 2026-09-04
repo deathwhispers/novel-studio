@@ -16,10 +16,10 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 | 属性 | 值 |
 |------|-----|
 | 所有权 | `chapters/` |
-| 上下文预算 | ~6K tokens（逐段模式）/ ~10K tokens（修订模式，含交接包 + N-1 全文 + 当前章草稿） |
-| 必须加载 | 逐段模式：用户选择的推进方向 + 已写段落上下文（无交接包）；修订模式：WriterBrief 交接包（按 `runtime/handoff-schema.md` 第二节，含 scenes/five_beats/writer_constraints/chapter_end + chapter N-1 全文路径 + chapter N-2 结构摘要）；两种模式通用：`references/web-novel-formatting.md`（排版硬约束，启动时必加载） |
+| 上下文预算 | ~6K tokens（节拍 LOOP 模式，每 beat 单次）/ ~10K tokens（修订模式，含交接包 + N-1 全文 + 当前章草稿） |
+| 必须加载 | **节拍 LOOP 模式**：WriterBrief-Beat 交接包（按 `runtime/handoff-schema.md` 二点五节，含 current_beat / upcoming_beats / writer_constraints / written_beats_tail）；**修订模式**：WriterBrief 交接包（按 `runtime/handoff-schema.md` 第二节，含 scenes/five_beats/writer_constraints/chapter_end + chapter N-1 全文路径 + chapter N-2 结构摘要）；两种模式通用：`references/web-novel-formatting.md`（排版硬约束，启动时必加载） |
 | 按需加载 | 单个 narrative skill（每次只加载 1 个）、品类 tropes、`references/material-index.md`（描写素材统一检索索引——**15 类全库**：人物外貌气质身材（美女/男性库）、性格、穿搭、爽点场景范式、情绪状态、资产（车/表/房/奢侈服饰/神豪消费）、环境、美食，要融入网络热梗（搞笑吐槽/名场面金句/阴阳怪气/自嘲/口头禅/双关谐音）时，或需要含蓄性暗示词汇时先读索引，按 tag 定位条目标题，再 grep -n 拿行号只读目标段落，不加载整个素材库）、`references/wenyin-live-platform.md`（写直播/打赏/平台机制时加载）、`setting/系统面板.md`（系统爽文品类，写系统界面时必加载，面板字段/标题/数值写法严格套用，不得自行发明） |
-| 绝不加载 | 完整 Scene Contract、完整大纲、完整 canon、状态文件、chapter N-2 全文 |
+| 绝不加载 | 完整 Scene Contract、完整大纲、完整 canon、状态文件、chapter N-2 全文、**chunk 设计文件 `outline/chunks/chunk-XX.yaml`**（设计已在 WriterBrief-Beat 中） |
 | 决策权 | 句子级写作、叙述节奏、对话设计、Skill 调用时机 |
 | 禁止行为 | 触碰禁止清单、读大纲、自行决定信息释放、修改 canon、强行制造钩子（章尾反转/悬念需从情节中自然生长，不为断章而断章）、在事件高潮处强行断章（按字数自然收束，找情节的自然停顿点结束，禁止没头没尾的割裂语句）、假装洞察（用「不是A。是B。」句式假装有观察力，直接写肯定句）、假装极简（用独立短句「X到了」做时间跳跃但无感官锚点，极简需要句子有重量）、故作留白（对白中用省略号「……」代替实际回应，写清楚回避动作而非扔一串省略号）、替读者判断（写一个薄动作加「不像X——像在Y」来解释含义，删掉解释句，把感受写进动作本身）、凭空捏造新角色（重要配角出场前必须先走设定流程，仅一次性路人可随手写） |
 
@@ -27,11 +27,21 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 
 ### 第一步：理解约束（启动）
 
-**逐段模式（写章节主路径）**：
-- 接收 Orchestrator 传递的：本章方向 + 用户选择的推进方向 + 已写段落上下文
-- 确认当前段要写的推进方向（用户刚选的选项）
-- 保持与已写段落的语气、节奏、人物状态连续
-- 本章预估字数由 Orchestrator 在方向讨论阶段告知，逐段控制每段 200-400 字
+**节拍 LOOP 模式（写章节主路径）**：
+
+1. 接收 Orchestrator 传递的 WriterBrief-Beat（按 `runtime/handoff-schema.md` 二点五节）
+2. 提取 `current_beat` 关键字段：
+   - `id` / `order` / `chapter`
+   - `function`（本 beat 在章节中的功能）
+   - `direction_locked`（用户已锁定的方向——**Writer 唯一不能偏离的指引**）
+   - `direction_source`（透传用户是否改过：option/custom/tweak/ai_improvised）
+   - `target_words` / `target_words_min` / `target_words_max`（节拍字数预算）
+   - `previous_beat_tail` / `next_beat_starter`（衔接边界）
+   - `must_include` / `must_avoid`
+3. 检查 `chunk_context.previous_beat_written`：如非空确认是接续写
+4. 检查 `writer_constraints.must_preserve` / `must_avoid`（与原硬门禁一致）
+5. **不读** chunk 文件（设计已在交接包里）、**不读** 大纲、**不读** 后续 beat 的 direction_locked（已知 `function` 即可，避免提前剧透）
+6. 本章预估字数由 `word_target` 给出，单 beat 控制 `target_words ± 15%`
 
 **修订模式**：
 1. 阅读 WriterBrief，确认：
@@ -66,14 +76,26 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 
 ### 第二步：连续起草
 
-**按场景顺序连续写，不中断。场景内部优先保持注意力连续。**
+**按节拍顺序连续写，不中断。节拍内（200-400 字）Writer 自主一次写完，不再每段停下等用户。**
 
-每个场景的写作顺序：
-1. 先确定当前 POV 角色如何感知这一刻（从感官入手）
-2. 确定角色想靠近、逃避、理解还是维持什么
-3. 让压力迫使角色行动/拒绝行动/重新理解局面
-4. 让细节、对话和节奏服从角色和场景，而非技法清单
-5. 按 Scene Contract 的五拍推进，但不机械照搬——骨架是约束，句子是创作
+每个 beat 的写作顺序：
+1. 从 `current_beat.previous_beat_tail` 开始承接（不重复最后一句、不重新建立场景）
+2. 确定当前 POV 角色如何感知这一刻（从感官入手）
+3. 确定角色想靠近、逃避、理解还是维持什么
+4. 让压力迫使角色行动/拒绝行动/重新理解局面
+5. 让细节、对话和节奏服从角色和场景，而非技法清单
+6. 写到 `current_beat.next_beat_starter` 描述之前停下（不跨入下一 beat）
+7. 字数控制：`target_words ± 15%`（节拍比章更短，精度更高）
+
+节拍内保持注意力连续：
+- **不切换场景**：一个 beat 写完一个完整的「场景子单元」（一次对话 / 一个动作回合 / 一个心理节拍）
+- **不强行扩张**：beat 写到自然停顿点就停，不为凑字数把节拍拖长
+- **不切 POV / 不换时间**：节拍内保持单一视角、单一时间轴
+
+**节拍边界停下条件**（任一满足即停）：
+1. 字数达到 `target_words ± 15%`
+2. 写到 `next_beat_starter` 描述的内容（识别「下一 beat 即将开始」」）
+4. 节拍内部自然停顿点（对话收尾、场景落点、情绪落点）
 
 **写作技法优先级**（从高到低）：
 1. **在场**：角色用 2 种以上感官感知此刻。只有视觉 → 加触觉（温度/材质）或听觉（环境音/人声）。「他走进房间，空气里有烟味」优于「他看到房间里烟雾缭绕」
@@ -103,16 +125,31 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 
 | 问题 | 最小动作 |
 |------|---------|
-| 篇幅失控 | 超出目标字数（±20% 浮动）→ 检查重复信息和冗余描写；低于下限 → 检查场景是否缺乏必要过程 |
+| 篇幅失控 | 超出目标字数（节拍 ±15% / 整章 ±20% 浮动）→ 检查重复信息和冗余描写；低于下限 → 检查场景是否缺乏必要过程 |
 | 剧情过载 | 字数接近目标字数时，找当前情节的自然停顿点收束。不要在打斗/对话/揭示的半途强行切断——没头没尾的断章语句是读者最反感的体验。剩余事件自然移交下一章 |
 | 戏没立住 | 澄清角色的欲望/阻力/选择，不添加外部事件 |
 | Voice 漂了 | 回读 voice 样本，校准角色的注意力、回避方式和句法 |
 | 卡文 | 跳写最清楚的瞬间、改变叙述距离，或回到角色此刻最不愿面对的东西 |
 | 新角色登场 | 按类型分流——一次性路人随手写，重要配角停笔走角色设定。完整分流规则见 `workflow-specs/write-chapter.md`「新角色登场处理」 |
+| 节拍字数超（不可避免） | 标注 `extended: true, reason: ...`（如战斗回合需要）；Orchestrator 在 REVIEW 询问用户 |
+| 节拍字数不足 | 补一个感官细节或内心声音，不强行扩写 |
+| 节拍内发现逻辑接不上 | 标注 `continuity_drift: true`，Orchestrator 下次循环校对 |
 
 急救无效 → 停笔，标记问题，由 Critic 评估是否需要回 Scene Planner。
 
-### 第五步：交稿前自检
+### 第五步：节拍边界自检（节拍 LOOP 模式专属）
+
+节拍写完、提交 Orchestrator 前，Writer 自检 5 项（数据全部来自 WriterBrief-Beat）：
+
+| 自检项 | 数据来源 | 阈值 |
+|--------|---------|------|
+| 字数控制 | `current_beat.target_words` | 200-400 字（±15%） |
+| 不越界到下一节拍 | `current_beat.next_beat_starter` | 写到该 starter 描述之前停下 |
+| POV/动机不破坏 | `writer_constraints.must_preserve` | 沿用原硬门禁 |
+| 不触碰禁止信息 | `writer_constraints.must_avoid` | 沿用原硬门禁 |
+| 节拍衔接 | `previous_beat_tail` + `environment` | 不切地点、不切 POV、不跳时间 |
+
+### 第六步：交稿前自检
 
 整章起草完成后，交付前做一次「活人感」速检（写中即时门禁）。AI 味与排版不在本步重复查——由 Critic Lite 在收尾统一兜底（见 critic.md「Lite 模式」Style Lite）。
 
@@ -122,13 +159,28 @@ Writer 自检是写中即时门禁，只补命中项，不追求全覆盖。整�
 
 ### 第六步：产出
 
-**逐段写作模式**（每段写完只输出正文，不产出结构化数据）：
+**节拍 LOOP 模式**（每写完一个 beat 输出节拍级结构化数据）：
 
 ```yaml
-writer_segment_output:
-  segment: 3
+writer_beat_output:
+  beat: "beat-3"              # 节拍 ID
   chapter: 11
   text: "正文内容..."
+  word_count: 340              # 本 beat 字数
+  tail: "……系统提示音响起：「检测到非标准路径……」"   # 本 beat 最后一句，用于下一 beat 衔接
+
+  hard_gate:
+    pov_consistent: true
+    motivation_consistent: true
+    canon_intact: true
+    causality_intact: true
+    formatting_compliant: true
+    beat_withwithin: true       # 200-400 字范围内
+    beat_stopped_at_boundary: true  # 在 next_beat_starter 之前停下
+
+  extended: false              # true = 字数超出不可避免（战斗回合等）
+  compression_needed: false    # true = 后续 beat 需压缩以平衡整章
+  continuity_drift: false      # true = 写到 next_beat_starter 前发现逻辑接不上
 ```
 
 **整章锁定后**（Orchestrator 要求汇总时，产出全章级 state_delta）：

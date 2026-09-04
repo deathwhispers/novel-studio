@@ -31,7 +31,7 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 
 | 用户说 | 意图分类 | 触发 Workflow |
 |--------|---------|---------------|
-| 「写第X章」「续写」「写下一章」 | 写章节 | write-chapter |
+| 「写第X章」「续写」「写下一章」 | 写章节 | write-chapter（节拍 LOOP 模式） |
 | 「修改第X章」「重写第X章」「润色」 | 修订章节 | revise-chapter |
 | 「开新书」「初始化」「新建项目」 | 初始化项目 | init-project |
 | 「补设定」「世界观」「角色设计」 | 世界观构建 | worldbuilding |
@@ -54,11 +54,13 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 
 读取对应 Workflow 文件，按状态机规则调度：
 
-**写章节（逐段模式）**：
-- 第一阶段：Orchestrator 与用户多轮对话确认方向（本章功能/信息释放/伏笔轻碰由方向讨论确定）
-- 第二阶段：Orchestrator 给出选项 → 用户选择 → 调度 Writer 写一段 → 用户检查 → 循环
-- 写作中若需引入新重要角色（非一次性路人）→ 暂停写作，走 worldbuilding「添加角色」分支设定后继续
-- 第三阶段：用户确认完成 → 调度 Critic 做 Lite 检查（Logic/Character/Style）→ Writer 汇总 state_delta → 调度 StateManager 更新所有状态文件
+**写章节（节拍 LOOP 模式）**：
+- 阶段 0：Orchestrator 驱动 LOOP（LOOP_INIT → LOOP_PICKING → LOOP_DONE），用户批量确认 chunk 内所有节拍 + 选 chunk_mode（segment/chapter/super）
+- 阶段 1：Orchestrator 为当前 beat 组装 WriterBrief-Beat 调度 Writer；Writer 节拍内一次写完（200-400 字）；按 segment 模式每 beat 停下检查；按 chapter/super 模式 Writer 连续写完本粒度内所有 beat
+- 阶段 2：触发 REVIEW → Orchestrator 组装 CriticBrief-Lite（含 mode + beat_plan + continuity_context）调度 Critic 做轻量检查
+- 阶段 3：用户锁定 → Writer 汇总 state_delta → Orchestrator 组装 StateManagerBrief 调度 StateManager 更新（章节事务：+字数 +章节数 +chapter_state.status=COMPLETED +chunk_plan.beats_written，不动 confirmed_beats）
+- 阶段 4：最后一章完成后 StateManager 自动触发 chunk 收尾事务（archive + 清空 chunk_plan）
+- 任意阶段用户说"回到 LOOP" / "改 beat-X" → Orchestrator 把 loop_state=LOOP，loop_iteration +1，目标 beat 处理（详见 write-chapter.md 阶段 0.6 节）
 - 无 NEED_PLAN/NEED_SCENE/NEED_REVIEW 等中间状态枚举，用户对话驱动流转
 
 **修订章节**：
@@ -86,11 +88,12 @@ NEED_REVIEW → Critic（仅相关 Checker）
 - `state/progress.yaml` 是否存在 → 判断是否有运行状态
 - `chapters/` 最新章节 → 判断进度
 
-**两种情况自动分流**：
+**三种两种情况自动分流**：
 
 | 信号 | 判定 | 动作 |
 |------|------|------|
-| `core/作品核心.md` 存在 + `progress.yaml` 含 `schema_version` | 新版工作区 | 正常续写 |
+| `core/作品核心.md` 存在 + `progress.yaml` 含 `schema_version` + `chunk_plan` 块存在 | 新版 v3 工作区（节拍 LOOP 模式） | 走节拍 LOOP 流程 |
+| `core/作品核心.md` 存在 + `progress.yaml` 含 `schema_version` + `chunk_plan` 块缺失 | 旧 v3 工作区 | 提示用户 `/novel-studio:upgrade` 升级到节拍模式，或保留旧逐段模式 |
 | `core/作品总表.md`（旧名）存在，或 `progress.yaml` 缺 `schema_version` / `files` 用 `hard_canon` / `files.outline` 指向 `.md` | 旧版工作区（v2） | 建议用户执行 `/novel-studio:upgrade` |
 
 ## 交接包与信息裁剪
@@ -111,13 +114,13 @@ Orchestrator 不仅是路由器，也是**信息经纪人**——从上游完整
 
 | 下游 Agent | Brief 格式 | 预估大小 | 使用场景 |
 |-----------|-----------|---------|---------|
-| Writer（逐段） | 用户选择的推进方向 + 已写段落上下文 | ~1K | 写章节逐段模式 |
+| Writer（节拍 LOOP） | WriterBrief-Beat（current_beat + chunks摘要 + 约束，不传 chunk 文件路径） | ~1.5K | 写章节节拍模式 |
 | Writer（修订） | WriterBrief（scenes + 约束 + 章尾落点） | ~1.5K | 修订章节 |
 | StateManager | StateManagerBrief（state_delta） | ~0.5K | 写章节/修订 |
 | ScenePlanner | ScenePlannerBrief（修订目标 + 现有章节结构） | ~1.5K | 修订-场景重设 |
 | Critic | CriticBrief（合并检查清单） | ~0.8K | 修订/质量检查 |
-| Critic（Lite） | CriticBrief-Lite（正文路径 + 连续性上下文） | ~0.5K | 写章节收尾 |
-| Outliner | 不使用 Brief | — | Orchestrator 传递用户构想，Outliner 自行加载 canon 摘要 |
+| Critic（Lite） | CriticBrief-Lite（mode: segment/chapter/super + 正文路径 + beat_plan + continuity_context） | ~0.5K | 写章节收尾 |
+| Outliner | 不使用 Brief | — | Orchestrator 传递用户构想 + chunk 设计触发 |
 
 ### 裁剪原则
 
@@ -141,4 +144,4 @@ Orchestrator 启动时：
 - **Agent 不自选后继**：下一步由 Orchestrator 按 workflow 定义调度，不由 Agent 推荐
 - **用户可见的是进度，不是 Agent 名**：报告「正在重排场景结构…」而不是「正在调用 ScenePlanner」
 - **对话流程在 command 文件中**：Orchestrator 不重复定义具体的多轮对话流程，command 文件是对话流程的唯一权威来源
-- **状态文件写入分工**：Orchestrator 写入 `progress.yaml`（章节进度 chapter_state）和 `agent-log.yaml`（流转日志）；StateManager 写入 `author.yaml`、`reader.yaml`、`character.yaml`、`foreshadow.yaml`（大状态）、`transaction-log.yaml`（事务日志），以及 `progress.yaml` 的累计统计字段（total_words、total_chapters_written）和顶层 `state_version`（事务版本号）
+- **状态文件写入分工**：Orchestrator 写入 `progress.yaml`（`chapter_state` 字段 + `chunk_plan` 块的节拍相关字段：`current_chunk`、`current_beat`、`confirmed_beats`、`loop_state`、`loop_iteration`、`loop_revert_log`、`beats_written`、`words_written`、`writing_started_at`）和 `agent-log.yaml`（流转日志）；StateManager 写入 `author.yaml`、`reader.yaml`、`character.yaml`、`foreshadow.yaml`（大状态）、`transaction-log.yaml`（事务日志），以及 `progress.yaml` 的累计统计字段（total字段、total_chapters_written）和顶层 `state_version`（事务版本号）+ 章节事务中 `chunk_plan.beats_written` + chunk 收尾事务中清空 `chunk_plan` 全字段

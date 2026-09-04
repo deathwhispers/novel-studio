@@ -33,12 +33,31 @@ chapter_state:                  # 当前正在写的章节状态
   draft: ""                     # 正文文件路径
   segment_count: 0              # 已写成段数
 
+# ===== chunk 块（节拍批量确认 Loop 的运行时进度）=====
+# 详见第十节「chunk 字段定义与生命周期」。
+chunk_plan:
+  current_chunk: null           # 当前活跃 chunk id（null = 未启动 chunk）
+  source: null                  # chunk 设计文件路径（outline/chunks/chunk-XX.yaml）
+  current_beat: null            # 当前正在处理的 beat id（null = chunk 全部完成）
+  chapter_range: null           # 本 chunk 覆盖的章节号 [start, end]
+  chapter_word_target: null     # 继承自 workspace.chapter_word_target，可被 chunk 级覆盖
+  confirmed_beats: {}           # 节拍确认状态，key=beat_id；详见第十节 1.3 节
+  loop_state: null              # LOOP | WRITING | REVIEW | LOCKED
+  loop_iteration: 0             # LOOP 重入次数（含首次进入）
+  loop_entered_at: null         # 进入当前 LOOP 状态的时间
+  beats_written: 0              # 当前章节已写完的 beat 数
+  beats_total: 0                # 当前章节的 beat 总数（非 chunk 全部）
+  words_written: 0              # 当前章节已写累计字数
+  writing_started_at: null      # 当前章节写作开始时间
+  loop_revert_log: []           # LOOP 回退日志（详见第十节 3.6 节）
+
 files:
   book_core: "core/作品核心.md"
   hard_rules: "setting/硬规则.yaml"
   outline: "outline/全书总纲.yaml"
   volumes:
     - "outline/volumes/volume-01.yaml"
+  chunks_dir: "outline/chunks/"
   chapters_dir: "chapters/"
 
 next_milestone:
@@ -51,6 +70,7 @@ next_milestone:
 - `chapter_state` 由 Orchestrator 在写章节过程中写入
 - `current` 的累计统计字段（total_words、total_chapters_written）由 StateManager 在章节锁定后更新
 - `state_version` 由 StateManager 独占维护，每次状态事务 +1；Orchestrator 不修改此字段
+- `chunk_plan` 块的存在与否控制写章节模式：缺失 → 旧逐段模式；存在 → 节拍 LOOP 模式
 
 ---
 
@@ -406,3 +426,148 @@ active（完整条目）──「下一章还用得上吗？」──> settled�
 1. **结算一句话判断**：「下一章还用得上吗」。用 → 留；不用 → 指针化。
 2. **残留信息不归压缩管**：伏笔收束后仍影响后文的「影响」，不靠压缩反向推断，由日常 `state_delta` 自然落到 `reader.known_facts` / `author.secrets`。压缩只做「指针化」，不猜语义。
 3. **归档指针化，永不膨胀**：archive 条目固定 `id + 一句话 + 章节号`（几十字节），不存第二份真相。
+
+---
+
+## 十、chunk 字段定义与生命周期
+
+> 写章节的「节拍批量确认 Loop」模式的运行时状态。`progress.yaml` 的 `chunk_plan` 块是该模式**唯一状态源**；chunk 设计内容（beat 定义、选项池）由 `outline/chunks/chunk-XX.yaml` 提供，是**静态设计文档**，不重复存储于 state。
+
+### 10.1 块结构
+
+```yaml
+chunk_plan:
+  # 当前 chunk 标识与来源
+  current_chunk: "chunk-01"        # 当前 chunk id；null = 未启动 chunk
+  source: "outline/chunks/chunk-01.yaml"   # chunk 设计文件
+
+  # 当前正在处理的节拍
+  current_beat: "beat-3"           # 当前 beat id；null = chunk 全部完成
+
+  # chunk 范围
+  chapter_range: [11, 15]         # [起始章, 结束章]
+  chapter_word_target: 2000        # 单章目标字数（继承自 workspace，可覆盖）
+
+  # ★ 节拍确认状态（核心数据结构，详见 10.3）
+  confirmed_beats:
+    "beat-1":
+      choice: "选项A：接上章结尾"
+      source: "option"             # option | custom | tweak:<选项> | ai_improvised
+      locked: true                 # true = 已锁定；false = 已呈现未锁；缺失 key = 还没呈现
+      locked_at: "2026-01-15T10:30:00"
+
+  # 状态机字段
+  loop_state: "WRITING"           # LOOP | WRITING | REVIEW | LOCKED
+  loop_iteration: 2               # LOOP 重入次数（含首次进入）
+  loop_entered_at: "2026-01-15T10:30:00"
+
+  # 写作进度（当前章节维度）
+  beats_written: 2                # 当前章节已写完的 beat 数
+  beats_total: 7                  # 当前章节的 beat 总数（非 chunk 全部）
+  words_written: 850              # 当前章节已写累计字数
+  writing_started_at: "2026-01-15T10:36:00"
+
+  # 回退日志（详见 10.5）
+  loop_revert_log:
+    - beat_id: "beat-3"
+      reverted_at: "2026-01-15T11:30:00"
+      reason: "用户指出方向偏离了卷节拍"
+```
+
+### 10.2 loop_state 状态机
+
+```
+LOOP ────► WRITING ────► REVIEW ────► WRITING ────► ... ────► LOCKED
+  ▲                       │                                            ▲
+  │                       ▼                                            │
+  └───────────── (任意阶段用户说"回到 LOOP") ──────────────────────────┘
+```
+
+| 状态 | 含义 | Orchestrator 动作 |
+|------|------|------------------|
+| `LOOP` | 批量确认节拍中（chunk 启动时，或用户主动重入） | 展示未确认 beat 的选项，接收用户输入 |
+| `WRITING` | Writer 正在写当前 beat | 把 beat 任务打成 WriterBrief-Beat，调度 Writer |
+| `REVIEW` | Writer 写完 beat 后等用户检查（chunk_mode 控制粒度） | 展示内容等用户指令 |
+| `LOCKED` | chunk 全部章节完成 | 触发 StateManager 收尾事务（archive + 清空 chunk_plan） |
+
+### 10.3 节拍确认状态的四种语义
+
+用同一字段表达，靠 `confirmed_beats` 中是否存在 key + `locked` 字段值区分：
+
+| 状态 | 数据形态 |
+|------|---------|
+| 未呈现 | 该 beat_id 不在 `confirmed_beats` 中 |
+| 已呈现未锁 | 该 beat_id 在 `confirmed_beats` 中，`locked: false` |
+| 已锁定 | 该 beat_id 在 `confirmed_beats` 中，`locked: true` |
+| 已写完 | `beats_written` 已计入该 beat，但 `confirmed_beats` 保留 |
+
+`confirmed_beats[].source` 枚举：
+- `option`：用户从预设选项池中选了 A/B/C/D
+- `custom`：用户自定义方向
+- `tweak:<原选项>`：用户选了某个选项但改了措辞（如 `tweak:选项B`）
+- `ai_improvised`：Writer 在用户未选的情况下自己发挥（仅当用户选 D「你来定」时）
+
+### 10.4 写入权约束
+
+**Orchestrator** 写入的字段（写章节流程中）：
+- `current_chunk`、`current_beat`、`confirmed_beats`、`loop_state`、`loop_iteration`、`loop_revert_log`
+- `beats_written`、`words_written`、`writing_started_at`
+- `source`、`chapter_range`、`chapter_word_target`
+
+**StateManager** 写入的字段：
+- 章节事务中：递增 `beats_written` 与 `words_written`；**不修改** `confirmed_beats`、`loop_state`、`loop_revert_log`
+- chunk 收尾事务（loop_state: LOCKED 触发时）：清空 `chunk_plan` 全部字段为 null/0
+
+**写入互斥**：
+- 章节事务中不能动 `chunk_plan.confirmed_beats`（已用节拍不能回收）
+- StateManager 不写 `loop_revert_log`（这是 LOOP 行为记录）
+
+### 10.5 LOOP 回退机制
+
+任意状态下用户说"回到 LOOP" / "改 beat-X" / "这个 beat 方向不对"：
+
+1. Orchestrator 把 `loop_state: LOOP`
+2. `loop_iteration +1`
+3. 目标 beat 的 `confirmed_beats` 条目：
+   - **未写**（`beats_written` 未计）：`locked: false`（让用户重选）
+   - **已写**：`locked: true` 保留，但 `loop_revert_log` 追加一条
+
+`loop_revert_log` 每条结构：
+
+```yaml
+- beat_id: "beat-3"
+  reverted_at: "2026-01-15T11:30:00"
+  reason: "用户指出方向偏离了卷节拍"   # 可选，用户口述或 Orchestrator 推断
+```
+
+### 10.6 chunk 完成清理
+
+StateManager 在最后一章 `COMPLETED` 触发时检测（**双重条件**）：
+- `current.chapter == chapter_range[1]`（最后一章）
+- `chapter_state.status: COMPLETED`
+- `beats_written == beats_total`（注：`beats_total` 是当前章的 beat 数）
+
+满足 → 触发「chunk 收尾事务」：
+1. `outline/chunks/chunk-XX.yaml` 内容指针化进 `state/archive/chunks-archive.yaml`
+2. `progress.yaml` 的 `chunk_plan` 块字段全部置 null / 0（保留字段结构）
+3. `transaction-log.yaml` 追加 `trigger: "chunk_close"` 记录
+4. `state_version` 独立 +1（与章节事务分开）
+5. `outline/chunks/chunk-XX.yaml` 文件**不删除**（保留为大纲设计真值）
+
+### 10.7 chunk 跨卷约束
+
+- chunk **不跨卷**：`chapter_range` 必须完全落在某一卷的 chapter_range 内
+- 跨卷时强制拆分：`chunk-XX` 覆盖 `[V1_last_chapter]`、`chunk-XX+1` 覆盖 `[V2_first_chapter, ...]`
+- 拆分点在 LOOP 启动前由 Orchestrator 检测并提示用户
+
+### 10.8 兼容性（缺失 chunk_plan 块的旧工作区）
+
+- `schema_version` 保持 3（字段新增向后兼容，旧读取方忽略未知字段）
+- 缺失 `chunk_plan` 块的旧工作区 → Orchestrator 检测后降级到旧逐段模式（保留 `/novel-studio:write N` 命令可用）
+- 升级路径：`/novel-studio:upgrade` 检测到缺 `chunk_plan` 块 → 询问用户是否启用节拍模式 → 用户确认后 StateManager 写入空 `chunk_plan: {}`
+
+---
+
+## 十一、文件版本与兼容（已上移至第七节）
+
+本节仅补充：`chunk_plan` 块是 schema_version=3 的可选扩展块。缺失不影响旧读取方（schema_version 读取规则不变）。

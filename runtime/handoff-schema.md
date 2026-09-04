@@ -177,6 +177,136 @@ writer_brief:
 
 ---
 
+## 二点五、WriterBrief-Beat（写章节节拍模式）
+
+**方向**：Orchestrator → Writer（节拍 LOOP 模式）
+**预估**：~1.5K tokens（交接包自身）+ 上章路径（Writer 自行读取）
+**用途**：Writer 据此写**单个 beat**（200-400 字），节拍内一次写完不打断。**不传 chunk 文件路径**——所有需要的信息已在交接包里，避免 Writer 越权读完整设计。
+
+```yaml
+writer_brief_beat:
+  from: Orchestrator
+  to: Writer
+  chapter: 11
+  mode: "beat-loop"                 # 区别于修订模式的 "scene-contract"
+  word_target: 2000                 # 整章目标字数（Orchestrator 从 progress.yaml workspace.chapter_word_target 提取，浮动 ±20%）
+
+  # chunk 上下文（让 Writer 知道整体处于 chunk 哪个阶段）
+  chunk_context:
+    chunk_id: "chunk-01"
+    beats_total: 7                  # 当前章 beat 总数
+    beats_locked_count: 7           # 已锁定的 beat 数
+    previous_beat_written: "beat-2" # 当前 beat 不是第一个时此字段非空；用于判断是否接续
+
+  # ★ 当前要写的节拍任务（核心：单 beat）
+  current_beat:
+    id: "beat-3"
+    order: 3                        # 在当前章的顺序（从 1 起）
+    chapter: 11
+    function: "转折——系统评价'创造性使用'，主角意识到系统在测试思维方式"
+    pov: "主角"
+    narrative_distance: "近"        # 近（内心可见）| 中（行为可见）| 远（概括叙述）
+    environment: "XX城训练场，清晨"
+    environment_pressure: "系统任务时限只剩2小时"
+
+    # 用户已锁定的方向（Writer 唯一不能偏离的指引）
+    direction_locked: "选项B：系统给出'创造性使用'评价，但触发隐藏任务"
+    direction_source: "tweak:选项B"   # option | custom | tweak:<原选项> | ai_improvised
+
+    # 字数目标（按节拍算）
+    target_words: 350
+    target_words_min: 200
+    target_words_max: 400
+
+    must_include:                   # 必须包含的元素（Writer 写后自检用）
+      - "系统给出评价的提示"
+      - "主角对评价的内心反应"
+    must_avoid:
+      - "直接揭示系统在测试思维方式（这个理解留给下一节拍）"
+
+    # 衔接边界
+    previous_beat_tail: "……系统提示音响起：「检测到非标准路径……」"
+    next_beat_starter: "主角注意到任务列表多了一条红色标记"
+
+  # 后续未写的节拍摘要（不超过 3 个；让 Writer 知道整体走向避免方向冲突）
+  upcoming_beats:
+    - id: "beat-4"
+      order: 4
+      function: "主角选择不点开红色任务"
+      direction_locked: "选项A：主动克制"
+    - id: "beat-5"
+      order: 5
+      function: "测试结束，系统给出综合评价"
+      direction_locked: "选项C：评价中等偏上"
+    # 最多 3 个，超过则 Orchestrator 裁剪
+
+  # Writer 约束（从 chapter_state + chunk 文件提取，与原 WriterBrief 一致）
+  writer_constraints:
+    must_preserve:
+      - "主角的伪装身份不能暴露给路人"
+      - "被救者说话方式：急促/省略/用词古怪"
+    must_avoid:
+      - "AI 味：解释主角为什么选择取巧"
+      - "信息泄漏：不能说「系统和这个人有关联」"
+
+  # 章尾落点（从 chunk 文件最后一个 beat 的 chapter_end_anchor 提取）
+  chapter_end:
+    hook: "主角接受了一个不知深浅的条件……"
+    reader_question: "系统和这个神秘组织到底是什么关系？"
+
+  # 连续性上下文
+  last_chapter_path: "chapters/第010章-章节名.md"
+  previous_chapter_summary:
+    chapter: 9
+    ending_state: "主角位于训练场，情绪警觉，等级炼气三层，右手轻伤"
+
+  # 本章已写节拍的尾巴（Writer 续写时拿到，避免重复读全文）
+  written_beats_tail:
+    - beat_id: "beat-1"
+      tail: "训练场门推开，冷风带着草腥味。"
+      word_count: 280
+    - beat_id: "beat-2"
+      tail: "……系统提示音响起：「检测到非标准路径……」"
+      word_count: 320
+
+  # 素材库检索指引（同原 WriterBrief，从 beat.function 推断命中场景）
+  material_refs:
+    beauty_refs: []
+    male_refs: []
+    personality_refs: []
+    outfit_refs: []
+    luxury_fashion_refs: []
+    car_refs: []
+    watch_refs: []
+    property_refs: []
+    luxury_consumption_refs: []
+    environment_refs: ["训练场清晨"]
+    food_refs: []
+    scene_pattern_refs: ["能力兑现"]
+    emotion_state_refs: ["警觉", "余悸"]
+    double_entendre_refs: []
+    meme_refs: []
+
+  # 明确禁止加载
+  must_not_read:
+    - "outline/ 完整文件（beats 摘要已在交接包中，不传路径）"
+    - "state/ 完整状态文件"
+    - "setting/ 任何文件（系统面板 setting/系统面板.md 除外——系统爽文品类写系统界面时读取）"
+    - "其他章节正文（last_chapter_path 除外）"
+```
+
+**Writer 节拍自检表**（写完即停的依据）：
+
+| 自检项 | 数据来源 | 阈值 |
+|--------|---------|------|
+| 字数控制 | `current_beat.target_words` | 200-400 字（±15%） |
+| 不越界到下一节拍 | `current_beat.next_beat_starter` | 写到该 starter 描述之前停下 |
+| POV/动机不破坏 | `writer_constraints.must_preserve` | 沿用原硬门禁 |
+| 不触碰禁止信息 | `writer_constraints.must_avoid` | 沿用原硬门禁 |
+| 节拍衔接 | `previous_beat_tail` + `environment` | 不切地点、不切 POV、不跳时间 |
+
+---
+
 ## 三、CriticBrief
 
 **方向**：Orchestrator → Critic
@@ -317,20 +447,41 @@ statemanager_brief:
 
 **方向**：Orchestrator → Critic（Lite 模式）
 **预估**：~0.5K tokens（交接包自身）+ 正文全文（Critic 自行读取）
-**用途**：写章节逐段模式整章拼接后，Critic 以 Lite 模式做轻量检查。逐段模式无 Scene Contract，故不含 forbid_touch / hard_rules / pov_constraints / word_budget；只做「不需要契约的通用质量」检查（Logic/Character/Style 三项）。
+**用途**：写章节节拍 LOOP 模式整章/chunk/单 beat 完成后，Critic 以 Lite 模式做轻量检查。节拍模式无 Scene Contract → 不查信息泄漏、不查硬规则、不查节奏预算；只聚焦「不需要契约的通用质量」——内部因果一致性、人物连续性、文风排版、节拍方向一致性。阈值按 `mode` 分档：segment（单 beat）/ chapter（整章）/ super（多章）。
 
 ```yaml
 critic_brief_lite:
   from: Orchestrator
   to: Critic
-  mode: "lite"          # 写章节收尾
+  mode: "segment"                   # segment（单 beat）| chapter（整章）| super（多章）
   chapter: 11
+
+  # ★ 检查范围（按 mode 不同）
+  check_scope:
+    mode: "segment"                 # 与外层 mode 同步
+    beats: ["beat-3"]               # segment: 单 beat；chapter: 整章所有 beats；super: 多章所有 beats
+    check_text_path: "chapters/第011章-章节名.md"   # segment/chapter 必填
 
   # 需自行读取
   chapter_text: "chapters/第011章-章节名.md"
   ai_flavor_checklist: "references/ai-flavor-checklist.md"
 
-  # 连续性上下文（用于 Logic/Character 检查，从上一章结尾状态提取）
+  # ★ 节拍计划（让 Critic 检查方向一致性——每 beat 实际写出的内容是否与 direction_locked 偏离）
+  beat_plan:
+    - id: "beat-1"
+      direction_locked: "选项A：接上章结尾"
+    - id: "beat-2"
+      direction_locked: "选项C：状态描写"
+    - id: "beat-3"
+      direction_locked: "选项B：系统给出'创造性使用'评价"
+    # ...
+
+  # ★ 节拍衔接检查（segment 模式必填）
+  continuity_context:
+    previous_beat_tail: "……系统提示音响起："
+    next_beat_starter: "主角注意到任务列表多了一条红色标记"
+
+  # 连续性上下文（chapter/super 模式必填，segment 模式可省）
   previous_chapter_end_state:
     location: "XX城训练场"
     protagonist_condition: "右手轻伤未愈，情绪警觉"
@@ -347,11 +498,20 @@ critic_brief_lite:
 
   # 明确禁止加载
   must_not_read:
-    - "Scene Contract（逐段模式无此文件）"
+    - "Scene Contract（节拍模式无此文件）"
     - "state/ 完整状态文件"
     - "outline/ 任何文件"
     - "setting/ 任何文件"
 ```
+
+### Lite 判决阈值（按 mode 分档）
+
+| 问题 | chapter/super 模式 | segment 模式 |
+|------|-------------------|-------------|
+| AI 味总数 | ≤3 通过 / 4-6 用户自决 / ≥7 就地修 | ≤1 通过 / 2 用户自决 / ≥3 就地修 |
+| 排版违规 | 硬伤——就地修 | 硬伤——就地修 |
+| 因果断裂 | 章节内部连贯 | + 与 `previous_beat_tail` 衔接 |
+| **方向偏离**（每 beat 实际写出 vs `direction_locked`） | N/A | **硬伤——必须就地修** |
 
 ---
 
@@ -366,14 +526,16 @@ flowchart TD
 
     Orchestrator -->|"初始化"| Architect["🏗️ Architect<br/>直接传递用户构想<br/>（不使用 Brief）"]
 
-    subgraph WriteFlow["写章节（逐段模式）"]
-        Writer["✍️ Writer<br/>← 用户选择的推进方向<br/>（逐段：给选项 → 写200-400字 → 检查）"]
-        CriticLite["🔍 Critic Lite<br/>← CriticBrief-Lite<br/>（整章收尾：Logic/Character/Style）"]
+    subgraph WriteFlow["写章节（节拍 LOOP 模式）"]
+        LOOP["🔄 节拍 LOOP<br/>Orchestrator 展示 beats → 用户批量确认"]
+        Writer["✍️ Writer<br/>← WriterBrief-Beat<br/>（节拍内：连续 200-400 字）"]
+        CriticLite["🔍 Critic Lite<br/>← CriticBrief-Lite (segment/chapter/super)<br>（节拍/整章/整 chunk 收尾）"]
         StateManager["📋 StateManager<br/>← StateManagerBrief<br/>（state_delta + 用户锁定确认）"]
     end
 
-    Orchestrator -->|"/novel-studio:write"| Writer
-    Writer -->|"整章完成"| Orchestrator
+    Orchestrator -->|"LOOP 确认"| LOOP
+    LOOP -->|"全部节拍锁定 + 选 chunk_mode"| Writer
+    Writer -->|"节拍/章节/chunk 完成"| Orchestrator
     Orchestrator -->|"CriticBrief-Lite"| CriticLite
     CriticLite -->|"lite_report：通过/就地修/用户自决"| Orchestrator
     Orchestrator -->|"锁定确认"| StateManager
