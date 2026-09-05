@@ -10,7 +10,6 @@
 
 ```yaml
 # progress.yaml
-schema_version: 3             # 结构版本号，见「七、文件版本与兼容」。缺失或 <3 → 触发 upgrade 流程
 state_version: 15             # 事务版本号（整数递增），StateManager 每次状态更新 +1。缺失视为 1，首次更新时补齐。见「八」
 workspace:
   name: "作品名称"
@@ -25,13 +24,6 @@ current:
   total_chapters_written: 10
   total_words: 25000
   last_updated: "2026-01-15T10:30:00"
-
-chapter_state:                  # 当前正在写的章节状态
-  chapter_number: 11
-  status: "WRITING"             # DIRECTION（方向确认中）| WRITING（逐段写作中）| COMPLETED（已锁定）
-  chapter_direction: ""         # 本章方向（一句话）
-  draft: ""                     # 正文文件路径
-  segment_count: 0              # 已写成段数
 
 # ===== chunk 块（节拍批量确认 Loop 的运行时进度）=====
 # 详见第十节「chunk 字段定义与生命周期」。
@@ -66,11 +58,8 @@ next_milestone:
 ```
 
 **约束**：
-- `chapter_state.status` 枚举值：DIRECTION | WRITING | COMPLETED
-- `chapter_state` 由 Orchestrator 在写章节过程中写入
 - `current` 的累计统计字段（total_words、total_chapters_written）由 StateManager 在章节锁定后更新
 - `state_version` 由 StateManager 独占维护，每次状态事务 +1；Orchestrator 不修改此字段
-- `chunk_plan` 块的存在与否控制写章节模式：缺失 → 旧逐段模式；存在 → 节拍 LOOP 模式
 
 ---
 
@@ -315,32 +304,6 @@ last_checkpoint:
 
 ---
 
-## 七、文件版本与兼容
-
-### 版本演进
-
-| schema_version | 特征 | 状态 |
-|----------------|------|------|
-| 1 | 中文数字目录（`00-书核/`、`90-状态/`）+ 作品总表 + 硬设定 | 已废弃 |
-| 2 | 英文目录 + `core/作品总表.md` + `setting/硬设定.yaml` + `files.hard_canon` + `outline/全书总纲.md` | 需升级 |
-| 3（当前） | `core/作品核心.md` + `setting/硬规则.yaml` + `files.hard_rules` + `outline/全书总纲.yaml` + `workspace.chapter_word_target` | 当前 |
-
-### 兼容规则
-
-- 所有 YAML 文件使用 YAML 1.2 规范
-- 字段新增向后兼容——读取方忽略未知字段
-- 字段删除需在 State Manager 中做迁移（旧字段 → 归档）
-- 必填字段缺失时，Agent 拒绝启动并报告 Orchestrator
-- `schema_version`（结构版本，v1/v2/v3）与 `state_version`（事务版本，整数递增）是两个独立字段：前者只在工作区升级时变更，后者每次状态更新都递增。区分详见「八」
-
-### 升级触发
-
-- `progress.yaml` **缺失 `schema_version` 字段**（且 `files` 块使用旧字段 `hard_canon`、`files.outline` 指向 `.md`）→ 判定为 v2 旧工作区，Orchestrator 检测到后引导用户执行 `/novel-studio:upgrade`（见 `workflow-specs/upgrade-project.md`）
-- 升级只改 `core/`、`setting/`、`outline/` 路径与 `progress.yaml` 结构，**保留 `state/` 下 author/reader/character/foreshadow 大文件**（续写上下文不可丢）
-- 升级完成后写入 `schema_version: 3`
-
----
-
 ## 八、事务版本与变更日志
 
 > 状态系统用「事务版本」对抗历史记忆干扰——过时状态残留、多文件更新不同步、无版本可回溯、旧状态覆盖新状态。机制只有两项：一个版本号 + 一份变更日志。
@@ -351,8 +314,6 @@ last_checkpoint:
 |------|------|------|--------|------|
 | 全局事务版本号 | progress.yaml | `state_version` | StateManager | 状态系统总版本，每次状态更新 +1 |
 | 事务日志 | transaction-log.yaml | `transactions` | StateManager | 每次事务改了什么（何时/因哪章/改了哪些文件） |
-
-**与 `schema_version` 的区别**：`schema_version` 是文件**结构**版本（v1/v2/v3），只在工作区升级时变；`state_version` 是状态**内容**的事务版本，每次状态更新都递增。二者互不影响。
 
 ### 8.2 transaction-log.yaml
 
@@ -510,17 +471,19 @@ LOOP ────► WRITING ────► REVIEW ────► WRITING ─�
 ### 10.4 写入权约束
 
 **Orchestrator** 写入的字段（写章节流程中）：
-- `current_chunk`、`current_beat`、`confirmed_beats`、`loop_state`、`loop_iteration`、`loop_revert_log`
-- `beats_written`、`words_written`、`writing_started_at`
-- `source`、`chapter_range`、`chapter_word_target`
+- 节拍调度字段（每次 beat 推进时）：`current_chunk`、`current_beat`、`confirmed_beats`、`loop_state`、`loop_iteration`、`loop_revert_log`、`beats_written`、`words_written`、`writing_started_at`
+- chunk 启动时一次性写入（从 `outline/chunks/chunk-XX.yaml` 读取并初始化）：`source`、`chapter_range`、`chapter_word_target`、`beats_total`
+- `chapter_word_target` 优先级：若 chunk 文件给出 chunk 级建议值（如战斗章 2500 字、过渡章 1500 字），用 chunk 级值；否则 fallback 到 `workspace.chapter_word_target`
 
 **StateManager** 写入的字段：
-- 章节事务中：递增 `beats_written` 与 `words_written`；**不修改** `confirmed_beats`、`loop_state`、`loop_revert_log`
+- 章节事务中：递增 `beats_written` 与 `words_written`；**不修改** `confirmed_beats`、`loop_state`、`loop_revert_log`、`beats_total`
 - chunk 收尾事务（loop_state: LOCKED 触发时）：清空 `chunk_plan` 全部字段为 null/0
 
 **写入互斥**：
 - 章节事务中不能动 `chunk_plan.confirmed_beats`（已用节拍不能回收）
+- 章节事务中不能动 `chunk_plan.beats_total`（chunk 启动时定，章节推进中不变）
 - StateManager 不写 `loop_revert_log`（这是 LOOP 行为记录）
+- Orchestrator 启动 chunk 后不再改 `source`、`chapter_range`、`chapter_word_target`、`beats_total`——这些是初始化值
 
 ### 10.5 LOOP 回退机制
 
@@ -531,6 +494,7 @@ LOOP ────► WRITING ────► REVIEW ────► WRITING ─�
 3. 目标 beat 的 `confirmed_beats` 条目：
    - **未写**（`beats_written` 未计）：`locked: false`（让用户重选）
    - **已写**：`locked: true` 保留，但 `loop_revert_log` 追加一条
+4. 展示选项时 Orchestrator **重新从 `outline/chunks/chunk-XX.yaml` 读取目标 beat 的 options 池**——chunk 文件是设计真值，WriterBrief-Beat 不含完整 options
 
 `loop_revert_log` 每条结构：
 
@@ -540,11 +504,15 @@ LOOP ────► WRITING ────► REVIEW ────► WRITING ─�
   reason: "用户指出方向偏离了卷节拍"   # 可选，用户口述或 Orchestrator 推断
 ```
 
+**`loop_revert_log` 累积控制**：
+- 单 chunk 内无上限（典型 5-15 条）
+- chunk 收尾事务触发时，把本 chunk 的 `loop_revert_log` 全部追加进 `state/archive/chunks-archive.yaml` 的 chunk 条目下（不丢审计），`progress.chunk_plan.loop_revert_log` 清空
+- 避免长卷（30+ 章 / 6+ chunk）下文件膨胀
+
 ### 10.6 chunk 完成清理
 
-StateManager 在最后一章 `COMPLETED` 触发时检测（**双重条件**）：
+StateManager 在最后一章完成后触发（**双重条件**）：
 - `current.chapter == chapter_range[1]`（最后一章）
-- `chapter_state.status: COMPLETED`
 - `beats_written == beats_total`（注：`beats_total` 是当前章的 beat 数）
 
 满足 → 触发「chunk 收尾事务」：
@@ -560,14 +528,16 @@ StateManager 在最后一章 `COMPLETED` 触发时检测（**双重条件**）�
 - 跨卷时强制拆分：`chunk-XX` 覆盖 `[V1_last_chapter]`、`chunk-XX+1` 覆盖 `[V2_first_chapter, ...]`
 - 拆分点在 LOOP 启动前由 Orchestrator 检测并提示用户
 
-### 10.8 兼容性（缺失 chunk_plan 块的旧工作区）
+**拆分检测流程**（Orchestrator 在启动新 chunk 时执行）：
 
-- `schema_version` 保持 3（字段新增向后兼容，旧读取方忽略未知字段）
-- 缺失 `chunk_plan` 块的旧工作区 → Orchestrator 检测后降级到旧逐段模式（保留 `/novel-studio:write N` 命令可用）
-- 升级路径：`/novel-studio:upgrade` 检测到缺 `chunk_plan` 块 → 询问用户是否启用节拍模式 → 用户确认后 StateManager 写入空 `chunk_plan: {}`
+1. 读取 `outline/volumes/volume-XX.yaml` 的 `chapter_range`
+2. 若准备启动的 chunk `chapter_range`（默认 5 章）跨越两个 volume 的边界：
+   - 计算拆分点：上卷最后 1 章（chunk-XX）+ 下卷起始 N 章（chunk-XX+1）
+   - 提示用户：「chunk 跨卷了，是否拆分？A 拆分 B 强制单 chunk（不推荐）」
+3. 用户确认后，Orchestrator 调 Outliner 分别产出 `chunk-XX.yaml` 和 `chunk-XX+1.yaml`
+4. chunk-XX 启动 → 写完 → 收尾 → chunk-XX+1 启动
 
----
-
-## 十一、文件版本与兼容（已上移至第七节）
-
-本节仅补充：`chunk_plan` 块是 schema_version=3 的可选扩展块。缺失不影响旧读取方（schema_version 读取规则不变）。
+**Orchestrator 加载 chunk 文件的指针规则**：
+- Orchestrator **只读取** `progress.yaml.chunk_plan.source` 指向的当前 chunk 文件
+- **不扫描** `outline/chunks/` 目录——已归档的旧 chunk 文件（`chunk-01.yaml` 等）不会被误加载
+- chunk 收尾事务中 `source` 字段被置为 null，旧 chunk 文件仅作为大纲设计真值保留供用户查阅

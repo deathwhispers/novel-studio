@@ -15,7 +15,7 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 
 | 属性 | 值 |
 |------|-----|
-| 所有权 | `state/progress.yaml`（chapter_state 字段）+ `state/agent-log.yaml`（调度层写入） |
+| 所有权 | `state/progress.yaml`（`chunk_plan` 块的节拍调度字段）+ `state/agent-log.yaml`（调度层写入） |
 | 上下文预算 | ~2K tokens |
 | 必须加载 | `state/progress.yaml` + `state/agent-log.yaml`（最后 5 条） |
 | 按需加载 | Workflow 文件、品类配方索引、`runtime/handoff-schema.md`（裁剪交接包时参考） |
@@ -37,7 +37,6 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 | 「补设定」「世界观」「角色设计」 | 世界观构建 | worldbuilding |
 | 「大纲」「剧情设计」「故事结构」 | 大纲设计 | outline |
 | 「检查第X章」「体检」「审稿」 | 质量检查 | check |
-| 「升级」「更新项目结构」「旧版迁移」 | 工作区升级 | upgrade-project |
 
 ### 2. 多轮对话
 
@@ -56,11 +55,14 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 
 **写章节（节拍 LOOP 模式）**：
 - 阶段 0：Orchestrator 驱动 LOOP（LOOP_INIT → LOOP_PICKING → LOOP_DONE），用户批量确认 chunk 内所有节拍 + 选 chunk_mode（segment/chapter/super）
+  - LOOP_INIT：Orchestrator 检测 chunk 跨卷 → 若跨卷按 `state-schema.md` 10.7 拆分规则提示用户拆分；读 `progress.yaml.chunk_plan.source` 指向的 chunk 文件 → 加载 beat 列表（**不扫描 outline/chunks/ 目录**）
+  - LOOP_INIT：Orchestrator 一次性初始化 chunk_plan 的 `source / chapter_range / chapter_word_target / beats_total` 字段（从 chunk 文件读）；`chapter_word_target` 优先级：chunk 级 > workspace 级
+  - LOOP_PICKING：用户回 LOOP 改已锁 beat 时，Orchestrator **重新从 chunk 文件读取目标 beat 的 options 池**（WriterBrief-Beat 不含完整 options，chunk 文件是设计真值）
 - 阶段 1：Orchestrator 为当前 beat 组装 WriterBrief-Beat 调度 Writer；Writer 节拍内一次写完（200-400 字）；按 segment 模式每 beat 停下检查；按 chapter/super 模式 Writer 连续写完本粒度内所有 beat
 - 阶段 2：触发 REVIEW → Orchestrator 组装 CriticBrief-Lite（含 mode + beat_plan + continuity_context）调度 Critic 做轻量检查
-- 阶段 3：用户锁定 → Writer 汇总 state_delta → Orchestrator 组装 StateManagerBrief 调度 StateManager 更新（章节事务：+字数 +章节数 +chapter_state.status=COMPLETED +chunk_plan.beats_written，不动 confirmed_beats）
+- 阶段 3：用户锁定 → Writer 汇总 state_delta → Orchestrator 组装 StateManagerBrief 调度 StateManager 更新（章节事务：+字数 +章节数 +chunk_plan.beats_written，不动 confirmed_beats/loop_state/beats_total）
 - 阶段 4：最后一章完成后 StateManager 自动触发 chunk 收尾事务（archive + 清空 chunk_plan）
-- 任意阶段用户说"回到 LOOP" / "改 beat-X" → Orchestrator 把 loop_state=LOOP，loop_iteration +1，目标 beat 处理（详见 write-chapter.md 阶段 0.6 节）
+- 任意阶段用户说"回到 LOOP" / "改 beat-X" → Orchestrator 把 loop_state=LOOP，loop_iteration +1，目标 beat 处理（详见 write-chapter.md 阶段 0.6 节；LOOP 重新展示选项时按上面 LOOP_PICKING 的回 LOOP 改 beat 流程重读 chunk 文件）
 - 无 NEED_PLAN/NEED_SCENE/NEED_REVIEW 等中间状态枚举，用户对话驱动流转
 
 **修订章节**：
@@ -84,17 +86,11 @@ NEED_REVIEW → Critic（仅相关 Checker）
 ### 5. 工作区检测
 
 调度前先检测工作区信号：
-- `core/作品核心.md` 是否存在 → 判断是否已完成初始化（新版特征）
+- `core/作品核心.md` 是否存在 → 判断是否已完成初始化
 - `state/progress.yaml` 是否存在 → 判断是否有运行状态
-- `chapters/` 最新章节 → 判断进度
+- `chunks_dir` 下当前 chunk 文件 → 判断进度
 
-**三种两种情况自动分流**：
-
-| 信号 | 判定 | 动作 |
-|------|------|------|
-| `core/作品核心.md` 存在 + `progress.yaml` 含 `schema_version` + `chunk_plan` 块存在 | 新版 v3 工作区（节拍 LOOP 模式） | 走节拍 LOOP 流程 |
-| `core/作品核心.md` 存在 + `progress.yaml` 含 `schema_version` + `chunk_plan` 块缺失 | 旧 v3 工作区 | 提示用户 `/novel-studio:upgrade` 升级到节拍模式，或保留旧逐段模式 |
-| `core/作品总表.md`（旧名）存在，或 `progress.yaml` 缺 `schema_version` / `files` 用 `hard_canon` / `files.outline` 指向 `.md` | 旧版工作区（v2） | 建议用户执行 `/novel-studio:upgrade` |
+**唯一工作区模式**：节拍 LOOP 模式（chunk_plan 块必存在；缺失则视为未初始化，提示用户执行初始化）
 
 ## 交接包与信息裁剪
 
@@ -144,4 +140,4 @@ Orchestrator 启动时：
 - **Agent 不自选后继**：下一步由 Orchestrator 按 workflow 定义调度，不由 Agent 推荐
 - **用户可见的是进度，不是 Agent 名**：报告「正在重排场景结构…」而不是「正在调用 ScenePlanner」
 - **对话流程在 command 文件中**：Orchestrator 不重复定义具体的多轮对话流程，command 文件是对话流程的唯一权威来源
-- **状态文件写入分工**：Orchestrator 写入 `progress.yaml`（`chapter_state` 字段 + `chunk_plan` 块的节拍相关字段：`current_chunk`、`current_beat`、`confirmed_beats`、`loop_state`、`loop_iteration`、`loop_revert_log`、`beats_written`、`words_written`、`writing_started_at`）和 `agent-log.yaml`（流转日志）；StateManager 写入 `author.yaml`、`reader.yaml`、`character.yaml`、`foreshadow.yaml`（大状态）、`transaction-log.yaml`（事务日志），以及 `progress.yaml` 的累计统计字段（total字段、total_chapters_written）和顶层 `state_version`（事务版本号）+ 章节事务中 `chunk_plan.beats_written` + chunk 收尾事务中清空 `chunk_plan` 全字段
+- **状态文件写入分工**：Orchestrator 写入 `progress.yaml`（`chunk_plan` 块的节拍相关字段：`current_chunk`、`current_beat`、`confirmed_beats`、`loop_state`、`loop_iteration`、`loop_revert_log`、`beats_written`、`words_written`、`writing_started_at` + chunk 启动时一次性初始化的 `source`、`chapter_range`、`chapter_word_target`、`beats_total`）和 `agent-log.yaml`（流转日志）；StateManager 写入 `author.yaml`、`reader.yaml`、`character.yaml`、`foreshadow.yaml`（大状态）、`transaction-log.yaml`（事务日志），以及 `progress.yaml` 的累计统计字段（total字段、total_chapters_written）和顶层 `state_version`（事务版本号）+ 章节事务中 `chunk_plan.beats_written` 与 `words_written`（其他字段不动）+ chunk 收尾事务中清空 `chunk_plan` 全字段

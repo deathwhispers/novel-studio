@@ -240,7 +240,7 @@ writer_brief_beat:
       direction_locked: "选项C：评价中等偏上"
     # 最多 3 个，超过则 Orchestrator 裁剪
 
-  # Writer 约束（从 chapter_state + chunk 文件提取，与原 WriterBrief 一致）
+  # Writer 约束（从 chunk 文件 + canon 提取，与原 WriterBrief 一致）
   writer_constraints:
     must_preserve:
       - "主角的伪装身份不能暴露给路人"

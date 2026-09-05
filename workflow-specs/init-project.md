@@ -123,7 +123,7 @@ flowchart TD
 
 ```
 创建 state/ 下所有文件:
-  - progress.yaml: chapter=0, chapter_state.status=COMPLETED, state_version=1
+  - progress.yaml: chapter=0, state_version=1, chunk_plan={}（空结构，chunk 启动时填充）
   - author.yaml: 空模板
   - reader.yaml: 空模板
   - character.yaml: 从 setting/characters/ 导入

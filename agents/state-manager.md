@@ -8,7 +8,7 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 ## 在流水线中的位置
 
 ```
-详见 workflow-specs/pipeline.md。StateManager 出现在写章节、初始化、修订、世界观构建和工作区升级五条流水线中。它是 state/ 下 author/reader/character/foreshadow 四个文件（大状态）的唯一写入口，同时更新 progress.yaml 的累计统计字段（total_words、total_chapters_written）和顶层 state_version（事务版本号），并独占维护 transaction-log.yaml（事务日志）。Orchestrator 保有 progress.yaml 的 chapter_state 字段、chunk_plan 块的节拍相关字段（current_chunk/current_beat/confirmed_beats/loop_state/loop_iteration/loop_revert_log/beats_written/words_written/writing_started_at/source/chapter_range/chapter_word_target）的写入权，以及 agent-log.yaml 的流转写入权。
+详见 workflow-specs/pipeline.md。StateManager 出现在写章节、初始化、修订、世界观构建四条流水线中。它是 state/ 下 author/reader/character/foreshadow 四个文件（大状态）的唯一写入口，同时更新 progress.yaml 的累计统计字段（total_words、total_chapters_written）和顶层 state_version（事务版本号），并独占维护 transaction-log.yaml（事务日志）。Orchestrator 保有 progress.yaml 的 chunk_plan 块的节拍相关字段（current_chunk/current_beat/confirmed_beats/loop_state/loop_iteration/loop_revert_log/beats_written/words_written/writing_started_at/source/chapter_range/chapter_word_target/beats_total）的写入权（其中 beats_total/source/chapter_range/chapter_word_target 仅在 chunk 启动时一次性写入），以及 agent-log.yaml 的流转写入权。
 ```
 
 ## 角色定义
@@ -46,11 +46,13 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 - **不修改** `chunk_plan.current_chunk` / `current_beat` / `confirmed_beats` 等节拍调度字段（这些由 Orchestrator 写入）
 
 **chunk 收尾事务**（独立事务，与章节事务分开；详见第 1.5 节）：
-- 当 chunk 全部章节写完（最后一章 `chapter_state.status: COMPLETED` 且 `current.chapter == chunk_plan.chapter_range[1]` 且 `chunk_plan.beats_written == chunk_plan.beats_total`），触发本事务
+- 当 chunk 全部章节写完（最后一章 `current.chapter == chunk_plan.chapter_range[1]` 且 `chunk_plan.beats_written == chunk_plan.beats_total`），触发本事务
+- 归档 `outline/chunks/chunk-XX.yaml` 到 `state/archive/chunks-archive.yaml`（含原 chunk 设计内容摘要）
+- 把 `progress.chunk_plan.loop_revert_log` 全部追加进 `state/archive/chunks-archive.yaml` 该 chunk 条目下（审计不丢），然后清空
 - 清空 `progress.chunk_plan` 全部字段（chunk 已完成）
-- 归档 `outline/chunks/chunk-XX.yaml` 到 `state/archive/chunks-archive.yaml`
 - `state_version` 独立 +1
 - `transaction-log` 追加 `trigger: "chunk_close"`
+- `outline/chunks/chunk-XX.yaml` 文件**不删除**——下次启动新 chunk 时 Orchestrator 按 `progress.chunk_plan.source` 指针加载，不会误读旧文件
 
 **更新 author.yaml**：
 - 新增秘密 → 追加到 `secrets` 列表
@@ -89,7 +91,7 @@ current:
   last_updated: "2026-01-15T11:00:00"
 ```
 
-注意：`progress.yaml` 中的 `chapter_state`（status、chapter_number、chapter_direction、draft、segment_count）由 Orchestrator 在流转时写入，StateManager 不修改这些字段。
+注意：`progress.yaml` 的 `current.chapter` 由 StateManager 在章节锁定后递增；`chunk_plan` 块的节拍调度字段由 Orchestrator 写入。
 
 ### 3. 记忆压缩（每 5 章或卷末）
 
@@ -128,7 +130,7 @@ state/archive/
 ## 状态更新协议
 
 **触发条件**：
-- 写章节（逐段模式）：用户确认章节锁定 → Orchestrator 传递 StateManagerBrief（state_delta + 用户确认信号）
+- 写章节（节拍 LOOP 模式）：用户确认章节锁定 → Orchestrator 传递 StateManagerBrief（state_delta + 用户确认信号）
 - 修订章节：Critic Review Report（verdict: 通过）→ Orchestrator 传递 StateManagerBrief
 
 ```mermaid
@@ -143,7 +145,7 @@ flowchart TD
     VersionReject["⛔ 不一致<br/>报告 Orchestrator 重跑 state_delta"]
 
     Update["按 state_delta 逐项更新<br/>• author.yaml<br/>• reader.yaml<br/>• character.yaml<br/>• foreshadow.yaml"]
-    Progress["更新 progress.yaml<br/>total_words += 本章字数<br/>total_chapters_written += 1<br/>（chapter_state 由 Orchestrator 写入）"]
+    Progress["更新 progress.yaml<br/>total_words += 本章字数<br/>total_chapters_written += 1<br/>current.chapter += 1"]
     Commit["提交事务<br/>state_version +1<br/>追加 transaction-log 记录"]
 
     Compress{"需要压缩?<br/>每5章 / 卷末 / >50KB"}
@@ -172,7 +174,7 @@ flowchart TD
 - [ ] author.yaml 中 `status: revealed` 的秘密是否已从 `secrets` 中移出？
 - [ ] character.yaml 和 reader.yaml 中同一事实的状态是否一致？（角色已知 ≠ 读者已知 是正常的，但角色已知 > 读者已知 则不是）
 - [ ] foreshadow.yaml 的 `stats` 是否与实际 `threads` 列表一致？
-- [ ] progress.yaml 的 `current.chapter` 是否与 `chapter_state.chapter_number` 匹配？
+- [ ] `progress.current.chapter` 是否与最新章节正文文件编号一致？
 - [ ] 所有文件间的交叉引用路径是否有效？
 
 不一致 → 报告 Orchestrator，暂停流水线。
@@ -180,7 +182,7 @@ flowchart TD
 ## 核心原则
 
 1. **大状态唯一写入口**：author/reader/character/foreshadow 文件仅 StateManager 写入。progress.yaml 的累计统计字段（total_words、total_chapters_written）和顶层 `state_version`（事务版本号）也由 StateManager 更新；章节事务中 `progress.chunk_plan.beats_written` 与 `words_written` 由 StateManager 递增（其他 `chunk_plan` 字段由 Orchestrator 写入）；chunk 收尾事务中清空 `chunk_plan` 全字段；`transaction-log.yaml` 由 StateManager 独占写入
-2. **输入校验不依赖 Critic**：逐段写作模式只产出 lite_report（写章收尾的轻量检查，不传入 StateManager），StateManager 校验 state_delta 完整性即可执行；修订模式仍需 Review Report 通过
+2. **输入校验不依赖 Critic**：节拍 LOOP 模式下 Critic Lite 只产出 lite_report（写章收尾的轻量检查，不传入 StateManager），StateManager 校验 state_delta 完整性即可执行；修订模式仍需 Review Report 通过
 3. **增量更新而非全量覆盖**：只更新变化的部分，不重写整个文件
 4. **压缩是常态不是例外**：每 5 章例行压缩，不让状态文件无限制增长
 5. **不判断质量**：StateManager 消费 state_delta，不评估写作质量

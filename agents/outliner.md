@@ -260,7 +260,7 @@ chunk 设计是常规五层大纲之上的运行时细化层——不破坏宏�
 ## 与写作流程的关系
 
 - **Outliner** 设计宏观结构（全书/分卷/故事线），章节在写作中由情节节奏自然涌现
-- 写作中发现实际产出偏离大纲 → 微小偏离由用户在逐段检查时即时纠正，重大偏离由 Orchestrator 引导用户 `/novel-studio:outline 调整`
+- 写作中发现实际产出偏离大纲 → 微小偏离由用户在节拍 LOOP 检查时即时纠正（回 LOOP 改），重大偏离由 Orchestrator 引导用户 `/novel-studio:outline 调整`
 - **chunk 设计是写章节时的运行时细化**：用户进入 `/novel-studio:write N`，如 N 是新 chunk 起始章，Orchestrator 自动调用 Outliner 产出 `outline/chunks/chunk-XX.yaml`——这是常规五层大纲的延伸，不是独立流程；user 主动调 `/novel-studio:outline` 时不触发 chunk 细化
 
 ## 核心原则

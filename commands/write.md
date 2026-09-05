@@ -150,8 +150,7 @@ Writer 汇总本章变更：
 - 读者新获知的信息：[列出]
 
 StateManager 写入（章节事务）：
-✅ progress.yaml — total_words +XXXX, total_chapters_written +1
-✅ chapter_state.status: COMPLETED
+✅ progress.yaml — total_words +XXXX, total_chapters_written +1, current.chapter +1
 ✅ chunk_plan.beats_written = 7（本章总数）
 （confirmed_beats 不动）
 
@@ -201,7 +200,3 @@ StateManager 收尾事务：
 ## 反模式
 
 见 `workflow-specs/write-chapter.md` 的反模式段。
-
-## 兼容性
-
-旧 v3 工作区（缺 chunk_plan 块）→ 自动降级到旧逐段模式。`/novel-studio:upgrade` 可升级到节拍 LOOP 模式。

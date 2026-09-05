@@ -4,7 +4,7 @@
   <p>7 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
-    <img src="https://img.shields.io/badge/version-0.1.1-green?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-0.1.2-green?style=flat-square" />
     <img src="https://img.shields.io/badge/platform-Claude%20Code-orange?style=flat-square" />
   </p>
 </div>
@@ -63,10 +63,9 @@ claude plugin uninstall novel-studio
 | `/novel-studio:init` | 初始化新项目 — 创作起点、核心体验、品类基调、主角灵魂、篇幅模式 | 5 轮 |
 | `/novel-studio:world` | 世界观构建 — 角色、力量体系、世界扩展、冲突检测、综合审查 | 每设定不限轮次 |
 | `/novel-studio:outline` | 多线大纲 — 全书总纲、逐卷细化、伏笔布局、角色弧光，支持创建/调整/检查 | 逐层深化 |
-| `/novel-studio:write <N>` | 写章节 — 多轮对话确定方向 + 逐段写作即时纠偏 | 不限轮次 |
+| `/novel-studio:write <N>` | 写章节 — 节拍 LOOP 批量确认方向 + 节拍内连续写作 | 不限轮次 |
 | `/novel-studio:check <N>` | 质量扫描 — 问清楚用户关注什么，针对性检查，只报问题 | 1-2 轮 |
 | `/novel-studio:revise <N>` | 修订章节 — 理解问题 → 判断范围 → 告知影响 → 等待确认，支持范围升级 | 2-4 轮 |
-| `/novel-studio:upgrade` | 旧版升级 — v2 旧结构无损升级到 v3，保留续写状态 | 2-3 轮 |
 
 ## 架构：Agent 体系
 
@@ -195,17 +194,15 @@ novel-studio/
 │   ├── outline.md            大纲设计
 │   ├── write.md              章节写作
 │   ├── check.md              质量检查
-│   ├── revise.md             章节修订
-│   └── upgrade.md            旧版升级
-├── workflow-specs/                8 个文件（pipeline.md 总流水线 + 7 个工作流）
+│   └── revise.md             章节修订
+├── workflow-specs/                7 个文件（pipeline.md 总流水线 + 6 个工作流）
 │   ├── pipeline.md           总流水线
 │   ├── init-project.md       项目初始化
 │   ├── worldbuilding.md      世界观构建
 │   ├── outline.md            大纲设计
 │   ├── write-chapter.md      章节写作
 │   ├── check.md              质量检查
-│   ├── revise-chapter.md     章节修订
-│   └── upgrade-project.md    旧版升级
+│   └── revise-chapter.md     章节修订
 ├── references/               参考规范（Agent 运行时加载）
 │   ├── ai-flavor-catalog.md      AI 味模式目录（13 类）
 │   ├── ai-flavor-checklist.md    AI 味检测清单（24+9 项）
@@ -256,6 +253,38 @@ novel-studio/
 ```
 
 ## 更新日志
+
+### 0.1.2（节拍 LOOP 模式发布）
+
+**核心架构升级**：从「逐段确认」模式升级为「节拍批量确认 Loop」——把"作者把控大方向"的体验前置到写作开始前一次性确认，避免每写 200-400 字就打断作者。
+
+**新流程**：
+- **chunk 设计（Outliner 第六层）**：5 章为一 chunk，由 Outliner 在写章节时按需产出 `outline/chunks/chunk-XX.yaml`（含每 beat 的 2-4 个 options 池、字数预算、must_include/must_avoid、chapter_end_anchor）
+- **节拍 LOOP 模式**：进入写章节时 Orchestrator 驱动 LOOP（LOOP_INIT → LOOP_PICKING → LOOP_DONE），用户一次性确认 chunk 内所有节拍方向（可选项/自定义/跳到/回 LOOP），选 chunk_mode 后才进入写作
+- **三档 chunk_mode**：`segment`（每 beat 停下看）/ `chapter`（每章停下看，推荐）/ `super`（整个 chunk 看完）
+- **节拍内连续写**：节拍是 200-400 字的微型场景契约，Writer 节拍内一次写完（不再每段停下等用户）；节拍间按 chunk_mode 决定停/续
+- **方向一致性保护**：segment 模式下 Critic 检查每 beat vs `direction_locked`，偏离即硬伤——必须就地修
+- **状态单一源**：`progress.yaml` 的 `chunk_plan` 块（current_chunk/current_beat/confirmed_beats/loop_state/loop_iteration/beats_written/words_written/loop_revert_log 等）是运行时进度的唯一状态源；chunk 设计文件只放静态设计
+
+**核心 Agent 变化**：
+- **Orchestrator**：状态机扩展为 LOOP/WRITING/REVIEW/LOCKED 四态；新增 WriterBrief-Beat / CriticBrief-Lite（mode: segment/chapter/super）交接包；新增跨卷 chunk 拆分检测 + chunk 文件指针加载规则
+- **Writer**：节拍驱动写作（第一步改为节拍启动检查；第二步改为节拍内连续起草；新增第五步「节拍边界自检」5 项）；输出 `writer_beat_output` 节拍级结构化数据；`must_not_read` 增加 chunk 文件路径
+- **Critic**：Lite 模式升级为三档（segment/chapter/super），segment 模式新增 Checker2.5「方向一致性」（方向偏离 = 就地修硬伤）；判决阈值按 mode 分档
+- **StateManager**：新增 chunk 收尾事务（独立事务、state_version +1、trigger: chunk_close、归档 chunk 文件 + loop_revert_log）；章节事务中只递增 beats_written/words_written，不回收 confirmed_beats/loop_state/beats_total
+- **Outliner**：新增第六节「chunk 设计」——chunk 骨架（第二层细化时自动产出）+ chunk 详细设计（写章节触发时按需产出）
+
+**兼容性清理**（用户明确不需要向后兼容）：
+- 删除 `chapter_state` 块、`segment_count` 字段、`schema_version` 概念、旧的「v2/v3 工作区分流」、逐段确认模式
+- 删除 `workflow-specs/upgrade-project.md` 与 `commands/upgrade.md`
+- 全部 10 个核心 markdown 文件 + 1 个 README 重构为单一节拍 LOOP 模式
+
+**额外审查修复**：
+- `beats_total` 写入权声明补全（Orchestrator 启动 chunk 时初始化，章节事务中不变）
+- `chapter_word_target` 双源留痕处理（chunk 级 > workspace 级优先级明确）
+- 跨卷 chunk 拆分检测流程完整化
+- WriterBrief-Beat 不含完整 options → Orchestrator 回 LOOP 改 beat 时必须重读 chunk 文件
+- chunk 文件归档后不删除 → Orchestrator 按 `progress.chunk_plan.source` 指针加载，不扫描目录
+- `loop_revert_log` 累积控制（chunk 收尾时归档到 archive）
 
 ### 0.1.1
 

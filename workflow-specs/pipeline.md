@@ -34,14 +34,14 @@ flowchart TD
     ChunkClose --> Completed(["✅ chunk LOCKED"])
 ```
 
-**关键变化（vs 旧版逐段流水线）**：
+**关键设计**：
 
-| 阶段 | 旧版 | 新版 |
-|------|------|------|
-| 方向确定 | 3-5 轮对话讨论本章方向 | LOOP 一次性展示所有 beat 选项，用户逐个确认（含自定义/跳到/回 LOOP） |
-| 写作流程 | 逐段：给选项 → 写200-400字 → 检查 | 节拍内一次写完 200-400 字；节拍间按 chunk_mode 决定停/续 |
-| 质量检查 | Critic Lite 整章收尾（Logic/Character/Style） | Critic Lite 三档：segment（单 beat）/ chapter（整章）/ super（整 chunk） |
-| 状态源 | `progress.yaml` 的 `chapter_state` + segment 临时状态 | `progress.yaml` 的 `chunk_plan` 块（单一源） |
+| 阶段 | 实现 |
+|------|------|
+| 方向确定 | LOOP 一次性展示所有 beat 选项，用户逐个确认（含自定义/跳到/回 LOOP） |
+| 写作流程 | 节拍内一次写完 200-400 字；节拍间按 chunk_mode 决定停/续 |
+| 质量检查 | Critic Lite 三档：segment（单 beat）/ chapter（整章）/ super（整 chunk） |
+| 状态源 | `progress.yaml` 的 `chunk_plan` 块（单一源） |
 
 **交接包流转**（节拍模式）：
 | 步骤 | 交接包 |
@@ -174,39 +174,17 @@ flowchart LR
 
 ---
 
-## 七、工作区升级（upgrade-project）
-
-**触发**: `/novel-studio:upgrade`（检测到 v2 旧结构时）
-
-```mermaid
-flowchart TD
-    User["👤 User: /novel-studio:upgrade"]
-    Orchestrator["🎯 Orchestrator<br/>检测旧版特征 + 备份 + 改名"]
-
-    User --> Orchestrator
-
-    Orchestrator -->|"备份完成"| Rename["🔧 结构改名<br/>• 作品总表→作品核心<br/>• 硬设定→硬规则<br/>• 全书总纲.md→.yaml<br/>• progress.yaml 字段改写"]
-    Rename --> Architect["🏗️ Architect<br/><b>内容补全</b><br/>• core 灵魂契约补全<br/>• 硬设定拆分<br/>（作者确认）"]
-    Architect --> Outliner["🧭 Outliner<br/><b>大纲重构</b><br/>• 主线/支线→角色故事线<br/>• 卷级规划<br/>（作者确认）"]
-    Outliner --> StateManager["📋 StateManager<br/>校验 + 写 schema_version"]
-    StateManager --> Done(["✅ 升级完成<br/>state/ 已保留，可续写"])
-```
-
-详见 [`workflow-specs/upgrade-project.md`](upgrade-project.md)。
-
----
-
 ## Agent ↔ 流水线对应关系
 
 | Agent | 出现在流水线 |
 |-------|-------------|
-| Orchestrator | 全部七条 |
-| Architect | 初始化、世界观构建、工作区升级（内容补全） |
-| Outliner | 大纲设计、工作区升级（大纲重构） |
+| Orchestrator | 全部六条 |
+| Architect | 初始化、世界观构建 |
+| Outliner | 大纲设计 |
 | ScenePlanner | 修订（场景重设） |
-| Writer | 写章节（逐段模式）、修订（全部四种范围） |
-| Critic | 写章节（收尾 Lite）、修订（场景重设/局部修复/仅去味）、质量检查 |
-| StateManager | 写章节（逐段模式）、初始化、修订、世界观构建、工作区升级（校验） |
+| Writer | 写章节（节拍 LOOP）、修订（全部四种范围） |
+| Critic | 写章节（收尾 Lite 三档）、修订（场景重设/局部修复/仅去味）、质量检查 |
+| StateManager | 写章节（节拍 LOOP）、初始化、修订、世界观构建 |
 
 ---
 

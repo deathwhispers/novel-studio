@@ -44,15 +44,15 @@ flowchart TD
     ChunkClose --> Done(["✅ chunk LOCKED"])
 ```
 
-## 核心变化（vs 旧版逐段模式）
+## 设计要点
 
-| 维度 | 旧版（逐段） | 新版（节拍 LOOP） |
-|------|------------|------------------|
-| 方向确定 | 每段前给选项、用户确认一次 | LOOP 一次性展示整章/整 chunk 所有节拍，**逐个确认**（可任意回退改） |
-| Writer | 每写 200-400 字停下等用户 | 节拍内连续写完，节拍间才停（segment 模式）或整章写完才停（chapter 模式） |
-| 用户确认频次 | 一章 7-10 次 | 整章 N 个节拍只确认 1 次 LOOP + 1 次粒度选择 = **2 次** |
-| 状态源 | `progress.yaml` 的 `chapter_state` + 各 segment 临时状态 | `progress.yaml` 的 `chunk_plan` 块（单一源） |
-| 方向偏离保护 | 无 | segment 模式 Critic 检查每 beat vs `direction_locked`，偏离即硬伤 |
+| 维度 | 实现 |
+|------|------|
+| 方向确定 | LOOP 一次性展示整章/整 chunk 所有节拍，**逐个确认**（可任意回退改） |
+| Writer | 节拍内连续写完，节拍间才停（segment 模式）或整章写完才停（chapter 模式） |
+| 用户确认频次 | 整章 N 个节拍只确认 1 次 LOOP + 1 次粒度选择 = **2 次** |
+| 状态源 | `progress.yaml` 的 `chunk_plan` 块（单一源） |
+| 方向偏离保护 | segment 模式 Critic 检查每 beat vs `direction_locked`，偏离即硬伤 |
 
 ## 详细步骤
 
@@ -64,30 +64,34 @@ Orchestrator 启动时读 `progress.chunk_plan`：
 
 | `loop_state` | 动作 |
 |------------|------|
-| 不存在 / 旧 v3 工作区（缺 chunk_plan 块） | 降级到旧逐段模式，提示用户 `/novel-studio:upgrade` |
 | `LOOP` | 进入 LOOP_PICKING，从未锁 beat 续选 |
 | `WRITING` + `current_beat` | 进入阶段 1，从该 beat 续写（幂等） |
 | `REVIEW` | 展示已写内容等用户指令 |
 | `LOCKED` / 全 null | chunk 已完成，请 `/novel-studio:write <下一章>` 触发新 chunk |
 
+**未初始化工作区**（chunk_plan 缺失）→ 提示用户先执行 `/novel-studio:init` 初始化项目。
+
 #### 0.2 新 chunk 启动
 
 `/novel-studio:write N` 时若 N 是新 chunk 起始章：
-1. Orchestrator 调用 Outliner 产出 `outline/chunks/chunk-XX.yaml`（含每 beat 的 options 池）
-2. Orchestrator 初始化 `progress.chunk_plan`：
+
+1. **跨卷检测**：Orchestrator 检查 `outline/volumes/volume-XX.yaml` 的 `chapter_range`，若准备启动的 chunk（默认 5 章）跨卷边界，按 `runtime/state-schema.md` 10.7 拆分规则提示用户拆分；用户确认后调 Outliner 分别产出 `chunk-XX.yaml` 和 `chunk-XX+1.yaml`
+2. Orchestrator 调用 Outliner 产出 `outline/chunks/chunk-XX.yaml`（含每 beat 的 options 池）
+3. Orchestrator **只加载 `progress.chunk_plan.source` 指向的当前 chunk 文件**，不扫描 `outline/chunks/` 目录——已归档的旧 chunk 文件不会被误加载
+4. Orchestrator 初始化 `progress.chunk_plan`：
 
 ```yaml
 chunk_plan:
   current_chunk: "chunk-01"
   source: "outline/chunks/chunk-01.yaml"
   chapter_range: [11, 15]
-  chapter_word_target: 2000
+  chapter_word_target: 2000        # chunk 级值（如有）优先；fallback 到 workspace.chapter_word_target
   confirmed_beats: {}
   loop_state: "LOOP"
   loop_iteration: 1
   loop_entered_at: "<now>"
   beats_written: 0
-  beats_total: 7                 # 当前章的 beat 总数
+  beats_total: 7                   # 当前章的 beat 总数
   words_written: 0
   writing_started_at: null
   loop_revert_log: []
@@ -173,7 +177,8 @@ chunk_plan:
 任何状态下用户说"回到 LOOP" / "改 beat-X"：
 1. `loop_state: LOOP`
 2. `loop_iteration +1`
-3. 目标 beat：
+3. **Orchestrator 重新从 `outline/chunks/chunk-XX.yaml` 读取目标 beat 的 options 池**——WriterBrief-Beat 只含 `direction_locked`，不含完整 options；chunk 文件是设计真值
+4. 目标 beat：
    - **未写**（`beats_written` 未计该 beat）：`locked: false`（让用户重选）
    - **已写**：`locked: true` 保留，但 `loop_revert_log` 追加：
 
@@ -298,9 +303,9 @@ Orchestrator 组装 `StateManagerBrief`（state_delta + user_confirmed: true）�
 StateManager 在章节事务中**只做**：
 - `progress.current.total_words += 本章字数`
 - `progress.current.total_chapters_written += 1`
+- `progress.current.chapter += 1`
 - `progress.state_version +1`
-- `chapter_state.status: COMPLETED`
-- `progress.chunk_plan.beats_written = 7`（设为本章总数）
+- `progress.chunk_plan.beats_written = 本章 beat 数`
 - `transaction-log` 追加一条
 
 StateManager **不做**：
@@ -310,17 +315,16 @@ StateManager **不做**：
 
 ### 阶段 4：chunk 收尾（仅最后一章完成后）
 
-StateManager 在最后一章（`current.chapter == chunk_plan.chapter_range[1]`）`COMPLETED` 时检测：
-
-- `current.chapter == chapter_range[1]`（最后一章）
-- `chapter_state.status: COMPLETED`
+StateManager 在最后一章完成后检测（**双重条件**）：
+- `current.chapter == chunk_plan.chapter_range[1]`
 - `beats_written == beats_total`（注：`beats_total` 是当前章的 beat 数）
 
 满足 → 触发「chunk 收尾事务」（独立事务，`state_version +1`，`trigger: "chunk_close"`）：
 1. `outline/chunks/chunk-XX.yaml` 内容指针化进 `state/archive/chunks-archive.yaml`
-2. `progress.yaml` 的 `chunk_plan` 块字段全部置 null / 0
-3. `transaction-log.yaml` 追加 `trigger: "chunk_close"` 记录
-4. `outline/chunks/chunk-XX.yaml` 文件**不删除**（保留为大纲设计真值）
+2. `progress.chunk_plan.loop_revert_log` 全部追加进 `state/archive/chunks-archive.yaml` 该 chunk 条目下（审计不丢），`progress.chunk_plan.loop_revert_log` 清空
+3. `progress.yaml` 的 `chunk_plan` 块字段全部置 null / 0
+4. `transaction-log.yaml` 追加 `trigger: "chunk_close"` 记录
+5. `outline/chunks/chunk-XX.yaml` 文件**不删除**（保留为大纲设计真值）——下次启动新 chunk 时 Orchestrator 按 `progress.chunk_plan.source` 指针加载，不会误读旧文件
 
 ## 上下文管理
 
@@ -355,7 +359,3 @@ WriterBrief-Beat 自带 `written_beats_tail` 数组，Writer 拿到最近几个 
 - 在事件半途强行切断——按字数（~2000）找自然停顿点收束，不在对话/打斗/揭示的高潮处戛然而止
 - 章节事务中动 `chunk_plan.confirmed_beats`（已锁节拍不能回收）
 - 状态变更不写 progress.yaml（违反单一源原则）
-
-## 兼容性
-
-旧 v3 工作区（缺 `chunk_plan` 块）→ Orchestrator 检测后降级到旧逐段模式（保留 `/novel-studio:write N` 命令可用）。`/novel-studio:upgrade` 可升级到节拍模式。
