@@ -58,8 +58,9 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
   - LOOP_INIT：Orchestrator 检测 chunk 跨卷 → 若跨卷按 `state-schema.md` 10.7 拆分规则提示用户拆分；读 `progress.yaml.chunk_plan.source` 指向的 chunk 文件 → 加载 beat 列表（**不扫描 outline/chunks/ 目录**）
   - LOOP_INIT：Orchestrator 一次性初始化 chunk_plan 的 `source / chapter_range / chapter_word_target / beats_total` 字段（从 chunk 文件读）；`chapter_word_target` 优先级：chunk 级 > workspace 级
   - LOOP_PICKING：用户回 LOOP 改已锁 beat 时，Orchestrator **重新从 chunk 文件读取目标 beat 的 options 池**（WriterBrief-Beat 不含完整 options，chunk 文件是设计真值）
-- 阶段 1：Orchestrator 为当前 beat 组装 WriterBrief-Beat 调度 Writer；Writer 节拍内一次写完（200-400 字）；按 segment 模式每 beat 停下检查；按 chapter/super 模式 Writer 连续写完本粒度内所有 beat
-- 阶段 2：触发 REVIEW → Orchestrator 组装 CriticBrief-Lite（含 mode + beat_plan + continuity_context）调度 Critic 做轻量检查
+- 阶段 1：Orchestrator 为当前 beat 组装 WriterBrief-Beat（含 `chapter_file_path` 让 Writer 在整章成稿时落盘）；Writer 节拍内一次写完（200-400 字）；按 segment 模式每 beat 停下检查；按 chapter/super 模式 Writer 连续写完本粒度内所有 beat
+- 阶段 1.5（chapter/super 模式）：Writer 整章成稿时一次性写入 `chapter_file_path`（纯正文，覆盖式，与断点恢复幂等语义一致）；落盘后进入阶段 2。segment 模式跳过——每 beat 写完直接进阶段 2，Critic Lite 改用 `CriticBrief-Lite.inline_text` 吃 `writer_beat_output.text`
+- 阶段 2：触发 REVIEW → Orchestrator 组装 CriticBrief-Lite（含 mode + beat_plan + continuity_context + segment 模式下的 inline_text）调度 Critic 做轻量检查
 - 阶段 3：用户锁定 → Writer 汇总 state_delta → Orchestrator 组装 StateManagerBrief 调度 StateManager 更新（章节事务：+字数 +章节数 +chunk_plan.beats_written，不动 confirmed_beats/loop_state/beats_total）
 - 阶段 4：最后一章完成后 StateManager 自动触发 chunk 收尾事务（archive + 清空 chunk_plan）
 - 任意阶段用户说"回到 LOOP" / "改 beat-X" → Orchestrator 把 loop_state=LOOP，loop_iteration +1，目标 beat 处理（详见 write-chapter.md 阶段 0.6 节；LOOP 重新展示选项时按上面 LOOP_PICKING 的回 LOOP 改 beat 流程重读 chunk 文件）

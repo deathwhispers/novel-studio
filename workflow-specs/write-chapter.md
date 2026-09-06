@@ -32,7 +32,9 @@ flowchart TD
     BeatReview -->|"继续"| Write
     BeatReview -->|"回 LOOP 改"| LoopPick
 
-    AutoContinue --> ChapterDone["REVIEW：整章"]
+    AutoContinue --> ChapterSave["阶段 1.5：整章落盘"]
+    ChapterSave --> ChapterDone["REVIEW：整章"]
+    BeatReview -.->|"segment 跳过 1.5"| BeatReview
     ChapterDone --> CriticLite["阶段 3：Critic Lite"]
     CriticLite --> Lock["阶段 4：用户锁定"]
     Lock --> StateUpdate["阶段 5：StateManager 更新"]
@@ -249,6 +251,18 @@ chunk_plan:
   beats_written: 1                # +1
   words_written: 340              # += 当前 beat 字数
 ```
+
+### 阶段 1.5：整章落盘（Writer 自执行，chapter/super 模式）
+
+Writer 把本章所有 beat 的 text 按顺序拼接（节拍间用空行分隔），写入 `chapter_file_path`：
+
+- **纯正文**——不写 `## beat-N` 二级标题，不写 YAML frontmatter，不写文件级 metadata
+- **覆盖式**——与「断点恢复 = 幂等重写覆盖」语义一致（见下方「断点恢复」节）
+- **不留作者手改**——用户手改后应锁定章节不再触发重写；这是预期行为，不是 bug
+
+落盘完成 → Orchestrator 调度阶段 2 Critic Lite。
+
+**segment 模式跳过本阶段**：每 beat 写完直接进阶段 2，Critic 吃 `writer_beat_output.text`（通过 `CriticBrief-Lite.inline_text`，见 `runtime/handoff-schema.md` 第五节）。每 beat 落盘会与 segment 模式的逐拍检查冲突。
 
 ### 阶段 2：LOOP 退出 / Critic Lite
 

@@ -222,6 +222,20 @@ writer_output:
     formatting_compliant: true    # 符合 web-novel-formatting.md 全部规则
 ```
 
+### 第七步：整章落盘（chapter/super 模式，Writer 自执行）
+
+**触发条件**：本章所有 beat 写完 + 即将进入 Critic Lite **之前**。
+
+**执行**：
+1. 把所有 `writer_beat_output.text` 按顺序拼接，节拍间用一个空行分隔
+2. **覆盖式**写入 `chapter_file_path`（WriterBrief-Beat 已给出）—— 与 `workflow-specs/write-chapter.md` 的「断点恢复 = 幂等重写覆盖」语义一致
+3. 文件内容：**纯正文**——无 `## beat-N` 二级标题，无 YAML frontmatter，无文件级 metadata
+4. **不引入作者手改保留**——覆盖是预期行为；用户手改后应锁定章节不再触发重写
+
+**落盘完成 → 进入 Critic Lite（Orchestrator 调度）**。
+
+**segment 模式跳过本步**——每个 beat 写完即过 Critic Lite，不做整章落盘（每 beat 落盘会与 segment 模式的逐拍检查冲突）。Critic Lite 改用 `CriticBrief-Lite.inline_text`（见 `runtime/handoff-schema.md` 第五节）直接吃 `writer_beat_output.text`，不走文件。
+
 ### Skill 调用
 
 当需要 AI 辅助具体技法时，调用 skills/ 下的纯能力 Skill：
