@@ -43,6 +43,23 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 5. **不读** chunk 文件（设计已在交接包里）、**不读** 大纲、**不读** 后续 beat 的 direction_locked（已知 `function` 即可，避免提前剧透）
 6. 本章预估字数由 `word_target` 给出，单 beat 控制 `target_words ± 15%`
 
+**章节文件处理**（节拍 LOOP 模式专属）：
+
+1. 读 `chapter_file_path`（如 `chapters/第011章-章节名.md`）
+2. 文件不存在 → 创建初始结构：
+   ```markdown
+   # 第 011 章 <章节名>
+
+   > 章节方向：<chapter_direction>
+   > 字数目标：~2000
+   > chunk: chunk-01
+
+   ```
+3. 文件已存在 → 读取已有内容、定位当前 beat 的标题位置（`## beat-<id>`）
+   - 标题存在 → **续写模式**：在已有 beat 文本后追加内容（不覆盖作者手改的部分）
+   - 标题不存在 → **新写模式**：在文件末尾追加 `## beat-<id>` 标题 + 新内容
+4. **作者手动修改保留**：节拍标题下若已有作者手写内容，Writer 仅在末尾追加补充，不覆盖（保留用户修改痕迹）
+
 **修订模式**：
 1. 阅读 WriterBrief，确认：
    - 每场景的五拍骨架
@@ -161,10 +178,27 @@ Writer 自检是写中即时门禁，只补命中项，不追求全覆盖。整�
 
 **节拍 LOOP 模式**（每写完一个 beat 输出节拍级结构化数据）：
 
+**1. 追加到章节文件**（先于结构化输出）：
+
+- 在 `chapter_file_path` 对应文件的 `## beat-<id>` 标题下追加正文
+- 追加格式（保留已有内容，作者手改不丢）：
+
+  ```markdown
+  ## beat-3（转折——系统评价"创造性使用"）
+
+  [本 beat 正文 340 字……]
+
+  ```
+- 写完即落字，作者可随时打开 `chapters/第011章-章节名.md` 阅读进度
+- 作者可手动编辑该文件——Writer 下次启动按续写模式只追加、不覆盖
+
+**2. 输出结构化数据**（给 Orchestrator / Critic 用）：
+
 ```yaml
 writer_beat_output:
   beat: "beat-3"              # 节拍 ID
   chapter: 11
+  chapter_file_path: "chapters/第011章-章节名.md"   # 已在哪个文件
   text: "正文内容..."
   word_count: 340              # 本 beat 字数
   tail: "……系统提示音响起：「检测到非标准路径……」"   # 本 beat 最后一句，用于下一 beat 衔接

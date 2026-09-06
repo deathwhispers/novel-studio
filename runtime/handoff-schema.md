@@ -191,6 +191,9 @@ writer_brief_beat:
   mode: "beat-loop"                 # 区别于修订模式的 "scene-contract"
   word_target: 2000                 # 整章目标字数（Orchestrator 从 progress.yaml workspace.chapter_word_target 提取，浮动 ±20%）
 
+  # ★ 章节文件路径（Writer 每个 beat 写完即追加到此文件，作者可实时打开阅读/修改）
+  chapter_file_path: "chapters/第011章-章节名.md"
+
   # chunk 上下文（让 Writer 知道整体处于 chunk 哪个阶段）
   chunk_context:
     chunk_id: "chunk-01"
