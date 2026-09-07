@@ -29,11 +29,11 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 
 | Checker | 对应 Skill |
 |---------|-----------|
-| Logic Checker | `skills/causality-check/SKILL.md` + `skills/foreshadow-check/SKILL.md` |
-| Info Leak Checker | `skills/info-leak-check/SKILL.md` |
+| Logic Checker | `skills/causality-check/SKILL.md` + `skills/foreshadow-check/SKILL.md` + `skills/panel-consistency/SKILL.md` |
+| Info Leak Checker | `skills/info-leak-check/SKILL.md` + `skills/panel-consistency/SKILL.md` |
 | Character Checker | `skills/character-check/SKILL.md` |
 | Pace Checker | `skills/pacing-check/SKILL.md` |
-| Style Checker | `skills/ai-flavor-detect/SKILL.md` + `skills/style-calibrate/SKILL.md` + `skills/voice-check/SKILL.md` |
+| Style Checker | `skills/ai-flavor-detect/SKILL.md` + `skills/style-calibrate/SKILL.md` + `skills/voice-check/SKILL.md` + `skills/stylist/SKILL.md` |
 
 ### Checker 1: Logic Checker（因果与连续性）
 

@@ -1,3 +1,18 @@
+# Pacing Check SKILL
+
+目的：评估段落/章节节奏并给出可操作建议。
+
+输入：文本段落或章节，相关 scene-card（可选）。
+
+输出格式：参见 `skills/critic-json-spec.md` 的 `pacing_score` 与 `suggested_changes` 字段。
+
+示例检查点：
+- 冲突分布是否均衡
+- 信息投放是否过密或过稀
+- 句式长短比例（短句%）
+
+样例 Prompt（供 Orchestrator 调用）：
+"评估以下章节的节奏，给出 `pacing_score`（0-10）并返回 3 条具体修改建议，每条建议附上修改后示例句子。"
 ---
 name: pacing-check
 description: "节奏分析。检查场景字数分配、情绪节奏、章尾动力是否合理。纯能力，由 Critic Pace Checker 调用。"
