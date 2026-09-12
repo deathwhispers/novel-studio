@@ -33,6 +33,7 @@ chunk_plan:
   current_beat: null            # 当前正在处理的 beat id（null = chunk 全部完成）
   chapter_range: null           # 本 chunk 覆盖的章节号 [start, end]
   chapter_word_target: null     # 继承自 workspace.chapter_word_target，可被 chunk 级覆盖
+  chunk_mode: null              # 写作粒度：null=未选择 | segment | chapter（默认）| super（启用 checkpoint）| super-strict（关闭 checkpoint）
   confirmed_beats: {}           # 节拍确认状态，key=beat_id；详见第十节 1.3 节
   loop_state: null              # LOOP | WRITING | REVIEW | LOCKED
   loop_iteration: 0             # LOOP 重入次数（含首次进入）
@@ -42,6 +43,25 @@ chunk_plan:
   words_written: 0              # 当前章节已写累计字数
   writing_started_at: null      # 当前章节写作开始时间
   loop_revert_log: []           # LOOP 回退日志（详见第十节 3.6 节）
+
+# ===== 大纲状态块（3 段大纲按需生成追踪）=====
+# 详见第十一节「outline_state 字段定义」。Orchestrator 生成时写入，StateManager chunk 收尾时更新。
+outline_state:
+  coarse_outline:
+    status: "pending"           # pending | completed
+    completed_at: null
+  volume_outlines:              # 每卷卷纲状态，key=volume-XX
+    "volume-01":
+      status: "pending"         # pending → generated → completed
+      generated_at: null
+    "volume-02":
+      status: "pending"
+      generated_at: null
+  chunk_designs:                # 每个 chunk 设计状态，key=chunk-XX
+    "chunk-01":
+      status: "pending"         # pending → generated → completed → archived
+      generated_at: null
+      archived_at: null
 
 files:
   book_core: "core/作品核心.md"
@@ -60,6 +80,8 @@ next_milestone:
 **约束**：
 - `current` 的累计统计字段（total_words、total_chapters_written）由 StateManager 在章节锁定后更新
 - `state_version` 由 StateManager 独占维护，每次状态事务 +1；Orchestrator 不修改此字段
+- `chunk_plan.chunk_mode` 由 Orchestrator 在 LOOP_DONE 时一次性写入，整个 chunk 生命周期不变；StateManager 不修改此字段；chunk 收尾事务中随 chunk_plan 整体清空
+- `outline_state` 块由 Orchestrator 写入 `status: "generated"`，由 StateManager 在 chunk 收尾事务中写入 `status: "archived"`；不破坏现有 `current` / `chunk_plan` / `state_version` 写入权
 
 ---
 
@@ -409,6 +431,9 @@ chunk_plan:
   chapter_range: [11, 15]         # [起始章, 结束章]
   chapter_word_target: 2000        # 单章目标字数（继承自 workspace，可覆盖）
 
+  # ★ 写作粒度（LOOP_DONE 时一次性写入，chunk 生命周期内不变）
+  chunk_mode: "chapter"           # segment | chapter（默认）| super（启用 checkpoint）| super-strict（关闭 checkpoint）
+
   # ★ 节拍确认状态（核心数据结构，详见 10.3）
   confirmed_beats:
     "beat-1":
@@ -431,7 +456,7 @@ chunk_plan:
   # 回退日志（详见 10.5）
   loop_revert_log:
     - beat_id: "beat-3"
-      reverted_at: "2026-01-15T11:30:00"
+      reverted_at: "2026-01-15T11:30:10"
       reason: "用户指出方向偏离了卷节拍"
 ```
 
@@ -444,12 +469,12 @@ LOOP ────► WRITING ────► REVIEW ────► WRITING ─�
   └───────────── (任意阶段用户说"回到 LOOP") ──────────────────────────┘
 ```
 
-| 状态 | 含义 | Orchestrator 动作 |
-|------|------|------------------|
-| `LOOP` | 批量确认节拍中（chunk 启动时，或用户主动重入） | 展示未确认 beat 的选项，接收用户输入 |
-| `WRITING` | Writer 正在写当前 beat | 把 beat 任务打成 WriterBrief-Beat，调度 Writer |
-| `REVIEW` | Writer 写完 beat 后等用户检查（chunk_mode 控制粒度） | 展示内容等用户指令 |
-| `LOCKED` | chunk 全部章节完成 | 触发 StateManager 收尾事务（archive + 清空 chunk_plan） |
+| 状态 | 含义 | Orchestrator 动作 | chunk_mode 影响 |
+|------|------|------------------|---------------|
+| `LOOP` | 批量确认节拍中（chunk 启动时，或用户主动重入） | 展示未确认 beat 的选项，接收用户输入 | — |
+| `WRITING` | Writer 正在写当前 beat | 把 beat 任务打成 WriterBrief-Beat，调度 Writer | — |
+| `REVIEW` | Writer 写完 beat 后等用户检查（chunk_mode 控制粒度） | 展示内容等用户指令 | `super` 模式下每章写完插入 super_checkpoint；`chapter` 模式下整章写完才进；`segment` 模式下每个 beat 都进 |
+| `LOCKED` | chunk 全部章节完成 | 触发 StateManager 收尾事务（archive + 清空 chunk_plan） | — |
 
 ### 10.3 节拍确认状态的四种语义
 
@@ -472,8 +497,11 @@ LOOP ────► WRITING ────► REVIEW ────► WRITING ─�
 
 **Orchestrator** 写入的字段（写章节流程中）：
 - 节拍调度字段（每次 beat 推进时）：`current_chunk`、`current_beat`、`confirmed_beats`、`loop_state`、`loop_iteration`、`loop_revert_log`、`beats_written`、`words_written`、`writing_started_at`
-- chunk 启动时一次性写入（从 `outline/chunks/chunk-XX.yaml` 读取并初始化）：`source`、`chapter_range`、`chapter_word_target`、`beats_total`
+- chunk 启动时一次性写入（从 `outline/chunks/chunk-XX.yaml` 读取并初始化）：`source`、`chapter_range`、`chapter_word_target`、`beats_total`、`chunk_mode`
 - `chapter_word_target` 优先级：若 chunk 文件给出 chunk 级建议值（如战斗章 2500 字、过渡章 1500 字），用 chunk 级值；否则 fallback 到 `workspace.chapter_word_target`
+- `chunk_mode` 来源：用户显式指定（`--segment` / `--super` / `--super-strict`）→ 直接写入；无 flag → 阶段0.45 LOOP_PREVIEW 询问用户，回车接受默认值 `chapter`
+- `chunk_mode` 写入时机：LOOP_DONE 退出 LOOP 时一次性写入，整个 chunk 生命周期不变（super checkpoint 用户选"降级"时改 `chapter` 除外）
+- **新增**：`outline_state.volume_outlines[volume-XX]` 由 Orchestrator 在调用 Outliner 生成卷纲时写入 `status: "generated"` + `generated_at`；`outline_state.chunk_designs[chunk-XX]` 由 Orchestrator 在调用 Outliner 生成 chunk 设计时写入 `status: "generated"` + `generated_at`；`outline_state.coarse_outline.status: "completed"` 由 Orchestrator 在段 1 粗大纲确认时写入
 
 **StateManager** 写入的字段：
 - 章节事务中：递增 `beats_written` 与 `words_written`；**不修改** `confirmed_beats`、`loop_state`、`loop_revert_log`、`beats_total`
@@ -517,10 +545,11 @@ StateManager 在最后一章完成后触发（**双重条件**）：
 
 满足 → 触发「chunk 收尾事务」：
 1. `outline/chunks/chunk-XX.yaml` 内容指针化进 `state/archive/chunks-archive.yaml`
-2. `progress.yaml` 的 `chunk_plan` 块字段全部置 null / 0（保留字段结构）
+2. `progress.yaml` 的 `chunk_plan` 块字段全部置 null / 0（保留字段结构）；`chunk_mode` 随 chunk_plan 整体清空
 3. `transaction-log.yaml` 追加 `trigger: "chunk_close"` 记录
 4. `state_version` 独立 +1（与章节事务分开）
 5. `outline/chunks/chunk-XX.yaml` 文件**不删除**（保留为大纲设计真值）
+6. `outline_state.chunk_designs[chunk-XX].status` 改为 `"archived"` + 写入 `archived_at`
 
 ### 10.7 chunk 跨卷约束
 
@@ -541,3 +570,107 @@ StateManager 在最后一章完成后触发（**双重条件**）：
 - Orchestrator **只读取** `progress.yaml.chunk_plan.source` 指向的当前 chunk 文件
 - **不扫描** `outline/chunks/` 目录——已归档的旧 chunk 文件（`chunk-01.yaml` 等）不会被误加载
 - chunk 收尾事务中 `source` 字段被置为 null，旧 chunk 文件仅作为大纲设计真值保留供用户查阅
+
+---
+
+## 十一、outline_state 字段定义（3 段大纲按需生成追踪）
+
+> 3 段大纲改造后的运行时状态追踪块。`progress.yaml` 的 `outline_state` 块追踪**粗大纲/卷纲/chunk 设计**三种大纲产物的生成状态。Orchestrator 调用 Outliner 时更新 `generated` 状态，StateManager 在 chunk 收尾事务中更新 `archived` 状态。
+
+### 11.1 块结构
+
+```yaml
+outline_state:
+  # ★ 段 1 粗大纲（一次性，必做）
+  coarse_outline:
+    status: "completed"            # pending | completed
+    completed_at: "2026-01-10T10:00:00"
+
+  # ★ 段 2 卷纲（按需生成——写到该卷起始章时由 Orchestrator 调 Outliner 产出）
+  volume_outlines:
+    "volume-01":
+      status: "completed"          # pending → generated → completed
+      generated_at: "2026-01-12T09:00:00"
+      completed_at: "2026-01-17T10:00:00"     # 该卷所有章节写完时填写
+    "volume-02":
+      status: "generated"
+      generated_at: "2026-01-20T14:30:00"
+      completed_at: null
+    "volume-03":
+      status: "pending"            # 尚未写到 V3 起始章，未生成
+      generated_at: null
+      completed_at: null
+
+  # ★ 段 3 chunk 设计（按需生成——写到新 chunk 起始章时由 Orchestrator 调 Outliner 产出）
+  chunk_designs:
+    "chunk-01":
+      status: "archived"           # pending → generated → completed → archived
+      generated_at: "2026-01-12T10:00:00"
+      completed_at: "2026-01-17T10:00:00"
+      archived_at: "2026-01-17T10:00:00"
+    "chunk-02":
+      status: "completed"
+      generated_at: "2026-01-18T09:00:00"
+      completed_at: null
+      archived_at: null
+    "chunk-03":
+      status: "generated"
+      generated_at: "2026-01-20T14:30:00"
+      completed_at: null
+      archived_at: null
+```
+
+### 11.2 状态语义
+
+| 字段状态 | 含义 |
+|---------|------|
+| `pending` | 尚未生成（如 `volume-02` 在写到 V2 起始章前一直为 `pending`） |
+| `generated` | 已生成（Orchestrator 调 Outliner 产出文件后写入） |
+| `completed` | 已完成（该卷/该 chunk 所有章节写完后标记） |
+| `archived` | 已归档（chunk 收尾事务完成后标记，与 `state/archive/chunks-archive.yaml` 同步） |
+
+### 11.3 写入权约束
+
+**Orchestrator** 写入：
+- `coarse_outline.status: "completed"` + `completed_at`（段 1 粗大纲确认时）
+- `volume_outlines[volume-XX].status: "generated"` + `generated_at`（写到该卷起始章前调 Outliner 产出卷纲后）
+- `chunk_designs[chunk-XX].status: "generated"` + `generated_at`（写到该 chunk 起始章前调 Outliner 产出 chunk 设计后）
+- `volume_outlines[volume-XX].status: "completed"` + `completed_at`（该卷最后一章写完、StateManager 完成章节事务后）
+- `chunk_designs[chunk-XX].status: "completed"` + `completed_at`（chunk 最后一章写完后）
+
+**StateManager** 写入（仅在 chunk 收尾事务中）：
+- `chunk_designs[chunk-XX].status: "archived"` + `archived_at`
+
+### 11.4 Orchestrator 检测逻辑
+
+`/novel-studio:write N` 启动时：
+
+```
+1. 检测 N 属于哪一卷（从 outline/全书总纲.yaml 的 volumes[] 查 chapter_range）
+2. 检测该卷 volume-XX.yaml 是否存在
+   - 文件不存在 + outline_state.volume_outlines[volume-XX].status == "pending"
+     → 调 Outliner 产出卷纲 → 写入 status: "generated"
+   - 文件存在 + status == "pending"（文件被外部手动删除）
+     → 调 Outliner 重新生成
+3. 检测 N 是否是新 chunk 起始章
+   - 是 → 调 Outliner 产出 chunk 设计 → 写入 status: "generated"
+4. 进入 LOOP_PREVIEW + chunk_mode 选择
+```
+
+### 11.5 与 chunk_plan 的关系
+
+| 维度 | chunk_plan | outline_state |
+|------|-----------|---------------|
+| 范围 | 当前活跃 chunk 的运行状态（loop_state / beats_written 等） | 所有大纲产物的生命周期状态（粗/卷/chunk 是否生成/完成/归档） |
+| 粒度 | 单 chunk 内的 beat 进度 | 全局的大纲产物状态 |
+| 写入权 | Orchestrator + StateManager | Orchestrator 主写 + StateManager 仅写 chunk archived |
+| 清理 | chunk 收尾事务清空 chunk_plan 块 | chunk 收尾事务只更新对应 chunk-XX.status="archived"，不清空 |
+| 关系 | chunk_plan.current_chunk 与 outline_state.chunk_designs[chunk-XX] 同步 | — |
+
+---
+
+## 十二、向后兼容
+
+- **旧工作区无 `chunk_plan.chunk_mode` 字段**：Orchestrator 视为 `null`（未选择），提示用户在阶段 0.45 选择，默认建议 `chapter`
+- **旧工作区无 `outline_state` 块**：Orchestrator 检测缺失 → 视为所有大纲产物 `pending` → 写到对应产物时按需生成
+- **旧 5 层大纲文件**（`伏笔地图.yaml` / `角色弧光.yaml` / `故事线交错.yaml`）：保留为可选参考文件，不强制迁移

@@ -54,17 +54,42 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 读取对应 Workflow 文件，按状态机规则调度：
 
 **写章节（节拍 LOOP 模式）**：
-- 阶段 0：Orchestrator 驱动 LOOP（LOOP_INIT → LOOP_PICKING → LOOP_DONE），用户批量确认 chunk 内所有节拍 + 选 chunk_mode（segment/chapter/super）
-  - LOOP_INIT：Orchestrator 检测 chunk 跨卷 → 若跨卷按 `state-schema.md` 10.7 拆分规则提示用户拆分；读 `progress.yaml.chunk_plan.source` 指向的 chunk 文件 → 加载 beat 列表（**不扫描 outline/chunks/ 目录**）
-  - LOOP_INIT：Orchestrator 一次性初始化 chunk_plan 的 `source / chapter_range / chapter_word_target / beats_total` 字段（从 chunk 文件读）；`chapter_word_target` 优先级：chunk 级 > workspace 级
-  - LOOP_PICKING：用户回 LOOP 改已锁 beat 时，Orchestrator **重新从 chunk 文件读取目标 beat 的 options 池**（WriterBrief-Beat 不含完整 options，chunk 文件是设计真值）
-- 阶段 1：Orchestrator 为当前 beat 组装 WriterBrief-Beat（含 `chapter_file_path` 让 Writer 在整章成稿时落盘）；Writer 节拍内一次写完（200-400 字）；按 segment 模式每 beat 停下检查；按 chapter/super 模式 Writer 连续写完本粒度内所有 beat
-- 阶段 1.5（chapter/super 模式）：Writer 整章成稿时一次性写入 `chapter_file_path`（纯正文，覆盖式，与断点恢复幂等语义一致）；落盘后进入阶段 2。segment 模式跳过——每 beat 写完直接进阶段 2，Critic Lite 改用 `CriticBrief-Lite.inline_text` 吃 `writer_beat_output.text`
-- 阶段 2：触发 REVIEW → Orchestrator 组装 CriticBrief-Lite（含 mode + beat_plan + continuity_context + segment 模式下的 inline_text）调度 Critic 做轻量检查
-- 阶段 3：用户锁定 → Writer 汇总 state_delta → Orchestrator 组装 StateManagerBrief 调度 StateManager 更新（章节事务：+字数 +章节数 +chunk_plan.beats_written，不动 confirmed_beats/loop_state/beats_total）
-- 阶段 4：最后一章完成后 StateManager 自动触发 chunk 收尾事务（archive + 清空 chunk_plan）
-- 任意阶段用户说"回到 LOOP" / "改 beat-X" → Orchestrator 把 loop_state=LOOP，loop_iteration +1，目标 beat 处理（详见 write-chapter.md 阶段 0.6 节；LOOP 重新展示选项时按上面 LOOP_PICKING 的回 LOOP 改 beat 流程重读 chunk 文件）
-- 无 NEED_PLAN/NEED_SCENE/NEED_REVIEW 等中间状态枚举，用户对话驱动流转
+
+启动 `/novel-studio:write N` 时，Orchestrator 执行以下步骤：
+
+1. **flag 解析**：检测命令尾部的 `--segment` / `--super` / `--super-strict` / `--auto`
+   - 有显式 chunk_mode flag → 直接记入待写入 `chunk_plan.chunk_mode`，跳过 LOOP_PREVIEW 模式询问
+   - 有 `--auto` → 进入 auto 模式（详见 3.5 节）
+   - 无 flag → 阶段 0.45 LOOP_PREVIEW 询问用户，回车接受默认 `chapter`
+
+2. **卷纲按需生成检测**（3 段大纲改造）：
+   - 读 `outline/全书总纲.yaml` 的 `volumes[]`，判断 N 属于哪一卷
+   - 检测 `outline/volumes/volume-XX.yaml` 是否存在
+   - **不存在** → 自动调 Outliner 产出卷纲（含 `storyline_progress` + `character_line_progress` + `pacing_map` + `turning_points`）
+   - 完成后写入 `progress.outline_state.volume_outlines[volume-XX].status: "generated"` + `generated_at`
+   - **对用户透明**：不弹额外对话
+
+3. **chunk 启动**（沿用）：检测 chunk 跨卷 → 必要时拆分；调 Outliner 产出 `outline/chunks/chunk-XX.yaml`；初始化 `chunk_plan`（除 `chunk_mode` 外）
+
+4. **LOOP 阶段**：
+   - **LOOP_INIT**（阶段 0）：展示本 chunk 主推的故事线/人物线（新增漂移方向展示）
+   - **LOOP_PICKING**（阶段 0.4）：用户逐个 beat 确认方向，Orchestrator 写入 `confirmed_beats`
+   - **LOOP_PREVIEW**（阶段 0.45，新增）：展示节拍预览表 + chunk_mode 选择 → 写入 `chunk_plan.chunk_mode`
+
+5. **写作阶段**：
+   - **阶段 1**：Orchestrator 为当前 beat 组装 `WriterBrief-Beat`（新增 `chunk_context.active_storyline` + `active_character_lines` + `current_beat.storyline_direction` + `character_line_direction` 字段）；Writer 节拍内一次写完（200-400 字）
+   - **阶段 1.5**（chapter/super 模式）：Writer 整章成稿时一次性写入 `chapter_file_path`
+   - **阶段 1.6**（仅 super 模式，非最后一章，新增）：触发 `super_checkpoint`——调度 Critic Lite（标记 `pause_reason: "super_checkpoint"`）+ 展示三选项（继续 super / 降级 chapter / 暂停 REVIEW）
+
+6. **REVIEW + Critic Lite**（阶段 2）：Orchestrator 组装 `CriticBrief-Lite`（新增 `pause_reason` + `drift_check` 字段），Critic 5 项 Lite 检查（含故事线漂移 + 人物线漂移）
+
+7. **用户锁定 + 状态更新**（阶段 3）：用户确认 → Writer 汇总 `state_delta` → Orchestrator 组装 `StateManagerBrief` 调度 StateManager（章节事务：+字数 +章节数 +chunk_plan.beats_written，不动 confirmed_beats/loop_state/chunk_mode/beats_total）
+
+8. **chunk 收尾**（阶段 4，仅最后一章）：StateManager 自动触发（archive + 清空 chunk_plan + 写入 `outline_state.chunk_designs[chunk-XX].status: "archived"`）
+
+9. **任意阶段用户说"回到 LOOP" / "改 beat-X"**：Orchestrator 把 `loop_state=LOOP`，`loop_iteration +1`，目标 beat 处理（详见 write-chapter.md 阶段 0.6 节；LOOP 重新展示选项时按 LOOP_PICKING 的回 LOOP 改 beat 流程重读 chunk 文件）
+
+10. 无 NEED_PLAN/NEED_SCENE/NEED_REVIEW 等中间状态枚举，用户对话驱动流转
 
 **修订章节**：
 ```
@@ -74,6 +99,22 @@ NEED_REVIEW → Critic（仅相关 Checker）
 ```
 
 **其他流水线**（初始化/世界观/大纲/检查）：按各自 workflow 定义执行。
+
+### 3.5 `--auto` 模式（减少干预）
+
+`/novel-studio:write N --auto` 触发全自动化模式：
+
+| 行为 | 默认模式 | `--auto` 模式 |
+|------|---------|--------------|
+| LOOP 阶段 | 展示每个 beat 选项 | 自动选 A（首个选项），跳过 LOOP_PICKING |
+| chunk_mode 选择 | 阶段 0.45 询问用户 | 自动 `super`（最快），跳过 LOOP_PREVIEW 询问 |
+| segment 模式 beat 间停下 | 每 beat 停下 | 不停，连续写完 |
+| Critic Lite 软问题 | 用户自决 | 默认通过 |
+| 用户锁定确认 | 询问用户 | 自动锁定 |
+
+**Orchestrator 检测**：命令尾部出现 `--auto` → 设置 `auto_mode: true` 标记 → LOOP_PICKING 时选第一个选项直接锁定所有 beat → LOOP_PREVIEW 时 chunk_mode 直接写 `super` → Critic Lite 软问题跳过用户自决环节（仅报硬伤）→ 阶段 3 用户锁定改为自动锁定
+
+**回退机制**：用户在任何阶段说「暂停 auto」/「手动接管」→ Orchestrator 把 `auto_mode: false`，从下一节点恢复正常模式
 
 ### 4. 异常处理
 
@@ -141,4 +182,4 @@ Orchestrator 启动时：
 - **Agent 不自选后继**：下一步由 Orchestrator 按 workflow 定义调度，不由 Agent 推荐
 - **用户可见的是进度，不是 Agent 名**：报告「正在重排场景结构…」而不是「正在调用 ScenePlanner」
 - **对话流程在 command 文件中**：Orchestrator 不重复定义具体的多轮对话流程，command 文件是对话流程的唯一权威来源
-- **状态文件写入分工**：Orchestrator 写入 `progress.yaml`（`chunk_plan` 块的节拍相关字段：`current_chunk`、`current_beat`、`confirmed_beats`、`loop_state`、`loop_iteration`、`loop_revert_log`、`beats_written`、`words_written`、`writing_started_at` + chunk 启动时一次性初始化的 `source`、`chapter_range`、`chapter_word_target`、`beats_total`）和 `agent-log.yaml`（流转日志）；StateManager 写入 `author.yaml`、`reader.yaml`、`character.yaml`、`foreshadow.yaml`（大状态）、`transaction-log.yaml`（事务日志），以及 `progress.yaml` 的累计统计字段（total字段、total_chapters_written）和顶层 `state_version`（事务版本号）+ 章节事务中 `chunk_plan.beats_written` 与 `words_written`（其他字段不动）+ chunk 收尾事务中清空 `chunk_plan` 全字段
+- **状态文件写入分工**：Orchestrator 写入 `progress.yaml` 的 `chunk_plan` 块（节拍相关字段：`current_chunk`、`current_beat`、`confirmed_beats`、`loop_state`、`loop_iteration`、`loop_revert_log`、`beats_written`、`words_written`、`writing_started_at` + chunk 启动时一次性初始化的 `source`、`chapter_range`、`chapter_word_target`、`beats_total`、`chunk_mode`——`chunk_mode` 在 LOOP_DONE 阶段 0.45 写入，整个 chunk 生命周期不变，super_checkpoint 降级时可改为 `chapter`）和 `agent-log.yaml`（流转日志）；新增 `progress.yaml` 的 `outline_state` 块（`coarse_outline.status: "completed"` + `volume_outlines[XX].status: "generated"` + `chunk_designs[XX].status: "generated"`，由 Orchestrator 在生成时写入）；StateManager 写入 `author.yaml`、`reader.yaml`、`character.yaml`、`foreshadow.yaml`（大状态）、`transaction-log.yaml`（事务日志），以及 `progress.yaml` 的累计统计字段（total字段、total_chapters_written）和顶层 `state_version`（事务版本号）+ 章节事务中 `chunk_plan.beats_written` 与 `words_written`（其他字段包括 `chunk_mode` 不动）+ chunk 收尾事务中清空 `chunk_plan` 全字段（含 `chunk_mode`）+ 写 `outline_state.chunk_designs[XX].status: "archived"`

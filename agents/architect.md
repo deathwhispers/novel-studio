@@ -96,14 +96,28 @@ write-chapter 中若需引入新重要配角（非一次性路人），Orchestra
     start_state: ""              # 初始状态
     end_state: ""                # 计划终点（长篇可写「未知」）
     growth_direction: ""         # 成长方向
+  # ★ 人物线（3 段大纲改造后新增，从原 storyline.direction 分离）
+  character_line:
+    direction: ""                # 本角色的成长方向：从什么状态 → 经过什么 → 走向哪里（POV 角色必填；非 POV 可省略）
+    key_storylines_participated: []  # 参与推进哪些故事线 ID（关联到粗大纲的 storylines[].id）
+    crossing: ""                 # 与其他角色人物线的交错点：在哪类事件/冲突上碰撞（配角尤其写与主角的交错）
+  # 旧 storyline 字段（保留过渡期，向后兼容）
   storyline:                     # 方向性故事线（不具体到章/卷，写作时把握方向用）
-    direction: ""                # 本角色的故事走向：追求什么 → 会经历什么 → 走向哪里
-    crossing: ""                 # 与其他角色故事线的交错点：在哪类事件/冲突上碰撞（配角尤其写与主角的交错）
+    direction: ""                # 本角色的故事走向：追求什么 → 会经历什么 → 走向哪里（迁移到 character_line.direction）
+    crossing: ""                 # 与其他角色故事线的交错点（迁移到 character_line.crossing）
   constraints:
     cannot_do: []                # 能力限制
     cannot_know: []              # 信息限制
     cannot_change: []            # 性格限制（不能突然变成另一个人）
 ```
+
+**字段变化说明**：
+- ✅ 新增 `character_line` 板块（从 `storyline.direction` 分离而来）
+  - `direction`：本角色的成长方向（POV 角色必填）
+  - `key_storylines_participated`：本角色参与推进哪些故事线 ID（关联粗大纲 storylines[]）
+  - `crossing`：与其他角色人物线的交错点
+- ⚠️ 旧 `storyline` 字段保留（过渡期），后续可逐步迁移到 `character_line`
+- **Orchestrator 优先用 `character_line`**（Outliner 在生成粗大纲时从 `character_line` 提取 `character_lines[]`）
 
 ## 品类骨架初始化（番茄系统爽文示例）
 

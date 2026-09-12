@@ -9,21 +9,24 @@ description: "章节写作流程。节拍批量确认 LOOP → 节拍驱动写�
 
 ```mermaid
 flowchart TD
-    User["👤 User: /novel-studio:write N"]
-    Orchestrator["🎯 Orchestrator<br/>工作区检测 + chunk 加载"]
+    User["👤 User: /novel-studio:write N [--segment|--super|--auto]"]
+    Orchestrator["🎯 Orchestrator<br/>工作区检测 + 卷纲按需生成 + chunk 加载"]
 
     User --> Orchestrator
 
-    Orchestrator --> LoopInit["阶段 0：LOOP_INIT<br/>展示 chunk + 进入确认"]
+    Orchestrator -->|"卷纲缺失"| VolGen["自动生成卷纲<br/>Outliner 产出 volume-XX.yaml"]
+    VolGen --> LoopInit
+    Orchestrator --> LoopInit["阶段 0：LOOP_INIT<br/>展示 chunk + 漂移方向"]
     Orchestrator --> Resume{"断点恢复？"}
-    Resume -->|"LOOP 状态"| LoopPick["阶段 0：LOOP_PICKING<br/>从未锁 beat 续选"]
+    Resume -->|"LOOP 状态"| LoopPick["阶段 0.4：LOOP_PICKING<br/>从未锁 beat 续选"]
     Resume -->|"WRITING/REVIEW 状态"| Write["阶段 1：节拍驱动写作"]
 
     LoopInit --> LoopPick
-    LoopPick -->|"全部节拍锁定 + 选 chunk_mode"| LoopDone["阶段 2：LOOP_DONE<br/>退出 LOOP → WRITING"]
+    LoopPick -->|"全部节拍锁定"| LoopPreview["阶段 0.45：LOOP_PREVIEW<br/>节拍预览表 + chunk_mode 选择"]
     LoopPick -->|"用户随时说改"| LoopPick
 
-    LoopDone --> Write
+    LoopPreview -->|"回车默认 chapter"| Write
+    LoopPreview -->|"--segment/--super flag"| Write
 
     Write --> SegmentCheck{"chunk_mode?"}
     SegmentCheck -->|"segment"| BeatReview["REVIEW：单 beat"]
@@ -33,15 +36,18 @@ flowchart TD
     BeatReview -->|"回 LOOP 改"| LoopPick
 
     AutoContinue --> ChapterSave["阶段 1.5：整章落盘"]
-    ChapterSave --> ChapterDone["REVIEW：整章"]
+    ChapterSave --> SuperCheck{"chunk_mode=super<br/>且非最后一章?"}
+    SuperCheck -->|"是"| SuperCP["阶段 1.6：super_checkpoint<br/>Critic Lite + 三选项"]
+    SuperCheck -->|"否"| ChapterDone["REVIEW：整章"]
     BeatReview -.->|"segment 跳过 1.5"| BeatReview
-    ChapterDone --> CriticLite["阶段 3：Critic Lite"]
-    CriticLite --> Lock["阶段 4：用户锁定"]
-    Lock --> StateUpdate["阶段 5：StateManager 更新"]
+    SuperCP -->|"继续 super/降级/暂停"| Write
+    ChapterDone --> CriticLite["阶段 2：Critic Lite"]
+    CriticLite --> Lock["阶段 3：用户锁定"]
+    Lock --> StateUpdate["阶段 4：StateManager 更新"]
 
     StateUpdate --> ChapterEnd{"chunk 最后一章?"}
     ChapterEnd -->|"否"| UserNext["User 写下一章 → LoopPick"]
-    ChapterEnd -->|"是"| ChunkClose["阶段 6：chunk 收尾事务"]
+    ChapterEnd -->|"是"| ChunkClose["阶段 5：chunk 收尾事务"]
 
     ChunkClose --> Done(["✅ chunk LOCKED"])
 ```
@@ -51,10 +57,12 @@ flowchart TD
 | 维度 | 实现 |
 |------|------|
 | 方向确定 | LOOP 一次性展示整章/整 chunk 所有节拍，**逐个确认**（可任意回退改） |
-| Writer | 节拍内连续写完，节拍间才停（segment 模式）或整章写完才停（chapter 模式） |
-| 用户确认频次 | 整章 N 个节拍只确认 1 次 LOOP + 1 次粒度选择 = **2 次** |
-| 状态源 | `progress.yaml` 的 `chunk_plan` 块（单一源） |
-| 方向偏离保护 | segment 模式 Critic 检查每 beat vs `direction_locked`，偏离即硬伤 |
+| 预览前置 | LOOP_PREVIEW 阶段 0.45：先看节拍预览表再选粒度——避免「还没看到全貌」时决策 |
+| Writer | 节拍内连续写完，节拍间才停（segment 模式）或整章写完才停（chapter 模式）或整 chunk 但每章停下（super 模式） |
+| super 防跑偏 | super_checkpoint 阶段 1.6：每章完成后 Critic Lite + 三选项（继续/降级/暂停） |
+| 用户确认频次 | 整章 N 个节拍只确认 1 次 LOOP + 1 次粒度选择 = **2 次**；super 模式每章额外加 1 次 checkpoint |
+| 状态源 | `progress.yaml` 的 `chunk_plan` 块（chunk 进度）+ `outline_state` 块（大纲产物状态） |
+| 方向偏离保护 | segment 模式 Critic 检查每 beat vs `direction_locked`；所有模式 Critic 检查故事线漂移 + 人物线漂移 |
 
 ## 详细步骤
 
@@ -77,10 +85,17 @@ Orchestrator 启动时读 `progress.chunk_plan`：
 
 `/novel-studio:write N` 时若 N 是新 chunk 起始章：
 
-1. **跨卷检测**：Orchestrator 检查 `outline/volumes/volume-XX.yaml` 的 `chapter_range`，若准备启动的 chunk（默认 5 章）跨卷边界，按 `runtime/state-schema.md` 10.7 拆分规则提示用户拆分；用户确认后调 Outliner 分别产出 `chunk-XX.yaml` 和 `chunk-XX+1.yaml`
-2. Orchestrator 调用 Outliner 产出 `outline/chunks/chunk-XX.yaml`（含每 beat 的 options 池）
-3. Orchestrator **只加载 `progress.chunk_plan.source` 指向的当前 chunk 文件**，不扫描 `outline/chunks/` 目录——已归档的旧 chunk 文件不会被误加载
-4. Orchestrator 初始化 `progress.chunk_plan`：
+1. **卷纲按需生成检测**（新增，3 段大纲改造）：
+   - Orchestrator 读 `outline/全书总纲.yaml` 的 `volumes[]`，判断 N 属于哪一卷（`chapter_range` 包含 N）
+   - 检测 `outline/volumes/volume-XX.yaml` 是否存在
+   - **不存在** → 自动调 Outliner 产出卷纲（含 `storyline_progress` + `character_line_progress` + `pacing_map` + `turning_points`）
+   - 卷纲生成完成后写入 `progress.outline_state.volume_outlines[volume-XX].status: "generated"` + `generated_at`
+   - **对用户透明**：不弹额外对话，自动完成
+2. **跨卷检测**：Orchestrator 检查 `outline/volumes/volume-XX.yaml` 的 `chapter_range`，若准备启动的 chunk（默认 5 章）跨卷边界，按 `runtime/state-schema.md` 10.7 拆分规则提示用户拆分；用户确认后调 Outliner 分别产出 `chunk-XX.yaml` 和 `chunk-XX+1.yaml`
+3. Orchestrator 调用 Outliner 产出 `outline/chunks/chunk-XX.yaml`（含每 beat 的 options 池）
+4. **新增**：Outliner 设计 chunk 时从卷纲提取 `active_storyline` + `active_character_lines` + 单 beat 的 `advancing_storyline`/`advancing_character_line`，写入 chunk 文件
+5. Orchestrator **只加载 `progress.chunk_plan.source` 指向的当前 chunk 文件**，不扫描 `outline/chunks/` 目录——已归档的旧 chunk 文件不会被误加载
+6. Orchestrator 初始化 `progress.chunk_plan`：
 
 ```yaml
 chunk_plan:
@@ -88,6 +103,7 @@ chunk_plan:
   source: "outline/chunks/chunk-01.yaml"
   chapter_range: [11, 15]
   chapter_word_target: 2000        # chunk 级值（如有）优先；fallback 到 workspace.chapter_word_target
+  chunk_mode: null                # LOOP_DONE 阶段 0.45 才写入；此处留 null
   confirmed_beats: {}
   loop_state: "LOOP"
   loop_iteration: 1
@@ -99,12 +115,22 @@ chunk_plan:
   loop_revert_log: []
 ```
 
+7. **新增**：写入 `progress.outline_state.chunk_designs[chunk-XX].status: "generated"` + `generated_at`
+
 #### 0.3 LOOP_INIT
 
 ```
 🔄 节拍批量确认 Loop 启动
 
 chunk-01 覆盖章节 11-15，共 7 个 beat（当前是第 11 章）。
+
+本 chunk 主推：
+   故事线：[sl-XXX 主题名] — [当前方向]
+   人物线：[char-XXX 角色名] — [当前方向]
+
+这意味着 Writer 在节拍内会严格遵循这两个方向——
+避免「写着写着忘了大方向」。
+
 我将依次展示每个 beat 的方向选项，你可以：
   - 选 A / B / C
   - 自定义方向
@@ -125,6 +151,10 @@ chunk-01 覆盖章节 11-15，共 7 个 beat（当前是第 11 章）。
 ```
 beat-3：[转折——系统评价"创造性使用"，主角意识到系统在测试思维方式]
 
+本 beat 推进：
+   故事线 [sl-XXX]：[方向]
+   人物线 [char-XXX]：[方向]
+
 选项：
   A. 选项A 完整描述
   B. 选项B 完整描述
@@ -136,7 +166,7 @@ beat-3：[转折——系统评价"创造性使用"，主角意识到系统在�
   - 跳到 beat-X：跳到指定节拍
   - 看已选：查看当前 confirmed  摘要
   - 回上一个：回到上一个 beat 重选
-  - 全部选完了：即使有 beat 未选也进入 LOOP_DONE
+  - 全部选完了：即使有 beat 未选也进入 LOOP_PREVIEW
 ```
 
 **用户操作 → Orchestrator 写入 `progress.chunk_plan.confirmed_beats[beat-id]`**：
@@ -147,32 +177,52 @@ beat-3：[转折——系统评价"创造性使用"，主角意识到系统在�
 | `D` / `你来定` | `choice: null, source: "ai_improvised", locked: true, locked_at: <now>` |
 | `自定义：[方向]` | `choice: 用户文本, source: "custom", locked: true, locked_at: <now>` |
 | `跳到 beat-Y`（已锁） | 跳到 beat-Y；`loop_iteration +1`；`loop_revert_log` 追加一条 |
-| `全部选完了` | 即使有 beat 未选也跳 LOOP_DONE |
+| `全部选完了` | 即使有 beat 未选也跳 LOOP_PREVIEW（阶段 0.45） |
 
-#### 0.5 LOOP_DONE
+#### 0.45 LOOP_PREVIEW（节拍预览 + chunk_mode 选择）
 
 ```
-✓ 本 chunk 共 7 个 beat，已确认 X 个（其中 Y 个用「你来定」）。
+✅ 节拍方向全部确认（X 个锁定，Y 个用「你来定」）
 
-选择写作粒度（写作中何时停下来让你看）：
-  1. segment：每个 beat 写完停下看（最精细）
-  2. chapter：每章所有 beat 写完停下看（推荐）
-  3. super：整个 chunk 写完才停
+📊 本 chunk 节奏预览：
+  beat-1 [钩子]    → A 接上章结尾       [locked]    ~280 字
+  beat-2 [承接]    → B 场景切换        [locked]    ~320 字
+  beat-3 [转折]    → C 状态描写        [locked]    ~360 字
+  beat-4 [高潮]    → 用户自定义        [custom]    ~400 字
+  ...
+  预计总字数：~2400 字（±15%）
 
-你的选择？
+[如果估算字数偏差大 → 提示用户回 LOOP 改 beat]
+
+写作粒度（回车 = chapter 推荐档 / --segment / --super / --super-strict）：
+> 
 ```
 
-用户选 → Orchestrator 写入 `chunk_mode`，退出 LOOP：
+**用户响应 → Orchestrator 写入 `chunk_plan.chunk_mode`**：
+
+| 用户输入 | chunk_mode | 后续行为 |
+|---------|-----------|---------|
+| 回车（默认） | `chapter` | 每章所有 beat 写完停下看 |
+| `chapter` | `chapter` | 同上 |
+| `segment` | `segment` | 每个 beat 写完停下看 |
+| `super` | `super` | 每章完成后插入 checkpoint（阶段 1.6） |
+| `super-strict` | `super-strict` | 整 chunk 一气呵成（无 checkpoint，保留原行为） |
+| `回 LOOP 改 beat-X` | 不变 | 回到 LOOP_PICKING 重选指定 beat |
+
+**Orchestrator 写入 `chunk_plan.chunk_mode` + 退出 LOOP**：
 
 ```yaml
 chunk_plan:
+  chunk_mode: "chapter"           # 用户选的粒度
   loop_state: "WRITING"
-  current_beat: "beat-1"     # 即将写第一个 beat
+  current_beat: "beat-1"          # 即将写第一个 beat
   beats_total: 7
   beats_written: 0
   words_written: 0
   writing_started_at: "<now>"
 ```
+
+**为什么先预览再选粒度**：用户对节奏没概念时，被迫在「还没看到全貌」时选粒度容易出错。先看到 7 个 beat 的方向分布，再选「写作中何时停下来」，决策质量更高。
 
 #### 0.6 LOOP 重入（任意阶段可触发）
 
@@ -260,9 +310,46 @@ Writer 把本章所有 beat 的 text 按顺序拼接（节拍间用空行分隔�
 - **覆盖式**——与「断点恢复 = 幂等重写覆盖」语义一致（见下方「断点恢复」节）
 - **不留作者手改**——用户手改后应锁定章节不再触发重写；这是预期行为，不是 bug
 
-落盘完成 → Orchestrator 调度阶段 2 Critic Lite。
+落盘完成 → 进入阶段 1.6（仅 super 模式）或阶段 2（chapter/super-strict 模式）。
 
 **segment 模式跳过本阶段**：每 beat 写完直接进阶段 2，Critic 吃 `writer_beat_output.text`（通过 `CriticBrief-Lite.inline_text`，见 `runtime/handoff-schema.md` 第五节）。每 beat 落盘会与 segment 模式的逐拍检查冲突。
+
+### 阶段 1.6：super 模式章节 checkpoint（仅 super，非最后一章）
+
+**触发条件**：`chunk_mode == "super"` AND `current.chapter != chapter_plan.chapter_range[1]`（非最后一章）。
+
+**最后一章不触发**：当 `current.chapter == chapter_range[1]` 时，super 模式直接进入阶段 2 完整 Critic Lite（覆盖整 chunk 所有章节所有 beat），走 LOCKED 流程。
+
+**行为**：
+
+1. Orchestrator 调度 Critic Brief-Lite，`mode: "chapter"`，并标记 `pause_reason: "super_checkpoint"`（让 Critic 知道这是 mid-chunk 调用，阈值照旧）
+2. Critic Lite 产出 lite_report（含故事线漂移 + 人物线漂移检查结果）
+3. Orchestrator 展示报告 + 三选项：
+
+```
+✅ 第 N 章完成（约 XXXX 字，super 模式 checkpoint）
+
+[Critic Lite 报告]
+
+本章结束。下一步：
+  1. 继续 super — 写下一章（chapter-N+1），写完继续 checkpoint
+  2. 降级为 chapter — 后续章节在阶段 2（每章 Critic Lite）正常停下
+  3. 暂停 — 进入 REVIEW，本 chunk 状态保留
+
+你的选择？
+```
+
+4. 用户响应：
+
+| 选择 | Orchestrator 动作 |
+|------|------------------|
+| 1. 继续 super | 重置 `current_beat: "beat-1"` + `beats_written: 0` + `words_written: 0` + `writing_started_at: <now>`，调 Writer 写下一章（保留 `chunk_mode: "super"`） |
+| 2. 降级为 chapter | 改 `chunk_mode: "chapter"`，重置 `current_beat: "beat-1"` 等；后续章节按普通 chapter 模式走 |
+| 3. 暂停 | `loop_state: "REVIEW"`，等待用户进一步指令 |
+
+**为什么需要 checkpoint**：原 super 模式是「整 chunk（5 章）写完才让用户看」，跑偏要等 35+ beat 后才暴露。引入 checkpoint 后每章完成都停下，让用户确认「方向没偏」再继续写下一章。
+
+**降级机制**：如果用户在中途发现 super 太激进，可降级为 chapter（更稳但节奏更慢）；不会丢失已写内容。
 
 ### 阶段 2：LOOP 退出 / Critic Lite
 
@@ -281,14 +368,32 @@ Orchestrator 组装 `CriticBrief-Lite`（见 `runtime/handoff-schema.md` 第五�
 - `check_scope.beats`（本次检查范围）
 - `beat_plan`（每 beat 的 `direction_locked`，用于方向一致性检查）
 - `continuity_context`（segment 模式必填，含 `previous_beat_tail` 和 `next_beat_starter`）
+- `pause_reason: "" | "super_checkpoint"`（新增——super 模式章节 checkpoint 时填该值，其他场景空字符串）
+- `drift_check`（新增——漂移检测清单）：
+  - `storyline_expected`: `{ storyline_id, direction, carrier }` 从当前 beat/chunk 的 `active_storyline` 提取
+  - `character_line_expected`: `{ character_id, direction, growth_target }` 从当前 beat 的 `character_line_direction` 提取
 
 Critic 判决（详见 `agents/critic.md` Lite 模式）：
 
 | 判决 | 动作 |
 |------|------|
-| `通过` | 进入阶段 4 用户锁定 |
+| `通过` | 进入阶段 3 用户锁定 |
 | `就地修` | Writer 限定范围修改（不改 confirmed_beats） |
 | `用户自决` | 列给用户，用户决定修或不修 |
+
+**漂移严重度阈值**（按 mode 分档）：
+
+| 漂移严重度 | segment | chapter | super |
+|----------|---------|---------|-------|
+| 无 | 0 beat 偏离 | 0 处偏离 | 0 处偏离 |
+| 轻微 | 1 beat 偏离 | 1-2 处偏离 | 1-3 处偏离 |
+| 严重 | ≥2 beat 偏离 | ≥3 处偏离 | ≥4 处偏离 |
+
+| 漂移严重度 | segment | chapter | super |
+|----------|---------|---------|-------|
+| 无 | 通过 | 通过 | 通过 |
+| 轻微 | 用户自决 | 用户自决 | 用户自决 |
+| 严重 | 就地修 | 就地修 | 就地修 |
 
 ### 阶段 3：用户锁定 + 状态更新
 
@@ -336,9 +441,10 @@ StateManager 在最后一章完成后检测（**双重条件**）：
 满足 → 触发「chunk 收尾事务」（独立事务，`state_version +1`，`trigger: "chunk_close"`）：
 1. `outline/chunks/chunk-XX.yaml` 内容指针化进 `state/archive/chunks-archive.yaml`
 2. `progress.chunk_plan.loop_revert_log` 全部追加进 `state/archive/chunks-archive.yaml` 该 chunk 条目下（审计不丢），`progress.chunk_plan.loop_revert_log` 清空
-3. `progress.yaml` 的 `chunk_plan` 块字段全部置 null / 0
-4. `transaction-log.yaml` 追加 `trigger: "chunk_close"` 记录
-5. `outline/chunks/chunk-XX.yaml` 文件**不删除**（保留为大纲设计真值）——下次启动新 chunk 时 Orchestrator 按 `progress.chunk_plan.source` 指针加载，不会误读旧文件
+3. `progress.yaml` 的 `chunk_plan` 块字段全部置 null / 0；`chunk_mode` 随 chunk_plan 整体清空
+4. `progress.outline_state.chunk_designs[chunk-XX].status` 改为 `"archived"` + 写入 `archived_at`
+5. `transaction-log.yaml` 追加 `trigger: "chunk_close"` 记录
+6. `outline/chunks/chunk-XX.yaml` 文件**不删除**（保留为大纲设计真值）——下次启动新 chunk 时 Orchestrator 按 `progress.chunk_plan.source` 指针加载，不会误读旧文件
 
 ## 上下文管理
 

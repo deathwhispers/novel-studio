@@ -201,6 +201,18 @@ writer_brief_beat:
     beats_locked_count: 7           # 已锁定的 beat 数
     previous_beat_written: "beat-2" # 当前 beat 不是第一个时此字段非空；用于判断是否接续
 
+    # ★ 新增——本 chunk 主推的故事线（从 chunk 文件的 active_storyline 提取）
+    active_storyline:
+      id: "sl-001"
+      direction: "主角初步怀疑系统 → 主角发现系统的第一个关键秘密"
+      carrier: "主角"
+
+    # ★ 新增——本 chunk 主推的人物线（从 chunk 文件的 active_character_lines 提取）
+    active_character_lines:
+      - character_id: "char-001"
+        name: "主角"
+        direction: "被动接受系统 → 开始主动质疑系统"
+
   # ★ 当前要写的节拍任务（核心：单 beat）
   current_beat:
     id: "beat-3"
@@ -215,6 +227,18 @@ writer_brief_beat:
     # 用户已锁定的方向（Writer 唯一不能偏离的指引）
     direction_locked: "选项B：系统给出'创造性使用'评价，但触发隐藏任务"
     direction_source: "tweak:选项B"   # option | custom | tweak:<原选项> | ai_improvised
+
+    # ★ 新增——本 beat 推进的故事线（从 chunk 文件的 beats[].advancing_storyline 提取）
+    storyline_direction:
+      storyline_id: "sl-001"
+      current_direction: "主角初步怀疑系统 → 主角发现系统的第一个关键秘密"
+      carrier: "主角"             # 本 beat 主要由谁推进这条线
+
+    # ★ 新增——本 beat 推进的人物线（从 chunk 文件的 beats[].advancing_character_line 提取）
+    character_line_direction:
+      character_id: "char-001"
+      current_direction: "被动接受系统 → 开始主动质疑系统"
+      growth_target: "本 beat 末主角应完成：第一次违抗系统指令"  # 可选
 
     # 字数目标（按节拍算）
     target_words: 350
@@ -459,6 +483,9 @@ critic_brief_lite:
   mode: "segment"                   # segment（单 beat）| chapter（整章）| super（多章）
   chapter: 11
 
+  # ★ 新增——暂停原因（super 模式章节 checkpoint 时填该值，其他场景空字符串）
+  pause_reason: ""                  # "" | "super_checkpoint"
+
   # ★ 检查范围（按 mode 不同）
   check_scope:
     mode: "segment"                 # 与外层 mode 同步
@@ -479,6 +506,18 @@ critic_brief_lite:
     - id: "beat-3"
       direction_locked: "选项B：系统给出'创造性使用'评价"
     # ...
+
+  # ★ 新增——漂移检测清单（3 段大纲改造后新增）
+  # 数据来源：WriterBrief-Beat 的 chunk_context.active_storyline + current_beat.storyline_direction + character_line_direction
+  drift_check:
+    storyline_expected:
+      storyline_id: "sl-001"
+      direction: "主角初步怀疑系统 → 主角发现系统的第一个关键秘密"
+      carrier: "主角"
+    character_line_expected:
+      character_id: "char-001"
+      direction: "被动接受系统 → 开始主动质疑系统"
+      growth_target: "本 chunk 末主角应完成：第一次违抗系统指令"  # 可选
 
   # ★ 节拍衔接检查（segment 模式必填）
   continuity_context:
@@ -516,6 +555,8 @@ critic_brief_lite:
 | 排版违规 | 硬伤——就地修 | 硬伤——就地修 |
 | 因果断裂 | 章节内部连贯 | + 与 `previous_beat_tail` 衔接 |
 | **方向偏离**（每 beat 实际写出 vs `direction_locked`） | N/A | **硬伤——必须就地修** |
+| **故事线漂移**（Lite Checker 4：实际写出 vs `drift_check.storyline_expected`） | 1-2 处偏离→用户自决 / ≥3 处→就地修 | 1 beat 偏离→用户自决 / ≥2 beat→就地修 |
+| **人物线漂移**（Lite Checker 5：实际写出 vs `drift_check.character_line_expected`） | 1-2 处偏离→用户自决 / ≥3 处→就地修 | 1 beat 偏离→用户自决 / ≥2 beat→就地修 |
 
 ---
 
