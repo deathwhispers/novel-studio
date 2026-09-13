@@ -91,10 +91,13 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 
 10. 无 NEED_PLAN/NEED_SCENE/NEED_REVIEW 等中间状态枚举，用户对话驱动流转
 
-**修订章节**：
+**修订章节**（用户描述 → Orchestrator 调度 → 阶段流转，无固定枚举）：
 ```
-NEED_DRAFT → Writer（限制修改范围）
-NEED_REVIEW → Critic（仅相关 Checker）
+用户描述问题 → Orchestrator 判断范围（全文重写/场景重设/局部修复/仅去味）
+  → 全文重写：等同 write-chapter 节拍 LOOP 流程
+  → 场景重设：ScenePlanner → Writer（限制范围）→ Critic（仅相关 Checker）
+  → 局部修复：Writer（限制范围）→ Critic（仅相关 Checker）
+  → 仅去味：Writer（仅修 AI 味）→ Critic（仅 Style Checker）
 通过 → StateManager
 ```
 

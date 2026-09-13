@@ -182,6 +182,31 @@ chunk 设计不需要用户在 `/novel-studio:outline` 命令中手动生成。*
 
 ---
 
+### 段 4：伏笔地图（可选参考文件）
+
+伏笔地图是可选的参考文件，**不在 `/novel-studio:outline` 命令中强制生成**。你可以主动维护 `outline/伏笔地图.yaml`，包含伏笔的埋设/轻碰/回收规划：
+
+```yaml
+# outline/伏笔地图.yaml
+foreshadows:
+  - id: "fs-001"
+    description: "玉佩发光的秘密"
+    plant_volume: 1
+    plant_position: "中段"
+    plant_detail: "主角获得玉佩时闪过一丝光"
+    payoff_volume: 3
+    payoff_position: "卷末"
+    payoff_detail: "玉佩其实是XX文明的钥匙"
+    line: "sl-001"
+    status: "planned"
+```
+
+伏笔追踪的运行时状态（`active` / `touched` / `resolved` 等）由 StateManager 在 `state/foreshadow.yaml` 中维护——你只需要在大纲阶段规划好埋设和回收点，写作时按需填写。
+
+> 与段 1/2/3 不同：伏笔地图不是必做项，可以等写章节时遇到具体伏笔再补。
+
+---
+
 ### 调整已有大纲
 
 如果用户已有大纲想调整：

@@ -34,6 +34,7 @@ chunk_plan:
   chapter_range: null           # 本 chunk 覆盖的章节号 [start, end]
   chapter_word_target: null     # 继承自 workspace.chapter_word_target，可被 chunk 级覆盖
   chunk_mode: null              # 写作粒度：null=未选择 | segment | chapter（默认）| super（启用 checkpoint）| super-strict（关闭 checkpoint）
+  auto_mode: false              # --auto 模式开关（默认 false）。true = 自动选默认方向 + chunk_mode super + 自动锁定 + 软问题默认通过
   confirmed_beats: {}           # 节拍确认状态，key=beat_id；详见第十节 1.3 节
   loop_state: null              # LOOP | WRITING | REVIEW | LOCKED
   loop_iteration: 0             # LOOP 重入次数（含首次进入）
@@ -434,6 +435,9 @@ chunk_plan:
   # ★ 写作粒度（LOOP_DONE 时一次性写入，chunk 生命周期内不变）
   chunk_mode: "chapter"           # segment | chapter（默认）| super（启用 checkpoint）| super-strict（关闭 checkpoint）
 
+  # ★ --auto 模式开关（LOOP_INIT 时根据命令 flag 写入，chunk 生命周期内可由用户「暂停 auto」改回 false）
+  auto_mode: false                # true = 自动选默认方向 + chunk_mode super + 自动锁定 + 软问题默认通过
+
   # ★ 节拍确认状态（核心数据结构，详见 10.3）
   confirmed_beats:
     "beat-1":
@@ -501,6 +505,7 @@ LOOP ────► WRITING ────► REVIEW ────► WRITING ─�
 - `chapter_word_target` 优先级：若 chunk 文件给出 chunk 级建议值（如战斗章 2500 字、过渡章 1500 字），用 chunk 级值；否则 fallback 到 `workspace.chapter_word_target`
 - `chunk_mode` 来源：用户显式指定（`--segment` / `--super` / `--super-strict`）→ 直接写入；无 flag → 阶段0.45 LOOP_PREVIEW 询问用户，回车接受默认值 `chapter`
 - `chunk_mode` 写入时机：LOOP_DONE 退出 LOOP 时一次性写入，整个 chunk 生命周期不变（super checkpoint 用户选"降级"时改 `chapter` 除外）
+- **新增**：`auto_mode` 来源：用户显式指定 `--auto` flag → Orchestrator 在 LOOP_INIT 时直接写 `true`；无 flag → 写 `false`（默认）；用户在任何阶段说「暂停 auto」/「手动接管」 → Orchestrator 改写 `false`（从下一节点恢复正常模式）；断点恢复时按此值决定行为
 - **新增**：`outline_state.volume_outlines[volume-XX]` 由 Orchestrator 在调用 Outliner 生成卷纲时写入 `status: "generated"` + `generated_at`；`outline_state.chunk_designs[chunk-XX]` 由 Orchestrator 在调用 Outliner 生成 chunk 设计时写入 `status: "generated"` + `generated_at`；`outline_state.coarse_outline.status: "completed"` 由 Orchestrator 在段 1 粗大纲确认时写入
 
 **StateManager** 写入的字段：

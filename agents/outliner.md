@@ -226,6 +226,12 @@ volume_end_hook: "主角发现系统还有第二层隐藏——而反派似乎�
 
 **触发时机**：`/novel-studio:write N` 时 N 是新 chunk 起始章 → Orchestrator 调 Outliner 产出（沿用现有触发流程）。
 
+**chunk 不跨卷约束**（Outliner 设计阶段强制执行，避免 Orchestrator 兜底）：
+- Outliner 设计 chunk 前**先核对** `outline/全书总纲.yaml` 的 `volumes[]`，确认 `chapter_range` 完全落在某一卷内
+- 跨卷时**Outliner 主动拆分**：输出 `chunk-XX.yaml`（覆盖到 V1 末尾）+ `chunk-XX+1.yaml`（覆盖 V2 起始 N 章），Orchestrator 只需按 `source` 指针加载当前 chunk
+- 这避免 Orchestrator 在 LOOP_INIT 时才发现跨卷（晚于 chunk 设计，且已生成一次）
+- **约束的本质**：chunk 是 5 章一组的"运行单元"，跨卷会破坏"chunk 内故事线和人物线连贯推进"的假设
+
 ```yaml
 # outline/chunks/chunk-03.yaml
 chunk:

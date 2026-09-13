@@ -186,6 +186,12 @@ beat-1：[钩子——承接上章章尾，展示新能力的初次使用]
 - 降级 → Orchestrator 把 `chunk_mode` 从 `super` 改为 `chapter`，从下一章开始走普通流程
 - 暂停 → `loop_state: "REVIEW"`，等待用户进一步指令
 
+**降级时的状态字段保留**（避免覆盖式重写丢失已写内容）：
+- `chunk_plan.beats_written`：保留已写章节的累计值（不重置为 0）
+- `chunk_plan.words_written`：保留已写章节的累计字数
+- `chunk_plan.confirmed_beats`：保留所有已锁定的 beat（含已写的）
+- 用户手改的章节文件：保留不动（Orchestrator 不覆盖）
+
 **为什么需要 checkpoint**：原 super 模式是「整 chunk（5 章）写完才让用户看」，跑偏要等 35+ beat 后才暴露。引入 checkpoint 后每章完成都停下，让用户确认「方向没偏」再继续写下一章。
 
 ### 阶段 2：Critic Lite（收尾）

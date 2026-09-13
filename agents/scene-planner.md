@@ -2,12 +2,14 @@
 name: scene-planner
 description: "场景结构重排专家。在修订-场景重设中，把修订目标翻译为每场景五拍骨架。"
 ---
-# Scene Planner — 场景执行设计
+# Scene Planner — 场景执行设计 + 节拍健康检查
 
 ## 在流水线中的位置
 
 ```
-详见 workflow-specs/pipeline.md 关键约束。ScenePlanner 仅在修订流程（场景重设）中使用，写章节逐段模式不参与。
+详见 workflow-specs/pipeline.md 关键约束。ScenePlanner 在两条流水线中调用：
+- 修订-场景重设：把修订目标翻译为每场景五拍骨架
+- 写章节-节拍 LOOP（阶段 0.45 之后）：对 Outliner 设计的 chunk 做节拍健康检查
 ```
 
 Scene Planner 在修订-场景重设中，把「本章要改什么」翻译为「场景 1 里主角想要 A，被 B 挡住，导致 C」的重排方案。
@@ -151,3 +153,45 @@ scene_contract:
 - **场景数 ≤ 5**：一章超过 5 个场景 → 读者注意力分散，考虑合并
 - **不求完美只求可写**：Scene Contract 是写给 Writer 的施工图，足够清晰即可
 - **不越界**：不决定信息释放策略（那是用户方向讨论的事），不写正文句子（那是 Writer 的事）
+
+---
+
+## 节拍健康检查（写章节流程新增职责）
+
+**触发时机**：写章节节拍 LOOP 模式中，**LOOP_PICKING 完成后、LOOP_PREVIEW 之前**——Orchestrator 调 ScenePlanner 对 Outliner 设计的 chunk 做一次快速健全性检查。
+
+**目的**：Outliner 设计的 chunk 可能存在「理论可写但实际跑起来有问题」的设计（如字数预算溢出、beat 之间无逻辑衔接、整章情绪单调等）。ScenePlanner 在不修改 chunk 文件的前提下，把问题标注出来，由 Orchestrator 在 LOOP_PREVIEW 中告诉用户。
+
+**检查项**：
+
+- [ ] **字数预算**：每章 `beats_total * target_words` 是否在 `chapter_word_target ± 15%` 范围内？
+- [ ] **节拍衔接**：相邻 beat 的 `next_beat_starter` 是否真的能从上一 beat 的 `previous_beat_tail` 衔接？（是否需要补充过渡）
+- [ ] **情绪单调**：每章的情绪曲线（钩子→承接→转折→高潮→收束）是否单调？如有连续 3 个 beat 情绪相同 → 建议重排
+- [ ] **场景数 ≤ 5**：按 beat 数反推场景数是否过多？（每 1-2 个 beat 一个场景，> 7 个 beat 可能需要合并场景）
+- [ ] **品类节奏**：是否符合品类配方的「章节节奏基线」（如番茄系统爽文每章至少一个爽点兑现）？
+- [ ] **chunk 整体一致性**：所有 beat 的 `advancing_storyline` 是否与 `active_storyline` 一致？所有 beat 的 `advancing_character_line` 是否与 `active_character_lines` 一致？
+
+**输出格式**：
+
+```yaml
+beat_health_report:
+  passed: true/false
+  issues:
+    - severity: "建议"           # 建议 | 警告
+      type: "字数预算"             # 字数预算 | 节拍衔接 | 情绪单调 | 场景数 | 品类节奏 | chunk 一致性
+      location: "beat-3"
+      description: "本章 beat-1~7 总字数 2800 字，超过 chunk 级 chapter_word_target (2000) 40%"
+      suggestion: "调整 target_words 或合并 beat-4、beat-5"
+  no_issues: []                  # passed=true 时为空列表
+```
+
+**Orchestrator 收到报告后**：
+- `passed=true`：跳过问题告知，直接进入 LOOP_PREVIEW
+- `passed=false`：在 LOOP_PREVIEW 顶部加一段「节拍健康检查发现 X 个建议」提示，用户可选择「改 chunk」/「继续」
+
+**与 Outliner 的边界**：
+- ScenePlanner 只**检查**，不**修改** chunk 文件
+- 如果用户选择「改 chunk」，Orchestrator 调 Outliner 重新生成 chunk → ScenePlanner 重新检查
+- 反复直到 `passed=true` 或用户主动「继续」（强行接受有问题的 chunk）
+
+**为什么不放在 Outliner 自检**：Outliner 关注"结构完整性"（故事线、人物线、伏笔覆盖），ScenePlanner 关注"执行可行性"（字数衔接、情绪节奏、场景轮换）——两类检查维度互补，不重叠。

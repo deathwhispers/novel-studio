@@ -34,6 +34,9 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 | Character Checker | `skills/character-check/SKILL.md` |
 | Pace Checker | `skills/pacing-check/SKILL.md` |
 | Style Checker | `skills/ai-flavor-detect/SKILL.md` + `skills/style-calibrate/SKILL.md` + `skills/voice-check/SKILL.md` + `skills/stylist/SKILL.md` |
+| Lite Checker 2.5（方向一致性） | 复用 Style/Character Checker 的对应 skill |
+| Lite Checker 4（故事线漂移） | `skills/storyline-drift-check/SKILL.md` |
+| Lite Checker 5（人物线漂移） | `skills/character-line-drift-check/SKILL.md` |
 
 ### Checker 1: Logic Checker（因果与连续性）
 
@@ -278,13 +281,17 @@ review_report:
 
 ## 判决规则
 
-| 条件 | 判决 |
-|------|------|
-| 5 个 Checker 全部通过 | **通过** → StateManager |
-| Logic Checker 或 Info Leak Checker 有硬伤 | **局部修复** → Writer（限制修改范围） |
-| Style/Character/Pace 任一 > 3 个问题 | **局部修复** → Writer |
-| Logic Checker 有骨架级问题 | **骨架失效** → ScenePlanner |
-| Info Leak Checker 发现大面积泄漏（≥3处） | **骨架失效** → Orchestrator（报告用户，重新讨论本章信息释放方向） |
+| 条件 | 判决（**全量 5 Checker**——修订/质量检查） | 判决（**Lite 5 项**——写章节收尾） |
+|------|----------------------------------------|-----------------------------------|
+| 5 个 Checker 全部通过 | **通过** → StateManager | — |
+| Logic Checker 或 Info Leak Checker 有硬伤 | **局部修复** → Writer（限制修改范围） | 因果断裂**就地修** → Writer（Lite 1） |
+| Style/Character/Pace 任一 > 3 个问题 | **局部修复** → Writer | 软问题**用户自决** → 列给用户 |
+| Logic Checker 有骨架级问题 | **骨架失效** → ScenePlanner | 骨架问题**报告用户** → Orchestrator |
+| Info Leak Checker 发现大面积泄漏（≥3处） | **骨架失效** → Orchestrator（报告用户，重新讨论本章信息释放方向） | 大面积泄漏**报告用户** → Orchestrator |
+| Lite 模式独有：方向偏离 / 故事线漂移 / 人物线漂移严重 | — | **就地修**（硬伤）→ Writer |
+| Lite 模式独有：以上漂移轻微 | — | **用户自决** → 列给用户 |
+
+> **Lite 模式与全量 5 Checker 的核心差异**：Lite 模式无 Scene Contract，不查信息泄漏、不查硬规则、不查节奏预算；只查因果连续性、人物连续性、文风排版、节拍方向一致性、故事线/人物线漂移（5 项）。阈值按 mode 分档。
 
 ## Lite 模式（写章节节拍 LOOP 收尾）
 
