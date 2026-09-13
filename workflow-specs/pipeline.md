@@ -14,22 +14,37 @@
 ```mermaid
 flowchart TD
     User["👤 User"]
-    Orchestrator["🎯 Orchestrator<br/>工作区检测 + chunk 加载"]
+    Orchestrator["🎯 Orchestrator<br/>工作区检测 + 卷纲按需生成 + chunk 加载"]
 
     User --> Orchestrator
 
-    Orchestrator --> Loop0["阶段 0：节拍 LOOP<br/>逐个 beat 展示选项 → 用户批量确认<br/>→ 选 chunk_mode"]
-    Loop0 --> Write1["阶段 1：节拍驱动写作<br/>Writer 按 WriterBrief-Beat<br/>节拍内连续写 200-400 字"]
-    Write1 --> Check{"chunk_mode?"}
+    Orchestrator -->|"写到 Vx 起始章"| VolGen["自动生成卷纲<br/>Outliner 产出 volume-XX.yaml"]
+    VolGen --> Loop0
+    Orchestrator --> Loop0["阶段 0：节拍 LOOP + LOOP_PREVIEW<br/>逐个 beat 确认 + 节拍预览 + 选 chunk_mode"]
+
+    Loop0 -->|"passed=true"| Write1
+    Loop0 -->|"有建议"| BeatHealth["ScenePlanner<br/>节拍健康检查<br/>字数/衔接/情绪"]
+    BeatHealth -->|"用户继续"| Write1
+
+    Write1["阶段 1：节拍驱动写作<br/>Writer 按 WriterBrief-Beat<br/>节拍内连续写 200-400 字<br/>（Quick-Write 用户接管）"] --> Check{"chunk_mode?"}
     Check -->|"segment"| BeatReview["每 beat 写完停下检查"]
-    Check -->|"chapter/super"| Auto["连续写完本粒度内所有 beat"]
+    Check -->|"chapter"| Auto1["连续写完本章所有 beat"]
+    Check -->|"super/super-strict"| Auto2["连续写完本粒度内所有 beat<br/>super 模式每章 checkpoint"]
+
     BeatReview --> Write1
-    Auto --> CriticLite["阶段 2：Critic Lite<br/>segment/chapter/super 三档"]
+    Auto1 --> ChapterSave["阶段 1.5：整章落盘"]
+    Auto2 --> SuperCheck{"super 模式<br/>且非最后一章?"}
+    SuperCheck -->|"是"| SuperCP["阶段 1.6：super_checkpoint<br/>三选项（继续/降级/暂停）"]
+    SuperCheck -->|"否"| ChapterSave
+    SuperCP -->|"继续 super"| Auto2
+    SuperCP -->|"降级 chapter"| Auto1
+    ChapterSave --> CriticLite["阶段 2：Critic Lite<br/>5 项：因果/人物/文风/方向/漂移"]
+    BeatReview -.->|"segment 跳过 1.5"| CriticLite
+
     CriticLite --> Lock["阶段 3：用户锁定<br/>Writer 汇总 state_delta"]
     Lock --> StateManager["阶段 4：StateManager<br/>章节事务：+字数 +章节数<br/>不改 confirmed_beats"]
     StateManager --> NextChapter{"当前章 =<br/>chunk 最后一章?"}
     NextChapter -->|"否"| User
-    NextChunk["否 → User 写下一章"] --> User
     NextChapter -->|"是"| ChunkClose["阶段 5：chunk 收尾事务<br/>archive + 清空 chunk_plan"]
     ChunkClose --> Completed(["✅ chunk LOCKED"])
 ```
@@ -39,9 +54,13 @@ flowchart TD
 | 阶段 | 实现 |
 |------|------|
 | 方向确定 | LOOP 一次性展示所有 beat 选项，用户逐个确认（含自定义/跳到/回 LOOP） |
+| 预览前置 | 阶段 0.45 LOOP_PREVIEW：用户先看节拍预览表再选 chunk_mode（默认 chapter） |
+| 节拍健康检查 | LOOP_PICKING 完成后 ScenePlanner 做字数/衔接/情绪/场景数/品类节奏 6 项快速检查 |
 | 写作流程 | 节拍内一次写完 200-400 字；节拍间按 chunk_mode 决定停/续 |
-| 质量检查 | Critic Lite 三档：segment（单 beat）/ chapter（整章）/ super（整 chunk） |
-| 状态源 | `progress.yaml` 的 `chunk_plan` 块（单一源） |
+| 用户接管 | Quick-Write 命令：用户临时接管某个 beat，仍受字数/边界/direction_locked 约束 |
+| super 防跑偏 | super 模式每章完成后插入 super_checkpoint（继续/降级/暂停三选项） |
+| 质量检查 | Critic Lite 5 项：因果连续性/人物一致性/文风排版/方向一致性/故事线+人物线漂移 |
+| 状态源 | `progress.yaml` 的 `chunk_plan` 块（chunk 进度）+ `outline_state` 块（大纲产物状态） |
 
 **交接包流转**（节拍模式）：
 | 步骤 | 交接包 |
@@ -189,12 +208,12 @@ flowchart LR
 
 | Agent | 出现在流水线 |
 |-------|-------------|
-| Orchestrator | 全部六条 |
+| Orchestrator | 全部七条 |
 | Architect | 初始化、世界观构建 |
-| Outliner | 大纲设计（创建/调整/检查）+ **写章节按需生成卷纲（写到 Vx 起始章）+ 按需生成 chunk 设计（写到新 chunk 起始）** |
-| ScenePlanner | 修订（场景重设） |
-| Writer | 写章节（节拍 LOOP）、修订（全部四种范围） |
-| Critic | 写章节（收尾 Lite 三档 + 新增故事线漂移 + 人物线漂移 2 个 Checker）、修订（场景重设/局部修复/仅去味）、质量检查 |
+| Outliner | 大纲设计（创建/调整/检查/迁移）+ **写章节按需生成卷纲（写到 Vx 起始章）+ 按需生成 chunk 设计（写到新 chunk 起始）** |
+| ScenePlanner | 修订（场景重设）+ **写章节节拍健康检查（LOOP_PICKING 后）** |
+| Writer | 写章节（节拍 LOOP + Quick-Write 验证）、修订（全部四种范围） |
+| Critic | 写章节（收尾 Lite 5 项 + 新增故事线漂移 + 人物线漂移 2 个 Checker）、修订（场景重设/局部修复/仅去味）、质量检查 |
 | StateManager | 写章节（节拍 LOOP）、初始化、修订、世界观构建 |
 
 ---
@@ -206,7 +225,7 @@ flowchart LR
 3. **StateManager 是大状态唯一写入口**: 其他 Agent 只标记增量（state_delta），不直接写 `state/` 大状态文件（author/reader/character/foreshadow）。StateManager 同时维护事务版本（progress.state_version + transaction-log.yaml）
 4. **Writer 不知道大纲全貌**：渐进披露，Writer 只知道当前 beat 的约束和禁止触碰清单（节拍模式） / 当前段的 Scene Contract（修订模式）
 5. **交接包裁剪**: Orchestrator 按 `runtime/handoff-schema.md` 裁剪交接包，下游 Agent 只收到所需字段
-6. **节拍模式不依赖 ScenePlanner 和全量 Critic**：写章节由 LOOP + 节拍驱动，ScenePlanner 仅在修订使用；Critic 在节拍/整章/整 chunk 收尾以 Lite 模式兜底（无 Scene Contract，不查信息泄漏）
+6. **节拍模式不依赖 ScenePlanner 全量检查**：写章节由 LOOP + 节拍驱动，ScenePlanner 仅在节拍健康检查（LOOP_PICKING 后，写之前做字数/衔接/情绪检查）和修订-场景重设两处使用；Critic 在节拍/整章/整 chunk 收尾以 Lite 模式兜底（无 Scene Contract，不查信息泄漏）
 7. **状态更新是版本化事务**: StateManager 每次更新递增 `state_version`、记 transaction-log；写前核对事务号。定义见 `runtime/state-schema.md` 第八节
 
 ---

@@ -43,6 +43,7 @@ chunk_plan:
   beats_total: 0                # 当前章节的 beat 总数（非 chunk 全部）
   words_written: 0              # 当前章节已写累计字数
   writing_started_at: null      # 当前章节写作开始时间
+  quick_write_log: []           # Quick-Write 记录（用户接管的 beat）：[{beat_id, word_count, written_at}]
   loop_revert_log: []           # LOOP 回退日志（详见第十节 3.6 节）
 
 # ===== 大纲状态块（3 段大纲按需生成追踪）=====
@@ -462,6 +463,12 @@ chunk_plan:
     - beat_id: "beat-3"
       reverted_at: "2026-01-15T11:30:10"
       reason: "用户指出方向偏离了卷节拍"
+
+  # Quick-Write 记录（用户接管的 beat，按 beat 顺序追加）
+  quick_write_log:
+    - beat_id: "beat-3"
+      word_count: 280
+      written_at: "2026-01-16T14:20:00"
 ```
 
 ### 10.2 loop_state 状态机
@@ -507,6 +514,7 @@ LOOP ────► WRITING ────► REVIEW ────► WRITING ─�
 - `chunk_mode` 写入时机：LOOP_DONE 退出 LOOP 时一次性写入，整个 chunk 生命周期不变（super checkpoint 用户选"降级"时改 `chapter` 除外）
 - **新增**：`auto_mode` 来源：用户显式指定 `--auto` flag → Orchestrator 在 LOOP_INIT 时直接写 `true`；无 flag → 写 `false`（默认）；用户在任何阶段说「暂停 auto」/「手动接管」 → Orchestrator 改写 `false`（从下一节点恢复正常模式）；断点恢复时按此值决定行为
 - **新增**：`outline_state.volume_outlines[volume-XX]` 由 Orchestrator 在调用 Outliner 生成卷纲时写入 `status: "generated"` + `generated_at`；`outline_state.chunk_designs[chunk-XX]` 由 Orchestrator 在调用 Outliner 生成 chunk 设计时写入 `status: "generated"` + `generated_at`；`outline_state.coarse_outline.status: "completed"` 由 Orchestrator 在段 1 粗大纲确认时写入
+- **新增**：`chunk_plan.quick_write_log` 由 Orchestrator 在用户调用 `/novel-studio:quick-write` 时追加（不修改其他字段）；StateManager 在 chunk 收尾事务中随 chunk_plan 整体清空（保留到 archive 审计）
 
 **StateManager** 写入的字段：
 - 章节事务中：递增 `beats_written` 与 `words_written`；**不修改** `confirmed_beats`、`loop_state`、`loop_revert_log`、`beats_total`

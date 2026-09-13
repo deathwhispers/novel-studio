@@ -69,8 +69,9 @@ claude plugin uninstall novel-studio
 |:------|:------|:---------|
 | `/novel-studio:init` | 初始化新项目 — 创作起点、核心体验、品类基调、主角灵魂、篇幅模式 | 5 轮 |
 | `/novel-studio:world` | 世界观构建 — 角色、力量体系、世界扩展、冲突检测、综合审查 | 每设定不限轮次 |
-| `/novel-studio:outline` | 3 段大纲 — 粗大纲（必做，含故事线+人物线）/ 卷纲（按需生成）/ chunk 设计（按需生成） | 段 1: 3 轮 |
+| `/novel-studio:outline` | 3 段大纲 — 粗大纲（必做）/ 卷纲（按需生成）/ chunk 设计（按需生成）/ 迁移（一次性） | 段 1: 3 轮 |
 | `/novel-studio:write <N>` | 写章节 — 节拍 LOOP 批量确认方向 + 节拍内连续写 + Critic Lite 5 项 + 锁定 | 不限轮次 |
+| `/novel-studio:quick-write <N> [beat-id]` | 用户临时接管某个 beat 自己写（仍受字数/方向约束） | 1 轮 |
 | `/novel-studio:check <N>` | 质量扫描 — 问清楚用户关注什么，针对性检查，只报问题 | 1-2 轮 |
 | `/novel-studio:revise <N>` | 修订章节 — 理解问题 → 判断范围 → 告知影响 → 等待确认，支持范围升级 | 2-4 轮 |
 
@@ -198,8 +199,9 @@ novel-studio/
 ├── commands/                 7 个用户命令
 │   ├── init.md               项目初始化
 │   ├── world.md              世界观构建
-│   ├── outline.md            大纲设计
+│   ├── outline.md            大纲设计（含迁移工具）
 │   ├── write.md              章节写作
+│   ├── quick-write.md        用户临时接管某个 beat
 │   ├── check.md              质量检查
 │   └── revise.md             章节修订
 ├── workflow-specs/                7 个文件（pipeline.md 总流水线 + 6 个工作流）

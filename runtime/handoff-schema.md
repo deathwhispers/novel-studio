@@ -240,6 +240,9 @@ writer_brief_beat:
       current_direction: "被动接受系统 → 开始主动质疑系统"
       growth_target: "本 beat 末主角应完成：第一次违抗系统指令"  # 可选
 
+    # ★ Quick-Write 模式标识（当用户接管时填 true）
+    user_quick_write: false       # true = 本 beat 由用户接管（不调 Writer，Writer 仅做验证）
+
     # 字数目标（按节拍算）
     target_words: 350
     target_words_min: 200

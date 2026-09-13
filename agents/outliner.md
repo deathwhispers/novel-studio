@@ -309,6 +309,39 @@ foreshadows:
 
 **注意**：伏笔地图作为可选参考文件保留，不强制在段 1 完成时填充。写作过程中根据需要逐步补充。
 
+### 旧 5 层大纲迁移（一次性命令 `/novel-studio:outline 迁移`）
+
+**触发**：`/novel-studio:outline 迁移` 命令。
+
+**适用场景**：用户的工作区是 0.1.2 之前创建的，有旧 5 层大纲文件需要迁移到新 3 段格式。
+
+**迁移步骤**（Outliner 执行）：
+
+1. **备份**：把旧 5 层文件复制到 `outline/archive-v1.2/<timestamp>/`（带时间戳，永不覆盖）
+2. **粗大纲改造**：
+   - 旧 `storylines[].character`（单角色绑定）→ 新 `key_characters[]`（数组）
+   - 新增 `character_lines[]` 板块：从 `setting/characters/` 角色档案的 `character_line.direction` + 旧 `角色弧光.yaml` 的 `character_arcs` 合并生成
+3. **故事线交错迁移**：旧 `outline/故事线交错.yaml` 的 `interweave_map` 内容 → 合并到新粗大纲的 `storyline_crossings[]` + 卷纲 `turning_points[].affects_storylines`
+4. **角色弧光迁移**：旧 `outline/角色弧光.yaml` 的 `character_arcs` + `cross_character_intersections` → 合并到粗大纲 `character_lines[].direction` + 卷纲 `character_line_progress[].growth_marker`
+5. **伏笔地图保留**：旧 `outline/伏笔地图.yaml` 文件保留为可选参考文件，字段格式已兼容 3 段大纲（如 `line` 字段对应 `advancing_storyline`）
+6. **卷纲按需生成**：写章节流程照常进行，不需要迁移阶段
+
+**字段映射对照表**：
+
+| 旧 5 层字段 | 新 3 段字段 | 迁移规则 |
+|------------|-----------|---------|
+| `storylines[].character` | `storylines[].key_characters[]` | 字符串 → 单元素数组 |
+| `故事线交错.interweave_map.volume_X.line_map` | `storyline_crossings[]`（卷级别） | 按 `position` 聚合为卷级 `event` |
+| `角色弧光.character_arcs[].arc[].state` | `character_lines[].start_state` / `end_state` | 按卷号聚合为起点/终点 |
+| `角色弧光.character_arcs[].arc[].key_change` | `character_lines[].direction` | 提取变化关键词 |
+| `角色弧光.character_arcs[].cross_character_intersections` | 卷纲 `turning_points[].affects_character_lines` | 按事件重新分类 |
+| `伏笔地图.foreshadows[].line` | 保留原字段 + chunk 设计 `must_include` 引用 | 不变 |
+
+**风险与回退**：
+- 迁移脚本只读旧文件 + 写新文件，**不修改原文件**
+- 任何时候可手动 `cp -r outline/archive-v1.2/<timestamp>/* outline/` 回滚
+- 迁移失败（如旧文件结构异常）→ Outliner 报告具体错误，不写入任何新文件
+
 ## 工作流程
 
 ### 接收 Orchestrator 指令后（段 1 粗大纲，3 轮对话）

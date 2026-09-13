@@ -25,6 +25,7 @@ workflow: outline
 /novel-studio:outline                                    # 创建新大纲（段 1 粗大纲）
 /novel-studio:outline 调整                              # 调整已有大纲（故事线/人物线/卷纲/chunk）
 /novel-studio:outline 检查                              # 检查大纲（漂移检测 + 健康度扫描）
+/novel-studio:outline 迁移                              # 旧 5 层大纲 → 3 段大纲（一次性，谨慎）
 
 # 可选 flag
 /novel-studio:outline --auto                            # 自动确认 Outliner 方案 + 跳过可选层
@@ -204,6 +205,53 @@ foreshadows:
 伏笔追踪的运行时状态（`active` / `touched` / `resolved` 等）由 StateManager 在 `state/foreshadow.yaml` 中维护——你只需要在大纲阶段规划好埋设和回收点，写作时按需填写。
 
 > 与段 1/2/3 不同：伏笔地图不是必做项，可以等写章节时遇到具体伏笔再补。
+
+---
+
+### 旧 5 层大纲迁移（一次性）
+
+如果你的工作区是 0.1.2 之前创建的（有旧 5 层大纲文件：`outline/故事线交错.yaml`、`outline/角色弧光.yaml`、`outline/伏笔地图.yaml`），可使用 `/novel-studio:outline 迁移` 命令将旧大纲迁移到新 3 段格式。
+
+**迁移流程**：
+
+```
+📐 检测到旧 5 层大纲文件：
+   - outline/全书总纲.yaml（旧版本，含 storyline.character 单角色绑定）
+   - outline/故事线交错.yaml（interweave_map）
+   - outline/角色弧光.yaml（character_arcs）
+   - outline/伏笔地图.yaml（旧版本，foreshadows[].line 字段）
+
+迁移计划：
+   1. 备份：所有旧文件复制到 outline/archive-v1.2/（带时间戳）
+   2. 粗大纲改造：
+      - storylines[].character → storylines[].key_characters[]（单角色 → 数组）
+      - storylines[].stakes + resolution_volume 保留
+      - 新增 character_lines[] 板块：从角色档案 + 旧角色弧光生成
+   3. 故事线交错 → 合并到粗大纲 storyline_crossings[] + 卷纲 turning_points[].affects_storylines
+   4. 角色弧光 → 合并到粗大纲 character_lines[].direction + 卷纲 character_line_progress[].growth_marker
+   5. 伏笔地图 → 保留为可选参考文件（字段格式兼容，自动追加 chunk-XX 的伏笔引用）
+   6. 卷纲 → 按需生成（写到 Vx 起始章时自动产出，不需要迁移）
+
+是否执行迁移？（输入"是"开始 / "否"跳过 / "查看 diff"先看具体变化）
+```
+
+**迁移风险**：
+- 旧 `storylines[].character`（单角色绑定）→ 新 `key_characters[]`：如果旧大纲只有主角单角色推进，迁移后 `key_characters` 也只含主角——后续可手动扩展其他角色推进
+- 旧 `角色弧光.yaml` 的 `cross_character_intersections` → 新卷纲 `turning_points[].affects_character_lines`：可能需要重新核对跨角色交点（因为旧文件是按角色分类的，新文件是按转折点分类的）
+- 已锁定的伏笔（出现在旧 `伏笔地图.yaml` 但未在新 3 段大纲体现）：自动追加到 chunk 设计的 `must_include` 候选
+
+**回退**：
+- 迁移前备份在 `outline/archive-v1.2/<timestamp>/`——任何时候都可手动恢复
+- 迁移脚本本身只读 + 写新文件，不修改旧文件
+- 如迁移后发现问题，可手动 `cp -r outline/archive-v1.2/<timestamp>/* outline/` 回滚
+
+**何时执行**：
+- 工作区是 0.1.2 之前创建的，已写过几章且不想从头开始
+- 想用 0.1.3 的 3 段大纲 + 漂移检测，但保留原有伏笔和故事线设计
+
+**何时不执行**：
+- 工作区是 0.1.3 新建（没有旧文件）——直接用 `/novel-studio:outline` 创建即可
+- 旧大纲文件被手动编辑过且不标准——迁移可能不完整，建议手动迁移
 
 ---
 
