@@ -178,6 +178,26 @@ reading_tension:                # 当前追读张力
 各 POV 角色的认知状态。
 
 ```yaml
+# character.yaml — character_line 字段定义（W9 修复，三处统一）
+# character_line 是角色档案的「成长方向」单一权威——粗大纲 character_lines[] 与卷纲 character_line_progress[] 都从此处派生
+
+character_line:                  # POV 角色必填；非 POV 可省略
+  direction: ""                  # 本角色的成长方向：从什么状态 → 经过什么 → 走向哪里（一句话级）
+  start_state: ""                # 初始状态（POV 角色由 Architect 在 init 阶段填）
+  end_state: ""                  # 计划终点（长篇可写「未知」）
+  growth_direction: ""           # 内在成长类型（从工具人到主体性 / 从单一反派到立体化 等）
+  key_storylines_participated: []  # 参与推进哪些故事线 ID（关联到粗大纲 storylines[].id）
+  crossing: ""                   # 与其他角色人物线的交错点：在哪类事件/冲突上碰撞
+```
+
+> **三处使用的字段映射**：
+>
+> | 来源 | 字段 | 说明 |
+> |------|------|------|
+> | `setting/characters/xxx.yaml.character_line`（角色档案，最全） | direction / start_state / end_state / growth_direction / key_storylines_participated / crossing | 单一真值 |
+> | `outline/全书总纲.yaml.character_lines[]`（粗大纲） | character_id / name / direction / start_state / end_state / growth_direction | 从角色档案派生，省略 key_storylines_participated / crossing（粗大纲层级不需要） |
+> | `outline/volumes/volume-XX.yaml.character_line_progress[]`（卷纲） | character_id / start_state（卷起点）/ end_state（卷终点）/ key_beats / growth_marker | 从粗大纲 + 角色档案派生 |
+
 # character.yaml
 characters:
   - id: "char-001"

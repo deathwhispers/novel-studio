@@ -222,6 +222,19 @@ beat-3：[转折——系统评价"创造性使用"，主角意识到系统在�
 | `跳到 beat-Y`（已锁） | 跳到 beat-Y；`loop_iteration +1`；`loop_revert_log` 追加一条 |
 | `全部选完了` | 即使有 beat 未选也跳 LOOP_PREVIEW（阶段 0.45） |
 
+#### 0.43 ScenePlanner 节拍健康检查（LOOP_PICKING 完成后）
+
+Orchestrator 在 LOOP_PICKING 全部锁定后、LOOP_PREVIEW 之前，调 ScenePlanner 对 chunk 文件做快速健全性检查（详见 `agents/scene-planner.md` 节拍健康检查段 + `workflow-specs/pipeline.md` 的 BeatHealth 节点）。检查项：
+
+- 字数预算：每章 `len([b for b in chunk.beats if b.chapter == N]) * target_words` 是否在 `chapter_word_target ± 15%`
+- 节拍衔接：相邻 beat 的 `next_beat_starter` 是否能从上一 beat 的 `previous_beat_tail` 衔接
+- 情绪单调：连续 3 个 beat 情绪相同 → 建议重排
+- 场景数 ≤ 5：> 7 个 beat 可能需要合并场景
+- 品类节奏：是否符合品类配方的章节节奏基线
+- chunk 整体一致性：所有 beat 的 `advancing_storyline` 是否与 `active_storyline` 一致
+
+ScenePlanner 不修改 chunk 文件，把问题标注出来 → Orchestrator 在 LOOP_PREVIEW 中告诉用户「Outliner 的设计有这些问题，是否调整？」。用户可选择「忽略问题直接进入 LOOP_PREVIEW」或「回 LOOP 改 beat」。
+
 #### 0.45 LOOP_PREVIEW（节拍预览 + chunk_mode 选择）
 
 ```

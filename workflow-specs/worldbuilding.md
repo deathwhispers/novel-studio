@@ -198,7 +198,7 @@ flowchart TD
 Architect 更新 setting/系统面板.md
 对应修改：
   - setting/系统面板.md：按新面板定义
-  - references/setting-index.md（如可用）：标记面板变更历史
+  - references/setting-index.md（O11 修复——强制维护，无条件）：标记面板变更历史 + 更新 setting/INDEX.yaml 的 `panels.last_iterated_at`
   - transaction-log：trigger: "panel_iterate"，notes: "纯文档修订，不动已写章节"
 
 确认写入？

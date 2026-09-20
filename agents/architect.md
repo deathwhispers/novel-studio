@@ -99,8 +99,12 @@ write-chapter 中若需引入新重要配角（非一次性路人），Orchestra
     end_state: ""                # 计划终点（长篇可写「未知」）
     growth_direction: ""         # 成长方向
   # ★ 人物线（3 段大纲改造后新增，从原 storyline.direction 分离）
+  # 字段定义权威来源：runtime/state-schema.md 的 character_line 段
   character_line:
     direction: ""                # 本角色的成长方向：从什么状态 → 经过什么 → 走向哪里（POV 角色必填；非 POV 可省略）
+    start_state: ""              # 初始状态
+    end_state: ""                # 计划终点（长篇可写「未知」）
+    growth_direction: ""         # 内在成长类型
     key_storylines_participated: []  # 参与推进哪些故事线 ID（关联到粗大纲的 storylines[].id）
     crossing: ""                 # 与其他角色人物线的交错点：在哪类事件/冲突上碰撞（配角尤其写与主角的交错）
   # 旧 storyline 字段（保留过渡期，向后兼容）

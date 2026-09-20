@@ -72,6 +72,7 @@ storylines:
     key_characters: ["反派A", "神秘组织"]
 
 # ★ 人物线（按 POV 角色，每个独立成长）—— 人物线从附属升级为并列
+# 字段权威来源：runtime/state-schema.md 的 character_line 段（粗大纲层级省略 key_storylines_participated / crossing）
 character_lines:
   - character_id: "char-001"
     name: "主角"
