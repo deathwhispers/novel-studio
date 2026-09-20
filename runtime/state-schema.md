@@ -25,6 +25,15 @@ current:
   total_words: 25000
   last_updated: "2026-01-15T10:30:00"
 
+# ★ 正在写作中章节（A2 修复）—— current.chapter 是"已完成最后一章"，in_progress_chapter 是"正在写/审中的章节"
+# 区别：默认 normal（WRITING/REVIEW 时 in_progress_chapter 与 current.chapter 不同；LOCKED 后两者同步）
+# 目的：让用户和 Orchestrator 在章节写作过程中能区分"已完成的最后一章"与"正在写的章节"
+in_progress_chapter:
+  status: "normal"              # normal | writing | reviewing | locked
+  chapter: null                 # 正在写/审的章节号；null = 无章节在写
+  started_at: null              # 章节写作开始时间
+  beats_progress: "0/7"          # 进度字符串（已写/total）；Writer 实时更新
+
 # ===== chunk 块（节拍批量确认 Loop 的运行时进度）=====
 # 详见第十节「chunk 字段定义与生命周期」。
 chunk_plan:
@@ -38,7 +47,7 @@ chunk_plan:
   loop_iteration: 0             # LOOP 重入次数（含首次进入）
   loop_entered_at: null         # 进入当前 LOOP 状态的时间
   beats_written: 0              # 当前章节已写完的 beat 数
-  beats_total: 0                # 当前章节的 beat 总数（非 chunk 全部）
+  beats_total_current_chapter: 0  # 当前章节的 beat 总数（每章进入 WRITING 前由 Orchestrator 重置；非 chunk 全部）
   words_written: 0              # 当前章节已写累计字数
   writing_started_at: null      # 当前章节写作开始时间
   loop_revert_log: []           # LOOP 回退日志（详见第十节 3.6 节）
@@ -60,6 +69,8 @@ next_milestone:
 **约束**：
 - `current` 的累计统计字段（total_words、total_chapters_written）由 StateManager 在章节锁定后更新
 - `state_version` 由 StateManager 独占维护，每次状态事务 +1；Orchestrator 不修改此字段
+- `in_progress_chapter` 由 Orchestrator 维护，Writer/Critic 不动——Orchestrator 在章节进入 WRITING 时设置 `status: writing` + `started_at: <now>`；每 beat 完成更新 `beats_progress:`；进入 REVIEW 时 `status: reviewing`；LOCKED 时（StateManager 章节事务完成后）`status: locked` + `chapter: null`
+- `in_progress_chapter.chapter` 是动态的，与 `current.chapter`（已完成）独立——区别见 A2 修复动机：用户应能区分"已完成最后一章"与"正在写的章节"
 
 ---
 
@@ -424,7 +435,7 @@ chunk_plan:
 
   # 写作进度（当前章节维度）
   beats_written: 2                # 当前章节已写完的 beat 数
-  beats_total: 7                  # 当前章节的 beat 总数（非 chunk 全部）
+  beats_total_current_chapter: 7  # 当前章节的 beat 总数（每章进入 WRITING 前由 Orchestrator 从 chunk 文件读新章 beat 数并写入）
   words_written: 850              # 当前章节已写累计字数
   writing_started_at: "2026-01-15T10:36:00"
 
@@ -472,18 +483,20 @@ LOOP ────► WRITING ────► REVIEW ────► WRITING ─�
 
 **Orchestrator** 写入的字段（写章节流程中）：
 - 节拍调度字段（每次 beat 推进时）：`current_chunk`、`current_beat`、`confirmed_beats`、`loop_state`、`loop_iteration`、`loop_revert_log`、`beats_written`、`words_written`、`writing_started_at`
-- chunk 启动时一次性写入（从 `outline/chunks/chunk-XX.yaml` 读取并初始化）：`source`、`chapter_range`、`chapter_word_target`、`beats_total`
+- chunk 启动时一次性写入（从 `outline/chunks/chunk-XX.yaml` 读取并初始化）：`source`、`chapter_range`、`chapter_word_target`
+- **每章进入 WRITING 前必须重置** `beats_total_current_chapter` 为新章的 beat 数（从 chunk 文件对应章节的 beats 数组读 `len()`）
 - `chapter_word_target` 优先级：若 chunk 文件给出 chunk 级建议值（如战斗章 2500 字、过渡章 1500 字），用 chunk 级值；否则 fallback 到 `workspace.chapter_word_target`
 
 **StateManager** 写入的字段：
-- 章节事务中：递增 `beats_written` 与 `words_written`；**不修改** `confirmed_beats`、`loop_state`、`loop_revert_log`、`beats_total`
+- 章节事务中：递增 `beats_written` 与 `words_written`；**不修改** `confirmed_beats`、`loop_state`、`loop_revert_log`、`beats_total_current_chapter`
 - chunk 收尾事务（loop_state: LOCKED 触发时）：清空 `chunk_plan` 全部字段为 null/0
 
 **写入互斥**：
 - 章节事务中不能动 `chunk_plan.confirmed_beats`（已用节拍不能回收）
-- 章节事务中不能动 `chunk_plan.beats_total`（chunk 启动时定，章节推进中不变）
+- 章节事务中不能动 `chunk_plan.beats_total_current_chapter`（每章进入 WRITING 时由 Orchestrator 设定，章节推进中不变）
 - StateManager 不写 `loop_revert_log`（这是 LOOP 行为记录）
-- Orchestrator 启动 chunk 后不再改 `source`、`chapter_range`、`chapter_word_target`、`beats_total`——这些是初始化值
+- Orchestrator 启动 chunk 后不再改 `source`、`chapter_range`、`chapter_word_target`——这些是初始化值
+- **Orchestrator 不在 chunk 启动时写 `beats_total_current_chapter`**——该字段是"当前章节"维度，由 Orchestrator 在每章进入 WRITING 前根据当前章节的 beat 列表长度重置
 
 ### 10.5 LOOP 回退机制
 
@@ -513,7 +526,7 @@ LOOP ────► WRITING ────► REVIEW ────► WRITING ─�
 
 StateManager 在最后一章完成后触发（**双重条件**）：
 - `current.chapter == chapter_range[1]`（最后一章）
-- `beats_written == beats_total`（注：`beats_total` 是当前章的 beat 数）
+- `beats_written == beats_total_current_chapter`（注：`beats_total_current_chapter` 是当前章的 beat 数，由 Orchestrator 在每章进入 WRITING 前重置）
 
 满足 → 触发「chunk 收尾事务」：
 1. `outline/chunks/chunk-XX.yaml` 内容指针化进 `state/archive/chunks-archive.yaml`

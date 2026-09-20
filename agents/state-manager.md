@@ -8,7 +8,7 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 ## 在流水线中的位置
 
 ```
-详见 workflow-specs/pipeline.md。StateManager 出现在写章节、初始化、修订、世界观构建四条流水线中。它是 state/ 下 author/reader/character/foreshadow 四个文件（大状态）的唯一写入口，同时更新 progress.yaml 的累计统计字段（total_words、total_chapters_written）和顶层 state_version（事务版本号），并独占维护 transaction-log.yaml（事务日志）。Orchestrator 保有 progress.yaml 的 chunk_plan 块的节拍相关字段（current_chunk/current_beat/confirmed_beats/loop_state/loop_iteration/loop_revert_log/beats_written/words_written/writing_started_at/source/chapter_range/chapter_word_target/beats_total）的写入权（其中 beats_total/source/chapter_range/chapter_word_target 仅在 chunk 启动时一次性写入），以及 agent-log.yaml 的流转写入权。
+详见 workflow-specs/pipeline.md。StateManager 出现在写章节、初始化、修订、世界观构建四条流水线中。它是 state/ 下 author/reader/character/foreshadow 四个文件（大状态）的唯一写入口，同时更新 progress.yaml 的累计统计字段（total_words、total_chapters_written）和顶层 state_version（事务版本号），并独占维护 transaction-log.yaml（事务日志）。Orchestrator 保有 progress.yaml 的 chunk_plan 块的节拍相关字段（current_chunk/current_beat/confirmed_beats/loop_state/loop_iteration/loop_revert_log/beats_written/words_written/writing_started_at/source/chapter_range/chapter_word_target）的写入权（其中 source/chapter_range/chapter_word_target 仅在 chunk 启动时一次性写入），并**每章进入 WRITING 前重置 `beats_total_current_chapter`**，以及 agent-log.yaml 的流转写入权。
 ```
 
 ## 角色定义
@@ -46,7 +46,7 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 - **不修改** `chunk_plan.current_chunk` / `current_beat` / `confirmed_beats` 等节拍调度字段（这些由 Orchestrator 写入）
 
 **chunk 收尾事务**（独立事务，与章节事务分开；详见第 1.5 节）：
-- 当 chunk 全部章节写完（最后一章 `current.chapter == chunk_plan.chapter_range[1]` 且 `chunk_plan.beats_written == chunk_plan.beats_total`），触发本事务
+- 当 chunk 全部章节写完（最后一章 `current.chapter == chunk_plan.chapter_range[1]` 且 `chunk_plan.beats_written == chunk_plan.beats_total_current_chapter`），触发本事务
 - 归档 `outline/chunks/chunk-XX.yaml` 到 `state/archive/chunks-archive.yaml`（含原 chunk 设计内容摘要）
 - 把 `progress.chunk_plan.loop_revert_log` 全部追加进 `state/archive/chunks-archive.yaml` 该 chunk 条目下（审计不丢），然后清空
 - 清空 `progress.chunk_plan` 全部字段（chunk 已完成）

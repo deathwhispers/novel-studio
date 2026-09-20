@@ -32,9 +32,9 @@ flowchart TD
     BeatReview -->|"继续"| Write
     BeatReview -->|"回 LOOP 改"| LoopPick
 
-    AutoContinue --> ChapterSave["阶段 1.5：整章落盘"]
-    ChapterSave --> ChapterDone["REVIEW：整章"]
-    BeatReview -.->|"segment 跳过 1.5"| BeatReview
+    AutoContinue --> BeatSave["阶段 1.5：beat 实时落盘（持续）"]
+    ChapterSave["阶段 1.5 节拍间持续落盘"] --> ChapterDone["REVIEW：整章"]
+    BeatReview -.->|"review 不需等落盘"| BeatReview
     ChapterDone --> CriticLite["阶段 3：Critic Lite"]
     CriticLite --> Lock["阶段 4：用户锁定"]
     Lock --> StateUpdate["阶段 5：StateManager 更新"]
@@ -93,7 +93,7 @@ chunk_plan:
   loop_iteration: 1
   loop_entered_at: "<now>"
   beats_written: 0
-  beats_total: 7                   # 当前章的 beat 总数
+  beats_total_current_chapter: 7  # 当前章的 beat 总数（每章进入 WRITING 前重置）
   words_written: 0
   writing_started_at: null
   loop_revert_log: []
@@ -117,6 +117,49 @@ chunk-01 覆盖章节 11-15，共 7 个 beat（当前是第 11 章）。
 ```
 
 用户说"开始选" → 进入 LOOP_PICKING。
+
+#### 0.3.5 Fast Chunk 模式（A3 修复）
+
+**触发条件**：用户说「fast chunk」「快速 chunk」「复用节奏」「跳过 LOOP」等指令，或连续第 2+ 个 chunk 启动时用户主动选择。
+
+**行为差异**：
+- **跳过所有 beat 选项展示**——直接复用上一 chunk 的节奏（chunk 文件默认节奏模板）
+- **只问关键转折 beat**：从 chunk 文件中识别 `importance: "key_turn"` 或 `function` 含"转折/高潮/揭示/收尾"的 beat（通常 1-3 个），仅展示这些
+- **其他 beat 默认 "你来定"（Writer 现场发挥）**，进入 WRITING 后由 Writer 按 `direction_locked = null` 自由发挥
+- **chunk_mode 默认 chapter**（平衡检查密度与连贯性）
+
+**典型对话**：
+
+```
+🔄 Fast Chunk 启动
+
+chunk-02 覆盖章节 16-20，共 9 个 beat。
+复用 chunk-01 节奏（每章 1 关键转折 + 2-3 自由 beat）。
+
+需要你确认的 2 个关键转折 beat：
+  - beat-3：高潮——主角与宿敌的正面对决
+  - beat-7：揭示——XX角色的真实身份暴露
+
+[展示 beat-3 + beat-7 的选项]
+
+其他 7 个 beat 默认「你来定」，Writer 现场发挥。
+
+开始？
+```
+
+**适用场景**：
+- 第 2+ 个 chunk（用户已对前文有强记忆）
+- 长篇创作中后段（10+ chunk 后）
+- 用户主动希望跳过 LOOP 冗余对话
+
+**不适用场景**：
+- 第 1 个 chunk（需要充分讨论方向）
+- 关键转折 chunk（卷末/完本 chunk）
+
+**约束**：
+- fast chunk 模式下，`source: ai_improvised` 的比例更高——Writer 承担更多方向决策
+- 用户仍可随时说"回 LOOP 改 beat-X"——回退到 LOOP_PICKING
+- 仍可随时说"这章到此结束"提前结束
 
 #### 0.4 LOOP_PICKING
 
@@ -168,7 +211,7 @@ beat-3：[转折——系统评价"创造性使用"，主角意识到系统在�
 chunk_plan:
   loop_state: "WRITING"
   current_beat: "beat-1"     # 即将写第一个 beat
-  beats_total: 7
+  beats_total_current_chapter: 7   # 当前章的 beat 总数（每章进入 WRITING 前重置）
   beats_written: 0
   words_written: 0
   writing_started_at: "<now>"
@@ -252,17 +295,18 @@ chunk_plan:
   words_written: 340              # += 当前 beat 字数
 ```
 
-### 阶段 1.5：整章落盘（Writer 自执行，chapter/super 模式）
+### 阶段 1.5：beat 实时落盘（Writer 自执行，所有 chunk_mode 通用）
 
-Writer 把本章所有 beat 的 text 按顺序拼接（节拍间用空行分隔），写入 `chapter_file_path`：
+Writer 每个 beat 写完 + 输出 `writer_beat_output` **之后立即**把该 beat 文本追加到 `chapter_file_path`：
 
 - **纯正文**——不写 `## beat-N` 二级标题，不写 YAML frontmatter，不写文件级 metadata
-- **覆盖式**——与「断点恢复 = 幂等重写覆盖」语义一致（见下方「断点恢复」节）
-- **不留作者手改**——用户手改后应锁定章节不再触发重写；这是预期行为，不是 bug
+- **追加式**——新 beat 接在已有内容末尾，节拍间用一个空行分隔；不覆盖已有 beat
+- **所有 chunk_mode 通用**——segment 模式下逐拍落盘不再与逐拍检查冲突（落盘不打断流程）
+- **作者可随时打开 `chapters/第N章-XXX.md` 看实时进度**——这是 O2 修复的核心动机
+- **章节文件 = beat 进度的真值**——`chunk_plan` 是元数据，恢复时以文件已落盘内容为准（见「断点恢复」节）
+- **修订语义**（回 LOOP 改已写 beat）：Writer 重写该 beat 文本后 → Orchestrator 告知该 beat 在章节文件中的字符范围 → Writer 替换该范围（不重写整个文件）。整章成稿后用户手动修订不再被 Writer 覆盖——这是预期行为，不是 bug
 
-落盘完成 → Orchestrator 调度阶段 2 Critic Lite。
-
-**segment 模式跳过本阶段**：每 beat 写完直接进阶段 2，Critic 吃 `writer_beat_output.text`（通过 `CriticBrief-Lite.inline_text`，见 `runtime/handoff-schema.md` 第五节）。每 beat 落盘会与 segment 模式的逐拍检查冲突。
+落盘完成 → 进入阶段 2（按 chunk_mode 决定时机）。落盘独立于 Critic Lite 触发逻辑。
 
 ### 阶段 2：LOOP 退出 / Critic Lite
 
@@ -271,7 +315,7 @@ Writer 把本章所有 beat 的 text 按顺序拼接（节拍间用空行分隔�
 | chunk_mode | 进入 REVIEW 时机 |
 |---|---|
 | `segment` | 每个 beat 写完 |
-| `chapter` | 本章所有 beat 写完（`beats_written == beats_total`） |
+| `chapter` | 本章所有 beat 写完（`beats_written == beats_total_current_chapter`） |
 | `super` | 整个 chunk 所有章节所有 beat 写完 |
 
 #### 2.2 Critic Lite 调度
@@ -327,11 +371,19 @@ StateManager **不做**：
 - 不修改 `chunk_plan.loop_state`（保持 WRITING，下一章继续写）
 - 不修改 `chunk_plan.loop_revert_log`（这是 LOOP 行为记录）
 
+#### 3.5 Orchestrator 准备进入下一章
+
+章节事务完成后（`current.chapter +1` 后），Orchestrator 检测：
+- 若 `current.chapter` 仍在 `chapter_range` 内（未到最后一章）：进入下一章 → **从 `outline/chunks/chunk-XX.yaml` 读新章的 beats 数组长度，重置 `beats_total_current_chapter` 为新值**（详见 O1 修复）→ 推进 `current_beat` 到新章的 `beat-1` → 继续 WRITING
+- 若 `current.chapter == chapter_range[1]`：触发阶段 4 chunk 收尾
+
+**关键**：`beats_total_current_chapter` 不是 chunk 级静态值，是**当前章节维度**——每章进入 WRITING 前必须重置。Orchestrator 不写此字段时，chunk 收尾的双重条件永远不满足。
+
 ### 阶段 4：chunk 收尾（仅最后一章完成后）
 
 StateManager 在最后一章完成后检测（**双重条件**）：
 - `current.chapter == chunk_plan.chapter_range[1]`
-- `beats_written == beats_total`（注：`beats_total` 是当前章的 beat 数）
+- `beats_written == beats_total_current_chapter`（注：`beats_total_current_chapter` 是当前章的 beat 数，由 Orchestrator 在每章进入 WRITING 前重置）
 
 满足 → 触发「chunk 收尾事务」（独立事务，`state_version +1`，`trigger: "chunk_close"`）：
 1. `outline/chunks/chunk-XX.yaml` 内容指针化进 `state/archive/chunks-archive.yaml`

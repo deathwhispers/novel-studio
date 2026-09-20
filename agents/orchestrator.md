@@ -56,12 +56,12 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 **写章节（节拍 LOOP 模式）**：
 - 阶段 0：Orchestrator 驱动 LOOP（LOOP_INIT → LOOP_PICKING → LOOP_DONE），用户批量确认 chunk 内所有节拍 + 选 chunk_mode（segment/chapter/super）
   - LOOP_INIT：Orchestrator 检测 chunk 跨卷 → 若跨卷按 `state-schema.md` 10.7 拆分规则提示用户拆分；读 `progress.yaml.chunk_plan.source` 指向的 chunk 文件 → 加载 beat 列表（**不扫描 outline/chunks/ 目录**）
-  - LOOP_INIT：Orchestrator 一次性初始化 chunk_plan 的 `source / chapter_range / chapter_word_target / beats_total` 字段（从 chunk 文件读）；`chapter_word_target` 优先级：chunk 级 > workspace 级
+  - LOOP_INIT：Orchestrator 一次性初始化 chunk_plan 的 `source / chapter_range / chapter_word_target` 字段（从 chunk 文件读）；`chapter_word_target` 优先级：chunk 级 > workspace 级。**`beats_total_current_chapter` 不在 chunk 启动时初始化**——它是"当前章节"维度，每章进入 WRITING 前由 Orchestrator 从 chunk 文件对应章节的 beats 数组读 `len()` 并写入
   - LOOP_PICKING：用户回 LOOP 改已锁 beat 时，Orchestrator **重新从 chunk 文件读取目标 beat 的 options 池**（WriterBrief-Beat 不含完整 options，chunk 文件是设计真值）
-- 阶段 1：Orchestrator 为当前 beat 组装 WriterBrief-Beat（含 `chapter_file_path` 让 Writer 在整章成稿时落盘）；Writer 节拍内一次写完（200-400 字）；按 segment 模式每 beat 停下检查；按 chapter/super 模式 Writer 连续写完本粒度内所有 beat
-- 阶段 1.5（chapter/super 模式）：Writer 整章成稿时一次性写入 `chapter_file_path`（纯正文，覆盖式，与断点恢复幂等语义一致）；落盘后进入阶段 2。segment 模式跳过——每 beat 写完直接进阶段 2，Critic Lite 改用 `CriticBrief-Lite.inline_text` 吃 `writer_beat_output.text`
+- 阶段 1：Orchestrator 为当前 beat 组装 WriterBrief-Beat（含 `chapter_file_path` 让 Writer 落盘）；Writer 节拍内一次写完（200-400 字）；按 segment 模式每 beat 停下检查；按 chapter/super 模式 Writer 连续写完本粒度内所有 beat
+- 阶段 1.5（所有 chunk_mode 通用）：Writer 每个 beat 写完立即把文本追加到 `chapter_file_path`（纯正文，节拍间空行分隔，追加式——作者可随时打开章节文件看实时进度）；落盘独立于 Critic Lite 触发逻辑。修订已写 beat 时由 Orchestrator 告知该 beat 在文件中的字符范围，Writer 替换该范围
 - 阶段 2：触发 REVIEW → Orchestrator 组装 CriticBrief-Lite（含 mode + beat_plan + continuity_context + segment 模式下的 inline_text）调度 Critic 做轻量检查
-- 阶段 3：用户锁定 → Writer 汇总 state_delta → Orchestrator 组装 StateManagerBrief 调度 StateManager 更新（章节事务：+字数 +章节数 +chunk_plan.beats_written，不动 confirmed_beats/loop_state/beats_total）
+- 阶段 3：用户锁定 → Writer 汇总 state_delta → Orchestrator 组装 StateManagerBrief 调度 StateManager 更新（章节事务：+字数 +章节数 +chunk_plan.beats_written，不动 confirmed_beats/loop_state/beats_total_current_chapter）
 - 阶段 4：最后一章完成后 StateManager 自动触发 chunk 收尾事务（archive + 清空 chunk_plan）
 - 任意阶段用户说"回到 LOOP" / "改 beat-X" → Orchestrator 把 loop_state=LOOP，loop_iteration +1，目标 beat 处理（详见 write-chapter.md 阶段 0.6 节；LOOP 重新展示选项时按上面 LOOP_PICKING 的回 LOOP 改 beat 流程重读 chunk 文件）
 - 无 NEED_PLAN/NEED_SCENE/NEED_REVIEW 等中间状态枚举，用户对话驱动流转
@@ -134,6 +134,29 @@ Orchestrator 启动时：
 3. 如果 `status: completed` → 检查 progress.yaml 确认状态一致性
 4. 如果 agent-log 不存在 → 从头开始意图识别
 
+### 启动时 state_size_check（A7 修复）
+
+**触发时机**：Orchestrator 启动时（任何意图识别之前）。
+
+**检测**：
+- 扫描 `state/` 下所有 YAML 文件总大小
+- 若 > 50KB → 警告但继续（StateManager 已设计 50KB 阈值触发紧急压缩）
+- 若 > 80KB → **强制触发 StateManager 轻量压缩**（不等第 5 章）
+- 若 > 100KB → 暂停并提示用户：`state/ 体积过大（XXX KB），可能影响加载性能，建议立即压缩`
+
+**为什么需要**：随着长篇创作推进（30+ 章 / 6+ chunk），state 文件膨胀可能超过 LLM 实际加载能力。"必须不读"清单依赖 LLM 自觉，大文件下可靠性下降。state_size_check 是被动防御——比"必须不读"清单更主动。
+
+**压缩轻量策略**（区别于完整压缩，见 `runtime/memory-compress.md`）：
+- 只清理 `state/archive/` 中超过 30 章的事务日志归档
+- 不动 active 字段（确认角色/活跃伏笔/未揭示秘密）
+- 不动 confirmed_beats 与 loop_revert_log（正在进行的 chunk 需要）
+- 输出压缩事务日志（trigger: "compress_lightweight"）
+
+**与正常压缩的边界**：
+- 正常压缩（第 5/10/15 章触发）：完整结算 + 指针化所有 settled 对象
+- 轻量压缩（80KB 触发）：只清理 archive 中老事务，不动 active 对象
+- 紧急压缩（50KB 阈值）：与正常压缩等同
+
 ## 核心原则
 
 - **只在路由层做路由**：不写正文、不检查质量、不做设定、不修改 StateManager 管理的大状态文件
@@ -141,4 +164,4 @@ Orchestrator 启动时：
 - **Agent 不自选后继**：下一步由 Orchestrator 按 workflow 定义调度，不由 Agent 推荐
 - **用户可见的是进度，不是 Agent 名**：报告「正在重排场景结构…」而不是「正在调用 ScenePlanner」
 - **对话流程在 command 文件中**：Orchestrator 不重复定义具体的多轮对话流程，command 文件是对话流程的唯一权威来源
-- **状态文件写入分工**：Orchestrator 写入 `progress.yaml`（`chunk_plan` 块的节拍相关字段：`current_chunk`、`current_beat`、`confirmed_beats`、`loop_state`、`loop_iteration`、`loop_revert_log`、`beats_written`、`words_written`、`writing_started_at` + chunk 启动时一次性初始化的 `source`、`chapter_range`、`chapter_word_target`、`beats_total`）和 `agent-log.yaml`（流转日志）；StateManager 写入 `author.yaml`、`reader.yaml`、`character.yaml`、`foreshadow.yaml`（大状态）、`transaction-log.yaml`（事务日志），以及 `progress.yaml` 的累计统计字段（total字段、total_chapters_written）和顶层 `state_version`（事务版本号）+ 章节事务中 `chunk_plan.beats_written` 与 `words_written`（其他字段不动）+ chunk 收尾事务中清空 `chunk_plan` 全字段
+- **状态文件写入分工**：Orchestrator 写入 `progress.yaml`（`chunk_plan` 块的节拍相关字段：`current_chunk`、`current_beat`、`confirmed_beats`、`loop_state`、`loop_iteration`、`loop_revert_log`、`beats_written`、`words_written`、`writing_started_at` + chunk 启动时一次性初始化的 `source`、`chapter_range`、`chapter_word_target` + **每章进入 WRITING 前重置的 `beats_total_current_chapter`**）和 `agent-log.yaml`（流转日志）；StateManager 写入 `author.yaml`、`reader.yaml`、`character.yaml`、`foreshadow.yaml`（大状态）、`transaction-log.yaml`（事务日志），以及 `progress.yaml` 的累计统计字段（total字段、total_chapters_written）和顶层 `state_version`（事务版本号）+ 章节事务中 `chunk_plan.beats_written` 与 `words_written`（其他字段不动）+ chunk 收尾事务中清空 `chunk_plan` 全字段

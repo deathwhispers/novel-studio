@@ -191,13 +191,13 @@ writer_brief_beat:
   mode: "beat-loop"                 # 区别于修订模式的 "scene-contract"
   word_target: 2000                 # 整章目标字数（Orchestrator 从 progress.yaml workspace.chapter_word_target 提取，浮动 ±20%）
 
-  # ★ 章节文件路径（Writer 整章成稿时一次性写入此文件——纯正文，无节拍标题，无 frontmatter；与断点恢复幂等语义一致）
+  # ★ 章节文件路径（Writer 每个 beat 写完立即追加到此文件——纯正文，无节拍标题，无 frontmatter；所有 chunk_mode 通用，作者可随时打开看实时进度）
   chapter_file_path: "chapters/第011章-章节名.md"
 
   # chunk 上下文（让 Writer 知道整体处于 chunk 哪个阶段）
   chunk_context:
     chunk_id: "chunk-01"
-    beats_total: 7                  # 当前章 beat 总数
+    beats_total_current_chapter: 7  # 当前章 beat 总数（每章进入 WRITING 前由 Orchestrator 重置）
     beats_locked_count: 7           # 已锁定的 beat 数
     previous_beat_written: "beat-2" # 当前 beat 不是第一个时此字段非空；用于判断是否接续
 
@@ -463,10 +463,10 @@ critic_brief_lite:
   check_scope:
     mode: "segment"                 # 与外层 mode 同步
     beats: ["beat-3"]               # segment: 单 beat；chapter: 整章所有 beats；super: 多章所有 beats
-    check_text_path: "chapters/第011章-章节名.md"   # chapter/super 模式必填（阶段 1.5 落盘后必存在）；segment 模式不读此字段
-    inline_text: "..."              # ★ segment 模式必填：Orchestrator 直接传 writer_beat_output.text，Critic 不读文件
+    check_text_path: "chapters/第011章-章节名.md"   # 所有 mode 都可用：Writer 阶段 1.5 已实时落盘，文件必存在
+    inline_text: "..."              # ★ segment 模式可选：快速通道，Orchestrator 直接传 writer_beat_output.text（Critic 不必读文件）；chapter/super 模式不填此字段
 
-  # 需自行读取（chapter/super 模式：读 check_text_path；segment 模式：读 inline_text 字段，二选一）
+  # 需自行读取（所有 mode 都从 check_text_path 读；segment 模式可改读 inline_text 字段，省一次 Read）
   chapter_text: "chapters/第011章-章节名.md"
   ai_flavor_checklist: "references/ai-flavor-checklist.md"
 
