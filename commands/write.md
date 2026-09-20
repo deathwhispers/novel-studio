@@ -23,7 +23,27 @@ workflow: write-chapter
 /novel-studio:write <章节号>
 /novel-studio:write next
 /novel-studio:write
+
+# 可选 flag（写作粒度）
+/novel-studio:write <N> --segment        # 每个 beat 停下看（最精细）
+/novel-studio:write <N> --super          # 整 chunk 写完，但每章完成后插入 checkpoint
+/novel-studio:write <N> --super-strict   # 整 chunk 一气呵成（关闭 checkpoint，原行为）
+
+# 可选 flag（减少干预）
+/novel-studio:write <N> --auto           # 自动选默认方向 + chunk_mode super + 自动锁定
 ```
+
+**flag 优先级**：显式 flag（`--segment` / `--super` / `--super-strict`）直接覆盖默认 `chapter`；无 flag 时阶段 0.45 询问，回车接受 `chapter`。
+
+**`--auto` 模式开关**：
+
+| 行为 | 默认模式 | `--auto` 模式 |
+|------|---------|--------------|
+| LOOP 阶段 | 展示每个 beat 选项 | 自动选 A，跳过 LOOP |
+| chunk_mode 选择 | 询问用户 | 自动 `super`（最快） |
+| segment 模式 beat 间停下 | 每 beat 停下 | 不停，连续写完 |
+| Critic Lite 软问题 | 用户自决 | 默认通过 |
+| 用户锁定确认 | 询问用户 | 自动锁定 |
 
 ## 完整流程
 
@@ -47,8 +67,12 @@ workflow: write-chapter
 📖 当前状态（第 N-1 章结束时）：
    [上下文摘要]
 
-chunk-01 还没准备好，我先让 Outliner 设计本 chunk 的节拍（含每节拍选项）。
-[N 个 beat，覆盖章节 11-15，当前是第 11 章]
+本 chunk 主推：
+   故事线：[sl-XXX 主题名] — [当前方向]
+   人物线：[char-XXX 角色名] — [当前方向]
+
+chunk-XX 还没准备好，我先让 Outliner 设计本 chunk 的节拍（含每节拍选项）。
+[N 个 beat，覆盖章节 N-M，当前是第 N 章]
 
 ⚠️ 跨卷检测：检查 `outline/volumes/volume-XX.yaml`，若本 chunk 跨卷边界，按 `runtime/state-schema.md` 10.7 拆分——
    - chunk-XX 覆盖 [V1_last_chapter]
@@ -59,6 +83,7 @@ chunk-01 还没准备好，我先让 Outliner 设计本 chunk 的节拍（含每
 ```
 
 **跨卷处理**：用户确认拆分 → Orchestrator 调 Outliner 分别产出两个 chunk 文件；用户坚持单 chunk → 标注"跨卷不拆"风险，进入 LOOP（O6 修复——与 `workflow-specs/write-chapter.md` 0.2 决策树对齐）。
+**漂移方向展示**：本 chunk 主推的故事线和人物线由 Outliner 在设计 chunk 时从卷纲/粗大纲提取，Writer 在节拍内严格遵循这两个方向——避免「写着写着忘了大方向」。
 
 #### LOOP_PICKING：逐个确认节拍
 
@@ -73,16 +98,24 @@ beat-1：[钩子——承接上章章尾，展示新能力的初次使用]
 你的选择？或：
   - 自定义：[你的方向]
   - D / 你来定：Writer 现场决定（功能不变）
-  - 跳到 beat-X：跳到指定节拍
+  - 跳到 beat-X：跳到指定 beat
   - 看已选：查看当前 confirmed 摘要
   - 回上一个：回到上一个 beat 重选
-  - 全部选完了：即使有 beat 未选也进入写作
+  - 全部选完了：即使有 beat 未选也进入 LOOP_PREVIEW
 ```
 
-#### LOOP_DONE：选写作粒度
+#### 阶段 0.45：LOOP_PREVIEW（节拍预览 + chunk_mode 选择）
 
 ```
 ✓ 本 chunk 共 N 个 beat，已确认 X 个（其中 Y 个用"你来定"）。
+
+📊 本 chunk 节奏预览：
+  beat-1 [钩子]    → A 接上章结尾       [locked]    ~280 字
+  beat-2 [承接]    → B 场景切换        [locked]    ~320 字
+  beat-3 [转折]    → C 状态描写        [locked]    ~360 字
+  beat-4 [高潮]    → 用户自定义        [custom]    ~400 字
+  ...
+  预计总字数：~2400 字（±15%）
 
 选择写作粒度（写作中何时停下来让你看）：
   1. segment：每个 beat 写完停下看（最精细）
@@ -90,13 +123,25 @@ beat-1：[钩子——承接上章章尾，展示新能力的初次使用]
   3. super（伪 super，O13 修复）：整 chunk 写完后，**按章分段**触发 Critic Lite（chunk 内每章过一次 Lite），不是一次性扫整 chunk
   4. super（实 super，⚠️ 不推荐）：整 chunk 一次性写完 + 一次性 Critic Lite 扫整 chunk——风险高，5 章 × 2K 字 ≈ 10K 远超 Critic 3K 预算，会丢早期信息
 
-你的选择？
+[如果估算字数偏差大 → 提示用户回 LOOP 改 beat]
+
+写作粒度（回车 = chapter 推荐档 / --segment / --super / --super-strict）：
+> 
 ```
 
 **super 模式选择指南**（O13 修复）：
 - **多数情况选 #3 伪 super**：chunk 内 5 章逐章推进，每章过 Critic Lite，与 chapter 模式行为一致；最后一章完成后整体收口。**这是默认推荐**
 - **少数情况选 #4 实 super**：用户对整 chunk 方向高度确定、不在乎中间检查、想一口气出稿——但要承担 Lite 质量下降的风险
 - **不选 super**：选 segment 或 chapter（最稳健）
+
+**用户响应**：
+- 回车 / `chapter` → 默认 chapter 模式（推荐）
+- `segment` → 每个 beat 停下
+- `super` → 整 chunk 写完但每章完成后插入 checkpoint
+- `super-strict` → 整 chunk 一气呵成（关闭 checkpoint）
+- `回 LOOP 改 beat-X` → 回到 LOOP_PICKING 重选指定 beat
+
+**为什么先预览再选粒度**：用户对节奏没概念时，被迫在「还没看到全貌」时选粒度容易出错。先看到 7 个 beat 的方向分布，再选「写作中何时停下来」，决策质量更高。
 
 ### 阶段 1：节拍驱动写作
 
@@ -117,6 +162,8 @@ beat-1：[钩子——承接上章章尾，展示新能力的初次使用]
 ```
 
 > segment 模式：每个 beat 写完立即追加到章节文件。作者在 `chapters/第N章-XXX.md` 看到的就是已完成的章节进度。
+>
+> segment 模式下每 beat 都过 Critic Lite（含方向一致性检查）——严格保证故事线/人物线方向不漂移。
 
 **chapter/super 模式**（Writer 自动连续写）：
 
@@ -132,15 +179,37 @@ beat-1：[钩子——承接上章章尾，展示新能力的初次使用]
 
 > chapter/super 模式：每个 beat 写完立即追加，作者可随时打开章节文件查看当前已完成的全部正文。用户说"这章到此结束"或"锁定" → 进入 Critic Lite + 章节事务。
 
-#### 用户操作映射
+#### super 模式章节 checkpoint（阶段 1.6，仅 super 模式）
 
-| 用户说 | 动作 |
-|--------|------|
-| 「继续」/「A」/「下一段」 | `beats_written +1`，调 Writer 写下一个 beat（segment 模式） |
-| 「改这段：[问题]」 | Writer 修订当前 beat（限本 beat 范围，不改 confirmed_beats） |
-| 「回 LOOP」/「改 beat-X」 | 进入 LOOP 重入，target beat 设为 `locked: false` |
-| 「这章到此结束」 | 提前进入 Critic Lite（即使本章 beat 未全写完） |
-| 「写下一章」/「next」 | 锁章 → 推进到下一章 → 进入 LOOP（chunk 已存在） |
+**触发条件**：`chunk_mode == "super"` AND `current.chapter != chapter_range[1]`（非最后一章）。
+
+**最后一章不触发 checkpoint**，直接进入完整 Critic Lite → LOCKED 流程。
+
+```
+✅ 第 N 章完成（约 XXXX 字，super 模式 checkpoint）
+
+[Critic Lite 报告——chapter 级检查]
+
+本章结束。下一步：
+  1. 继续 super — 写下一章（chapter-N+1），写完继续 checkpoint
+  2. 降级为 chapter — 后续章节在阶段 2（每章 Critic Lite）正常停下
+  3. 暂停 — 进入 REVIEW，本 chunk 状态保留
+
+你的选择？
+```
+
+**用户响应**：
+- 继续 super → 重置 current_beat 为下一章 beat-1，继续循环
+- 降级 → Orchestrator 把 `chunk_mode` 从 `super` 改为 `chapter`，从下一章开始走普通流程
+- 暂停 → `loop_state: "REVIEW"`，等待用户进一步指令
+
+**降级时的状态字段保留**（避免覆盖式重写丢失已写内容）：
+- `chunk_plan.beats_written`：保留已写章节的累计值（不重置为 0）
+- `chunk_plan.words_written`：保留已写章节的累计字数
+- `chunk_plan.confirmed_beats`：保留所有已锁定的 beat（含已写的）
+- 用户手改的章节文件：保留不动（Orchestrator 不覆盖）
+
+**为什么需要 checkpoint**：原 super 模式是「整 chunk（5 章）写完才让用户看」，跑偏要等 35+ beat 后才暴露。引入 checkpoint 后每章完成都停下，让用户确认「方向没偏」再继续写下一章。
 
 ### 阶段 2：Critic Lite（收尾）
 
@@ -152,10 +221,22 @@ Critic Lite 检查（mode: chapter）：
    - 人物一致性：[通过 / 有几处跳变]
    - 文风与排版：[通过 / 有几处 AI 味或排版问题]
    - 方向偏离：[检查每 beat vs direction_locked]
+   - 故事线漂移：[检查实际内容 vs active_storyline.direction]
+   - 人物线漂移：[检查 POV 角色行为 vs active_character_lines[].direction]
 
 [硬伤回 Writer 修；软问题列给用户]
 
 需要我调整上面这些吗？还是直接锁定？
+```
+
+**漂移检查示例**：Critic 报告会包含：
+
+```
+   故事线漂移：轻微
+     - beat-3：锁定方向"主角发现系统第一秘密"，但实际写成"主角训练新能力"
+       （仍推进 sl-002 主角逆袭线，偏离了 chunk 主推的 sl-001）
+   人物线漂移：无
+     - 主角行为符合"被动接受 → 开始质疑系统"的人物线方向
 ```
 
 ### 阶段 3：用户锁定 + 状态更新
@@ -230,7 +311,80 @@ StateManager 收尾事务：
 
 ## 快速通道
 
-如果你对整个章节走向非常确定，可以说「全部按 A 选」/ 「全部选 A，chunk_mode chapter」——一句话完成 LOOP + 粒度选择。
+如果你对整个章节走向非常确定，可以一句话完成 LOOP + 粒度选择：
+
+| 一句话 | 效果 |
+|--------|------|
+| 「全部按 A 选」 | 跳 LOOP_PICKING，所有 beat 自动选 A |
+| 「全部选 A，chunk_mode chapter」 | 跳 LOOP_PICKING（全部 A） + 默认 chapter 粒度 |
+| 「全部选 A，--super」 | 跳 LOOP_PICKING（全部 A） + 强制 super（启用 checkpoint） |
+| `/novel-studio:write <N> --auto` | 全自动：跳 LOOP（全部 A）+ chunk_mode super + 自动锁定 + 软问题默认通过 |
+
+**`--auto` 的设计目的**：当用户对故事已经胸有成竹、希望"AI 自己写、自动往前推进"时使用——把整套流程的"询问点"压缩到最少，用户只看最后结果，必要时再回 LOOP 调整。
+
+## `--auto` 模式完整示例
+
+以 `/novel-studio:write 11 --auto`（V2 起始章，进入 chunk-13）为例：
+
+```
+📖 当前状态（第 10 章结束时）：
+   主角刚突破第一瓶颈，情绪觉醒，准备进入下一卷主线。
+
+检测到 V2 起始 + 卷纲缺失——自动让 Outliner 生成 volume-02.yaml...
+   ✅ volume-02.yaml 已生成（含 storyline_progress + character_line_progress + phase_map）
+   ✅ outline_state.volume_outlines[volume-02].status = "generated"
+
+检测到新 chunk 起始——自动让 Outliner 生成 chunk-13.yaml...
+   ✅ chunk-13.yaml 已生成（含 active_storyline + active_character_lines + 7 个 beats）
+
+本 chunk 主推：
+   故事线：[sl-001 系统真相线] — 主角初步怀疑系统 → 主角发现第一关键秘密
+   人物线：[char-001 主角] — 被动接受系统 → 开始主动质疑系统
+
+--auto 模式：自动选默认方向 + chunk_mode super + 自动锁定
+   ✅ 7 个 beat 全部锁定（默认选 A）
+   ✅ chunk_mode = "super"
+   ✅ Writer 开始写...
+
+✍️ 第 11 章全部 beat 写完（约 2200 字）
+
+📂 已写入 chapters/第011章-觉醒.md
+
+Critic Lite（chapter 级 + 漂移检测）：
+   - 因果连续性：通过
+   - 人物一致性：通过
+   - 文风与排版：AI 味 2 处（轻微）
+   - 故事线漂移：无（sl-001 推进正确）
+   - 人物线漂移：无（主角表现符合"开始质疑"方向）
+✅ 通过（软问题默认通过）
+
+🔒 第 11 章已自动锁定（无硬伤）
+
+[--auto 模式下不询问用户，直接推进]
+
+📂 继续写第 12 章...
+[重复相同流程，直到 chunk-13 最后一章]
+
+🎉 chunk-13 全部完成！（V2 起始 5 章）
+
+StateManager 收尾：
+   ✅ chunk-13.yaml 归档
+   ✅ chunk_plan 清空（含 chunk_mode）
+   ✅ outline_state.chunk_designs[chunk-13].status = "archived"
+
+📊 本次运行总结（5 章，约 11000 字）：
+   - 推进故事线：sl-001 系统真相线（30%）
+   - 推进人物线：char-001 主角（从"被动"到"开始质疑"，30% 进度）
+   - AI 味总数：9 处（平均 1.8 处/章，全部为软问题）
+   - 漂移事件：0
+```
+
+**回退机制**：用户在 `--auto` 模式运行中任何时刻说「暂停 auto」或「手动接管」→ Orchestrator 把 `auto_mode` 设为 false，从下一节点开始恢复正常模式（LOOP_PICKING 重新询问 + Critic Lite 软问题转用户自决）。
+
+**典型使用场景**：
+- 用户已经做了几卷，知道 AI 的写作风格——直接 `--auto` 跑一晚
+- 用户先在 segment 模式下写了几章调好风格——后续批量 `--auto` 加速
+- 用户对 chunk 设计很满意、不想每章确认——`--auto` 减少干扰
 
 ## 反模式
 

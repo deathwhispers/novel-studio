@@ -4,7 +4,7 @@
   <p>7 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
-    <img src="https://img.shields.io/badge/version-0.2.0-green?style=flat-square" />
+<img src="https://img.shields.io/badge/version-0.2.0-green?style=flat-square" />
     <img src="https://img.shields.io/badge/platform-Claude%20Code-orange?style=flat-square" />
   </p>
 </div>
@@ -40,21 +40,28 @@ claude plugin uninstall novel-studio
 ## 三条命令走完一章
 
 ```bash
-# 1. 确认本章方向（多轮对话，3-5 轮）
+# 1. 确认本章方向（节拍 LOOP：批量确认 + 选粒度）
 /novel-studio:write 10
+  → 阶段 0.45 LOOP_PREVIEW：展示节拍预览表 + 默认 chunk_mode=chapter
+  → 一次性确认所有节拍方向
+  → Writer 节拍内连续写（不再每段停下）
 
-# 2. 逐段写作（你描述 → AI 写 200-400 字 → 你检查 → 下一段）
-→ 「从主角推开仓库门开始写」
-✍️ 第 10 章 · 第 1 段：[正文 350 字]
-→ 「这段可以，继续。接下来写他发现地上的血迹」
-✍️ 第 10 章 · 第 2 段：[正文 280 字]
-→ 「这段不对，血迹应该是新鲜的，不是干涸的」
-✅ 已修正
-→ ...循环直到你说「这章到此结束」
+# 2. 整章成稿（Writer 自执行整章落盘，super 模式带 checkpoint）
+✍️ 第 10 章 · 整章（约 2200 字）
+  → Writer 自写入 chapters/第010章-XXX.md（纯正文，无节拍标题污染）
+  → super 模式下每章完成后停下让你确认方向
 
-# 3. 查看本章统计，锁定
-✅ 第 10 章完成（约 2200 字）
+# 3. Critic Lite + 用户锁定
+✅ Critic Lite（5 项：因果/人物/文风排版/方向偏离/故事线人物线漂移）
+  → 用户锁定 → StateManager 更新
+  → 推进到下一章
 ```
+
+写作节奏：
+- **chapter 模式（默认）**：每章整稿后停下 — 平衡干预与连续性
+- **segment 模式（`--segment`）**：每个 beat 停下看 — 最精细
+- **super 模式（`--super`）**：每章完成后 checkpoint 三选项（继续 super / 降级 chapter / 暂停）— 防跑偏
+- **--auto 模式**：全自动批量推进
 
 ## 命令一览
 
@@ -62,8 +69,9 @@ claude plugin uninstall novel-studio
 |:------|:------|:---------|
 | `/novel-studio:init` | 初始化新项目 — 创作起点、核心体验、品类基调、主角灵魂、篇幅模式 | 5 轮 |
 | `/novel-studio:world` | 世界观构建 — 角色、力量体系、世界扩展、冲突检测、综合审查 | 每设定不限轮次 |
-| `/novel-studio:outline` | 多线大纲 — 全书总纲、逐卷细化、伏笔布局、角色弧光，支持创建/调整/检查 | 逐层深化 |
-| `/novel-studio:write <N>` | 写章节 — 节拍 LOOP 批量确认方向 + 节拍内连续写作 | 不限轮次 |
+| `/novel-studio:outline` | 3 段大纲 — 粗大纲（必做）/ 卷纲（按需生成）/ chunk 设计（按需生成）/ 迁移（一次性） | 段 1: 3 轮 |
+| `/novel-studio:write <N>` | 写章节 — 节拍 LOOP 批量确认方向 + 节拍内连续写 + Critic Lite 5 项 + 锁定 | 不限轮次 |
+| `/novel-studio:quick-write <N> [beat-id]` | 用户临时接管某个 beat 自己写（仍受字数/方向约束） | 1 轮 |
 | `/novel-studio:check <N>` | 质量扫描 — 问清楚用户关注什么，针对性检查，只报问题 | 1-2 轮 |
 | `/novel-studio:revise <N>` | 修订章节 — 理解问题 → 判断范围 → 告知影响 → 等待确认，支持范围升级 | 2-4 轮 |
 
@@ -73,12 +81,12 @@ claude plugin uninstall novel-studio
 
 | Agent | 职责 | 所有权 | 关键约束 |
 |:-------|:------|:--------|:----------|
-| **Orchestrator** | 入口、意图识别、信息裁剪 | `progress.yaml`, `agent-log` | 不创作、不检查、不修改大状态 |
+| **Orchestrator** | 入口、意图识别、信息裁剪、flag 解析、卷纲/chunk 按需生成调度 | `progress.yaml`, `agent-log` | 不创作、不检查、不修改大状态 |
 | **Architect** | Canon 唯一所有者 | `core/`, `setting/` | 不读正文、不写大纲 |
-| **Outliner** | 多线叙事大纲 | `outline/` | 不读正文、不改 canon |
-| **ScenePlanner** | 场景五拍骨架（仅修订） | 场景节拍 | 不写正文 |
-| **Writer** | 正文唯一执行者（逐段/修订双模式） | `chapters/` | 不知道第 50 章的反转 |
-| **Critic** | 5 Checker 质量门禁 + 写章节收尾 Lite 检查 | 验收标准 | 只标注不修改正文 |
+| **Outliner** | 3 段大纲设计（粗/卷/章）；写章节时按需产出卷纲 + chunk 设计 | `outline/` | 不读正文、不改 canon |
+| **ScenePlanner** | 场景五拍骨架（仅修订-场景重设） | 场景节拍 | 不写正文；写章节流程不调用 |
+| **Writer** | 正文唯一执行者（节拍 LOOP / 修订双模式） | `chapters/` | 不知道第 50 章的反转 |
+| **Critic** | 5 Checker 质量门禁 + 写章节收尾 Lite 5 项检查（含故事线漂移 + 人物线漂移） | 验收标准 | 只标注不修改正文 |
 | **StateManager** | 状态更新 + 记忆压缩 | `state/`（大状态唯一写入口） | 写章节：用户锁定确认；修订：Critic 通过 |
 
 ## 工作区结构
@@ -87,7 +95,7 @@ claude plugin uninstall novel-studio
 my-novel/
 ├── core/                    作品核心（灵魂契约：一句话概括/读者承诺/基调/主角内核/主线承诺/禁忌与红线）
 ├── setting/                 硬规则、角色档案、世界规则、力量体系
-├── outline/                 全书总纲、分卷大纲、故事线交错、伏笔地图、角色弧光
+├── outline/                 全书总纲（故事线+人物线）；卷纲与 chunk 设计按需生成；可选伏笔地图
 ├── chapters/                已完成章节正文
 ├── snippets/                灵感片段、废弃草稿
 └── state/                   运行时状态（系统自动维护）
@@ -95,7 +103,7 @@ my-novel/
     ├── reader.yaml          读者已知事实、猜测、待解答问题
     ├── character.yaml       角色位置、状态、关系、压力项
     ├── foreshadow.yaml      伏笔追踪（埋设 → 触碰 → 揭示 → 归档）
-    ├── progress.yaml        写作进度（当前章、总字数、章节状态）
+    ├── progress.yaml        写作进度（含 chunk_plan 节拍调度 + outline_state 大纲产物状态）
     ├── transaction-log.yaml 状态事务日志（事务版本号 + 变更记录）
     └── agent-log.yaml       Agent 运行日志（支持断点恢复）
 ```
@@ -105,11 +113,11 @@ my-novel/
 | # | 设计 | 说明 |
 |:--|:-----|:-----|
 | 1 | **用户主导每一步** | 命令 = 多轮深度对话，不搞一键生成。方向、设定、大纲、写作全部由用户确认推动 |
-| 2 | **逐段写作，即时纠偏** | 每段 200-400 字，写完就停。跑偏最多偏一段，改完再继续 |
+| 2 | **节拍 LOOP 批量确认** | 进入写作前一次性确认所有节拍方向（带 LOOP_PREVIEW 预览）+ 节拍内连续写（200-400 字）不打断；super 模式每章完成后插入 checkpoint 防跑偏 |
 | 3 | **Agent 不自选后继** | 流转由命令和用户确认决定，Agent 不自行调用下一个 Agent |
 | 4 | **StateManager 唯一写入口** | 大状态（author/reader/character/foreshadow）唯一写入口，其他 Agent 只标记增量；状态更新走版本化事务（state_version + transaction-log） |
 | 5 | **Writer 不读大纲** | 只知道当前段的约束和禁止触碰清单，不知道全书走向 |
-| 6 | **Critic 门禁（修订/检查/写章收尾）** | 修订/检查：5 Checker 全量；写章节逐段模式：整章收尾 Critic Lite 三项轻量检查 |
+| 6 | **Critic 门禁（修订/检查/写章收尾）** | 修订/检查：5 Checker 全量；写章节节拍 LOOP 收尾：Critic Lite 5 项轻量检查（因果/人物/文风排版/方向一致性/故事线+人物线漂移） |
 | 7 | **信息裁剪** | Orchestrator 从上游完整输出中裁剪下游真正需要的字段，累计上下文从 ~34K 降至 ~25K |
 
 ## 写作质量体系
@@ -191,8 +199,9 @@ novel-studio/
 ├── commands/                 7 个用户命令
 │   ├── init.md               项目初始化
 │   ├── world.md              世界观构建
-│   ├── outline.md            大纲设计
+│   ├── outline.md            大纲设计（含迁移工具）
 │   ├── write.md              章节写作
+│   ├── quick-write.md        用户临时接管某个 beat
 │   ├── check.md              质量检查
 │   └── revise.md             章节修订
 ├── workflow-specs/                7 个文件（pipeline.md 总流水线 + 6 个工作流）
@@ -292,6 +301,33 @@ novel-studio/
 - **新增字段**：`progress.yaml.in_progress_chapter`、`chunk_plan.chunk_mode`（伪 super / 实 super）
 - **新文件**：`references/failure-skill-map.md`、`references/setting-index.md`
 - **Writer 输出流程变更**：从"整章落盘"改为"beat 实时追加"——与断点恢复语义重新对齐
+
+### 0.1.3（3 段大纲 + 故事线/人物线驱动 + Loop 体验优化）
+
+**核心升级**：把 5 层大纲改为 3 段大纲；故事线与人物线分离驱动；写作 Loop 加入 LOOP_PREVIEW + super checkpoint + `--auto` 模式；Critic Lite 新增漂移检测。
+
+**新流程**：
+- **3 段大纲**：段 1 粗大纲（必做，含 `core_premise` + `storylines` 按剧情主题 + `character_lines` 按 POV 角色 + 分卷粗规划 + `storyline_crossings`）→ 段 2 卷纲（写到该卷起始章时按需生成，由 Orchestrator 调 Outliner 透明完成）→ 段 3 chunk 设计（写到新 chunk 起始章时按需生成）。用户只需做段 1，段 2/3 在写章节时自动产出。
+- **故事线/人物线分离**：故事线按"剧情主题"为单位（穿越多个角色，用 `theme` + `key_characters[]` 表达），人物线按"POV 角色"为单位（每个独立完整，从原 `storyline.direction` 分离到角色档案 `character_line` 板块）。
+- **LOOP_PREVIEW**（阶段 0.45）：LOOP_PICKING 完成后展示节拍预览表 + chunk_mode 选择，用户先看全貌再选粒度（默认 `chapter`）。
+- **super 模式章节 checkpoint**（阶段 1.6）：每章完成后 Critic Lite + 三选项（继续 super / 降级 chapter / 暂停 REVIEW），避免整 chunk 盲写。
+- **`--auto` 模式**：自动选默认方向 + chunk_mode super + 自动锁定 + 软问题默认通过，最大限度减少干预。
+- **方向一致性保护**：每个 chunk 设计携带 `active_storyline` + `active_character_lines`，WriterBrief-Beat 传递 `storyline_direction` + `character_line_direction`，Critic Lite 新增 2 个 Checker（故事线漂移 + 人物线漂移）按 mode 分档判决。
+
+**核心 Agent 变化**：
+- **Orchestrator**：调度更新（flag 解析 + 卷纲按需生成检测 + LOOP_PREVIEW + super checkpoint 触发）；3.5 节新增 `--auto` 模式说明；状态文件写入分工补全 `chunk_plan.chunk_mode`（Orchestrator 写、StateManager 不动）+ `outline_state` 块（Orchestrator 主写、StateManager 在 chunk 收尾时写 archived）。
+- **Writer**：通过 `WriterBrief-Beat` 接收 `chunk_context.active_storyline` + `active_character_lines` + `current_beat.storyline_direction` + `character_line_direction`；节拍内严格遵循这两个方向。
+- **Critic**：Lite 模式从 3 项扩到 5 项（新增 Lite Checker 4 故事线漂移 + Lite Checker 5 人物线漂移）；判决阈值按 mode 分档；Lite Report 输出新增 `pause_reason` + `storyline_drift` + `character_line_drift` 字段。
+- **StateManager**：`progress.yaml` 新增 `outline_state` 块追踪三种大纲产物状态（coarse_outline / volume_outlines / chunk_designs）；chunk 收尾事务中把对应 chunk 标记为 `archived`。
+- **Outliner**：整体重写——5 层大纲改为 3 段大纲（粗/卷/章），新增 `character_lines` 板块；卷纲按需生成（写到 Vx 起始章时由 Orchestrator 调 Outliner），含 `storyline_progress` + `character_line_progress` + `phase_map` + `turning_points`（双维度追踪）+ `volume_end_hook`；chunk 设计新增 `active_storyline` + `active_character_lines` + `beats[].advancing_storyline` + `advancing_character_line`。
+- **Architect**：角色档案模板新增 `character_line` 板块（`direction` + `key_storylines_participated` + `crossing`），从原 `storyline.direction` 分离。
+
+**关键设计修复**：
+- 修复 `chunk_mode` schema 漏洞（文档引用但 `progress.yaml.chunk_plan` 块未定义）；新增枚举 `null | segment | chapter | super | super-strict`。
+- WriterBrief-Beat 渐进披露保持——不传 `outline/全书总纲.yaml` 路径，Writer 只知道当前 beat 的「主推线 ID + 当前方向」。
+- chunk_plan 状态机保持四态（LOOP/WRITING/REVIEW/LOCKED），不破坏；新增 `outline_state` 块独立追踪大纲产物状态。
+- 旧 5 层大纲文件（`故事线交错.yaml` / `角色弧光.yaml`）保留为"高级选项"，可继续使用（不强制迁移）。
+- 向后兼容：旧工作区无 `chunk_mode` 字段时 Orchestrator 视为 `null` + 提示用户；无 `outline_state` 块时视为所有产物 `pending`。
 
 ### 0.1.2（节拍 LOOP 模式发布）
 

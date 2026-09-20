@@ -187,3 +187,24 @@ flowchart TD
 4. **压缩是常态不是例外**：每 5 章例行压缩，不让状态文件无限制增长
 5. **不判断质量**：StateManager 消费 state_delta，不评估写作质量
 6. **每次更新是版本化事务**：写前核对事务号，写后递增 `state_version` 并记 transaction-log。见 `runtime/state-schema.md` 第八节
+
+## 模块化边界（5 类职责）
+
+StateManager 当前承担 5 类职责（在一个 Agent 主体内），可通过清晰的模块边界保持可维护性：
+
+| 模块 | 职责 | 触发时机 | 写入文件 | 优先级 |
+|------|------|---------|---------|--------|
+| **M1 大状态更新** | author/reader/character/foreshadow 的增量更新 | 每章锁定 + 每卷收尾 | `state/author.yaml` 等大状态文件 | P0（核心） |
+| **M2 进度统计** | progress.yaml 累计字段（total_words、total_chapters_written、current.chapter） | 每章锁定 | `state/progress.yaml.current` | P0（核心） |
+| **M3 事务版本** | state_version 维护 + transaction-log 追加 | 每次写入操作 | `progress.yaml.state_version` + `state/transaction-log.yaml` | P0（核心） |
+| **M4 记忆压缩** | 每 5 章/卷末/文件 > 50KB 时执行压缩 + 归档指针化 | 条件触发 | `state/*.yaml`（指针化到 archive/） | P1（重要） |
+| **M5 归档管理** | archive/ 目录维护（revealed-secrets、answered-questions 等） | M4 触发时被动执行 | `state/archive/*` | P1（重要） |
+
+**当前架构**：5 个模块在同一个 Agent 主体内（StateManager），按职责顺序依次执行（M1 → M2 → M3 → M4 → M5）。模块边界清晰，单测可以分别 mock。
+
+**未来拆分路径**（如需要）：
+- **场景 A（小规模）**：保持单体，仅模块边界清晰——已实现
+- **场景 B（中规模）**：拆分为 `StateUpdater`（M1+M2+M3）+ `MemoryCompressor`（M4+M5），通过交接包调用——预计影响 Orchestrator 调度，破坏现有契约
+- **场景 C（大规模）**：M1-M5 各自独立 Agent，事件驱动——破坏模块间事务原子性，需要重新设计事务协议
+
+**当前决策**：保持场景 A（单体 + 模块边界）。拆分收益不足以承担破坏现有契约的成本。当调用频率/复杂度超过阈值（预计 StateManager 上下文超过 4K tokens 时）再考虑场景 B。

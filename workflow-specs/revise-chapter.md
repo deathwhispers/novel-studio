@@ -14,7 +14,7 @@ flowchart TD
 
     User --> Orchestrator
 
-    Orchestrator -->|"全文重写"| Full["等同于 write-chapter 逐段流程<br/>多轮对话定方向 → 逐段写作 → 锁定 → StateManager"]
+    Orchestrator -->|"全文重写"| Full["等同于 write-chapter 节拍 LOOP 流程<br/>多轮对话定方向 → 节拍 LOOP 批量确认 → Writer 连续写 → 锁定 → StateManager"]
     Orchestrator -->|"场景重设"| SceneReset["ScenePlanner 重排场景 → Writer →<br/>Critic → StateManager"]
     Orchestrator -->|"局部修复"| LocalFix["跳过 ScenePlanner<br/>Writer（限制范围）→<br/>Critic → StateManager"]
     Orchestrator -->|"仅去味"| DeFlavor["跳过 ScenePlanner<br/>Writer（仅修AI味）→<br/>Critic（仅 Style Checker）→<br/>StateManager"]
@@ -38,7 +38,7 @@ Orchestrator 通过多轮对话判断修订范围。**先问用户觉得哪里�
 
 | 用户描述 | 修订范围 | 流程 | 说明 |
 |---------|---------|------|------|
-| 「重写第X章」「全部重写」 | 全文重写 | 等同 write-chapter 逐段 | 多轮对话定方向 + 逐段写作 |
+| 「重写第X章」「全部重写」 | 全文重写 | 等同 write-chapter 节拍 LOOP | 多轮对话定方向 + 节拍 LOOP 批量确认 + Writer 节拍内连续写 |
 | 「第X章节奏不对」「场景结构有问题」 | 场景重设 | ScenePlanner → Writer → Critic | 重排场景结构，保持核心功能不变 |
 | 「有几处写得不好」「对话修一下」 | 局部修复 | Writer → Critic（跳过 ScenePlanner） | 只改标记位置，不动其他 |
 | 「AI味太重」「去味」 | 仅去味 | Writer → Critic 仅 Style（跳过 ScenePlanner） | 只修AI味关键词，不动剧情结构 |
@@ -47,7 +47,7 @@ Orchestrator 通过多轮对话判断修订范围。**先问用户觉得哪里�
 
 ### 全文重写
 
-（等同于 write-chapter 逐段流程，详见 `write-chapter.md`）
+（等同于 write-chapter 节拍 LOOP 流程，详见 `write-chapter.md`）
 
 ### 场景重设
 

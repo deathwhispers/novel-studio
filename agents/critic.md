@@ -34,6 +34,9 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 | Character Checker | `skills/character-check/SKILL.md` |
 | Pace Checker | `skills/pacing-check/SKILL.md` |
 | Style Checker | `skills/ai-flavor-detect/SKILL.md` + `skills/style-calibrate/SKILL.md` + `skills/voice-check/SKILL.md` + `skills/stylist/SKILL.md` |
+| Lite Checker 2.5（方向一致性） | 复用 Style/Character Checker 的对应 skill |
+| Lite Checker 4（故事线漂移） | `skills/storyline-drift-check/SKILL.md` |
+| Lite Checker 5（人物线漂移） | `skills/character-line-drift-check/SKILL.md` |
 
 ### Checker 1: Logic Checker（因果与连续性）
 
@@ -278,13 +281,17 @@ review_report:
 
 ## 判决规则
 
-| 条件 | 判决 |
-|------|------|
-| 5 个 Checker 全部通过 | **通过** → StateManager |
-| Logic Checker 或 Info Leak Checker 有硬伤 | **局部修复** → Writer（限制修改范围） |
-| Style/Character/Pace 任一 > 3 个问题 | **局部修复** → Writer |
-| Logic Checker 有骨架级问题 | **骨架失效** → ScenePlanner |
-| Info Leak Checker 发现大面积泄漏（≥3处） | **骨架失效** → Orchestrator（报告用户，重新讨论本章信息释放方向） |
+| 条件 | 判决（**全量 5 Checker**——修订/质量检查） | 判决（**Lite 5 项**——写章节收尾） |
+|------|----------------------------------------|-----------------------------------|
+| 5 个 Checker 全部通过 | **通过** → StateManager | — |
+| Logic Checker 或 Info Leak Checker 有硬伤 | **局部修复** → Writer（限制修改范围） | 因果断裂**就地修** → Writer（Lite 1） |
+| Style/Character/Pace 任一 > 3 个问题 | **局部修复** → Writer | 软问题**用户自决** → 列给用户 |
+| Logic Checker 有骨架级问题 | **骨架失效** → ScenePlanner | 骨架问题**报告用户** → Orchestrator |
+| Info Leak Checker 发现大面积泄漏（≥3处） | **骨架失效** → Orchestrator（报告用户，重新讨论本章信息释放方向） | 大面积泄漏**报告用户** → Orchestrator |
+| Lite 模式独有：方向偏离 / 故事线漂移 / 人物线漂移严重 | — | **就地修**（硬伤）→ Writer |
+| Lite 模式独有：以上漂移轻微 | — | **用户自决** → 列给用户 |
+
+> **Lite 模式与全量 5 Checker 的核心差异**：Lite 模式无 Scene Contract，不查信息泄漏、不查硬规则、不查节奏预算；只查因果连续性、人物连续性、文风排版、节拍方向一致性、故事线/人物线漂移（5 项）。阈值按 mode 分档。
 
 ## Lite 模式（写章节节拍 LOOP 收尾）
 
@@ -320,6 +327,38 @@ review_report:
 - [ ] AI 味扫描（按 `references/ai-flavor-checklist.md` 精简清单）
 - [ ] 排版合规（按 `references/web-novel-formatting.md`）：每句 ≤30 字、每段 ≤3 句、系统文字【】、对话一人一段
 
+### Lite Checker 4: 故事线漂移检测（Storyline Drift Lite，新增）
+
+> 3 段大纲改造后新增的检查项。数据来源：`CriticBrief-Lite.drift_check.storyline_expected`（从 WriterBrief-Beat 的 `chunk_context.active_storyline` + `current_beat.storyline_direction` 提取）。
+
+- [ ] 本 beat/chapter/super 实际写出的内容是否推进了 `storyline_direction.current_direction`？（如方向是"主角发现系统的第一关键秘密"，实际是否在向这个终点靠近？）
+- [ ] `storyline_direction.carrier`（推进者）是否参与了推进？（如 carrier 是"主角"，主角是否在场且有相关动作？）
+- [ ] 是否向 `current_direction` 描述的终点靠近？（可能需要回看前几个 beat 综合判断）
+- [ ] 是否触碰了其他 storyline 的方向（**主线漂移**）？如 chunk 主推 `sl-001` 但实际写了 `sl-002` 的内容
+
+**漂移严重度判断**（按 chunk_mode 分档）：
+
+| 漂移严重度 | segment | chapter | super |
+|----------|---------|---------|-------|
+| 无 | 0 beat 偏离 | 0 处偏离 | 0 处偏离 |
+| 轻微 | 1 beat 偏离 | 1-2 处偏离 | 1-3 处偏离 |
+| 严重 | ≥2 beat 偏离 | ≥3 处偏离 | ≥4 处偏离 |
+
+**失败处理**：与方向偏离一致——轻微漂移列给用户自决；严重漂移为硬伤，必须就地修（Writer 限定范围修改）。
+
+### Lite Checker 5: 人物线漂移检测（Character Line Drift Lite，新增）
+
+> 3 段大纲改造后新增的检查项。数据来源：`CriticBrief-Lite.drift_check.character_line_expected`（从 WriterBrief-Beat 的 `current_beat.character_line_direction` 提取）。
+
+- [ ] POV 角色的行为是否向 `current_direction` 描述的成长方向变化？（如方向是"被动接受系统 →开始主动质疑系统"，主角是否表现出质疑？）
+- [ ] 是否完成了 `growth_target`（如有）？如"本 beat 末主角应完成：第一次违抗系统指令"
+- [ ] 角色是否「突然不像自己」（沿用 Character Lite）？
+- [ ] 是否向其他人物线漂移？（POV 角色是否突然展现出属于其他角色的弧光方向）
+
+**漂移严重度判断**：与 Lite Checker 4 相同分档。
+
+**失败处理**：与 Lite Checker 4 一致。
+
 ### Lite 判决（按 mode 分档）
 
 | 条件 | chapter 模式（super 按章分段等同） | segment 模式 |
@@ -329,6 +368,8 @@ review_report:
 | 因果断裂 | 章节内部连贯 | + 与 `previous_beat_tail` 衔接 |
 | **方向偏离**（每 beat 实际写出 vs `direction_locked`） | N/A | **硬伤——必须就地修** |
 | 人物跳变 | 硬伤——就地修 | 硬伤——就地修 |
+| **故事线漂移**（Lite Checker 4） | 轻微→用户自决 / 严重→就地修 | 1 beat 偏离→用户自决 / ≥2→就地修 |
+| **人物线漂移**（Lite Checker 5） | 轻微→用户自决 / 严重→就地修 | 1 beat 偏离→用户自决 / ≥2→就地修 |
 
 **super 模式**：与 chapter 模式同档，但**按章触发 N 次**（chunk 内每章一次），每次只检查本章。每次 Lite 通过后单独推进到下一章；某章 Lite 失败就地修后单独重跑该章 Lite。**不接受 super 一次性扫多章**（O3 修复，避免上下文超载）。
 
@@ -337,8 +378,8 @@ review_report:
 | 条件 | 判决 |
 |------|------|
 | 无硬伤 | **通过** → 锁定 |
-| 有硬伤（因果断裂 / 人物跳变 / 排版违规 / 方向偏离） | **就地修** → 回 Writer，限定修改范围 |
-| 只有软问题（AI 味偏多 / 对话区分度低 / 轻微因果跳跃） | **用户自决** → 列给用户，用户决定是否修 |
+| 有硬伤（因果断裂 / 人物跳变 / 排版违规 / 方向偏离 / 严重故事线漂移 / 严重人物线漂移） | **就地修** → 回 Writer，限定修改范围 |
+| 只有软问题（AI 味偏多 / 对话区分度低 / 轻微因果跳跃 / 轻微故事线漂移 / 轻微人物线漂移） | **用户自决** → 列给用户，用户决定是否修 |
 
 ### Lite Report 输出
 
@@ -347,6 +388,7 @@ lite_report:
   mode: "segment"             # segment | chapter | super
   chapter: 11
   verdict: "通过"            # 通过 | 就地修 | 用户自决
+  pause_reason: ""            # 新增："" | "super_checkpoint"
   hard_issues:               # 就地修：回 Writer 修改
     - checker: "logic"
       location: "第3段"
@@ -358,6 +400,20 @@ lite_report:
     - checker: "style"
       location: "第2段"
       description: "AI 味 3 处：感到/觉得/仿佛"
+
+  # ★ 新增——漂移检测结果
+  storyline_drift:
+    drift_severity: "无/轻微/严重"     # 无 | 轻微 | 严重
+    issues:
+      - beat_id: "beat-3"
+        location: "..."
+        description: "chunk 主推 sl-001 '系统真相线'，但实际写成了 sl-002 '主角逆袭线' 的内容，故事线漂移"
+  character_line_drift:
+    drift_severity: "无/轻微/严重"
+    issues:
+      - beat_id: "beat-2"
+        location: "..."
+        description: "POV 主角人物线方向是'被动接受系统 → 开始主动质疑系统'，但 beat 中主角仍完全顺从系统指令，人物线漂移"
 ```
 
 ## 核心原则

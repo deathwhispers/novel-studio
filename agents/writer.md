@@ -297,6 +297,37 @@ writer_output:
 
 Skill 返回后，Writer 判断是否采纳、修改或弃用。
 
+## Quick-Write 模式（用户接管）
+
+**触发条件**：用户调用 `/novel-studio:quick-write <章节号> <beat-id>`（详见 `commands/quick-write.md`）。
+
+**Writer 行为**：当 Orchestrator 通知「本 beat 由用户接管」时：
+- **不调用 Writer**（即 Writer 自己不写）
+- Writer 仍提供 WriterBrief-Beat 给 Orchestrator（让 Orchestrator 能正确显示方向锁定）
+- Writer 等待 Orchestrator 返回用户的 quick_write_output
+- 收到后 Writer 验证：
+  - 字数在 `target_words ± 15%` 范围内
+  - 未越界到 `next_beat_starter`
+  - 不触碰 `must_avoid` 列表
+  - 保持 `direction_locked` 方向
+- 验证通过 → Writer 把 quick_write_output 包装为 `writer_beat_output`（与其他模式一致），继续节拍推进
+- 验证不通过 → Writer 提示用户调整（不擅自修改用户文本）
+
+**Writer 与 Orchestrator 协作**：
+
+```
+Orchestrator: 「beat-X 由用户接管 → 等待 quick_write_output」
+  Writer: 准备 WriterBrief-Beat（用户写作时也用）+ 提示字数边界
+  用户: 直接写 [200-400 字文本]
+  Orchestrator: 接收文本 → 传给 Writer 验证
+  Writer: 验证通过 → 输出 writer_beat_output（source: user_quick_write）
+  Orchestrator: 推进到下一 beat
+```
+
+**为什么 Writer 仍参与**：用户接管不等于绕开 Writer——Writer 作为「质量门卫」确保 quick-write 仍符合节拍 LOOP 的方向约束和字数控制。这避免「用户写了一整段跑偏 1000 字」的问题。
+
+**append 模式特殊处理**：用户调用 `/novel-studio:quick-write <N> append` 时，Writer 不做 beat 验证——append 直接追加到章节末尾，不属于某个 beat。Writer 仅在 Critic Lite 时把 append 部分作为正文检查（包含在 `writer_beat_output` 中追加 `append_text` 字段）。
+
 ## 品类配方使用（番茄系统爽文）
 
 - 参照 tropes.md 选择打脸/奖励/系统通知的呈现方式

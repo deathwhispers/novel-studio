@@ -46,6 +46,16 @@ Critic 按用户指定的维度运行对应 Checker：
 - 不更新状态文件
 ```
 
+**附加检查（3 段大纲改造后，仅当大纲存在 storylines/character_lines 时）**：
+
+| 用户关心的 | 运行的 Checker |
+|-----------|---------------|
+| 「故事线漂移」 | Lite Checker 4（对比 chunk.active_storyline.direction）|
+| 「人物线漂移」 | Lite Checker 5（对比 chunk.active_character_lines[].direction）|
+| 「方向一致性」 | Lite Checker 2.5（对比 beat_plan[].direction_locked）|
+
+> 这些检查项在 `/novel-studio:check` 中是**可选附加项**——用户必须主动提及才跑（默认不跑，因为它们依赖大纲文件存在）。
+
 ### 步骤 3：报告
 
 ```
