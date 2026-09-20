@@ -1,6 +1,6 @@
 ---
 name: style-calibrate
-description: "文风校准。检查叙述者声音是否一致、文风是否偏离设定。纯能力，由 Writer（写前锁定）和 Critic Style Checker（写后验证）调用。"
+description: "文风校准。检查叙述者声音是否一致、文风是否偏离设定。**调用方：Writer 写前锁定 voice_lock；Critic Style Checker 写后验证文风漂移**。不被用作"如何写得更好"的润色入口——润色走 `stylist`。"
 category: craft
 ---
 
@@ -11,6 +11,20 @@ category: craft
 - 锁定叙述者声音（写前）
 - 检测文风漂移（写后）
 - 确保句子质感与写作模式匹配
+
+## 边界（O10 修复）
+
+| 关注 | 在哪里 |
+|------|--------|
+| 声音是否一致（写前 voice_lock / 写后验证漂移） | **本 skill** |
+| 写得好不好看（说明式→展现式润色） | `stylist`（修订场景） |
+| 怎么写（外貌/物品描写技法） | `description` |
+| AI 味词汇扫描（"眼中闪过一丝复杂"超 5 次） | `ai-flavor-detect` |
+
+**调用时机**：
+- **Writer 写 beat 前**：调本 skill 锁定 `voice_lock`，作为整章文风基线
+- **Critic Style Checker 写后验证**：调本 skill 检测文风漂移
+- **不被用作"写得更好"的入口**——文笔修改走 `stylist`
 
 ## 写前锁定（Writer 调用）
 

@@ -1,6 +1,6 @@
 ---
 name: description
-description: "通用描写技法。人物外貌、物品道具的描写方法，以及描写与素材库的配合。纯能力，由 Writer 按需调用。"
+description: "通用描写技法。人物外貌、物品道具的描写方法，以及描写与素材库的配合。纯能力，由 Writer 在 beat 起草阶段按需调用。修订场景不要直接调此 skill——走 `stylist` 润色。"
 category: narrative
 ---
 
@@ -11,6 +11,17 @@ category: narrative
 - 人物外貌描写（先印象后细节、特征化、避免清单）
 - 物品道具描写（功能 + 故事）
 - 描写与素材库的配合（技法 + 素材 = 成品）
+
+## 边界（O10 修复）
+
+| 关注 | 在哪里 |
+|------|--------|
+| 怎么写（先印象后细节、特征化） | **本 skill** |
+| 写得好不好看（说明式→展现式润色） | `stylist`（修订场景） |
+| 声音统一不漂移（叙述者声音锁定） | `style-calibrate` |
+| 场景/环境渲染（空间、感官、压力） | `scene-render`（另一 skill） |
+
+**调用时机**：Writer 写 beat **起草阶段**，需要外貌/物品描写时调本 skill。修订阶段不调本 skill——修订走 `stylist` 整体润色。
 
 场景/环境描写的完整技法见 `skills/scene-render/SKILL.md`，本 skill 不重复。
 

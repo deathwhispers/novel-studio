@@ -50,8 +50,15 @@ workflow: write-chapter
 chunk-01 还没准备好，我先让 Outliner 设计本 chunk 的节拍（含每节拍选项）。
 [N 个 beat，覆盖章节 11-15，当前是第 11 章]
 
+⚠️ 跨卷检测：检查 `outline/volumes/volume-XX.yaml`，若本 chunk 跨卷边界，按 `runtime/state-schema.md` 10.7 拆分——
+   - chunk-XX 覆盖 [V1_last_chapter]
+   - chunk-XX+1 覆盖 [V2_first_chapter, ...]
+   是否需要拆分？（推荐：是 / 强制单 chunk：不推荐）
+
 开始选节拍？
 ```
+
+**跨卷处理**：用户确认拆分 → Orchestrator 调 Outliner 分别产出两个 chunk 文件；用户坚持单 chunk → 标注"跨卷不拆"风险，进入 LOOP（O6 修复——与 `workflow-specs/write-chapter.md` 0.2 决策树对齐）。
 
 #### LOOP_PICKING：逐个确认节拍
 
@@ -75,26 +82,32 @@ beat-1：[钩子——承接上章章尾，展示新能力的初次使用]
 #### LOOP_DONE：选写作粒度
 
 ```
-✓ 本 chunk 共 7 个 beat，已确认 X 个（其中 Y 个用"你来定"）。
+✓ 本 chunk 共 N 个 beat，已确认 X 个（其中 Y 个用"你来定"）。
 
 选择写作粒度（写作中何时停下来让你看）：
   1. segment：每个 beat 写完停下看（最精细）
   2. chapter：每章所有 beat 写完停下看（推荐）
-  3. super：整个 chunk 写完才停
+  3. super（伪 super，O13 修复）：整 chunk 写完后，**按章分段**触发 Critic Lite（chunk 内每章过一次 Lite），不是一次性扫整 chunk
+  4. super（实 super，⚠️ 不推荐）：整 chunk 一次性写完 + 一次性 Critic Lite 扫整 chunk——风险高，5 章 × 2K 字 ≈ 10K 远超 Critic 3K 预算，会丢早期信息
 
 你的选择？
 ```
+
+**super 模式选择指南**（O13 修复）：
+- **多数情况选 #3 伪 super**：chunk 内 5 章逐章推进，每章过 Critic Lite，与 chapter 模式行为一致；最后一章完成后整体收口。**这是默认推荐**
+- **少数情况选 #4 实 super**：用户对整 chunk 方向高度确定、不在乎中间检查、想一口气出稿——但要承担 Lite 质量下降的风险
+- **不选 super**：选 segment 或 chapter（最稳健）
 
 ### 阶段 1：节拍驱动写作
 
 #### 写作中（按 chunk_mode）
 
-**章节文件落盘时机**：Writer **不在每个 beat 写文件**——整章所有 beat 写完后、进入 Critic Lite **之前**一次性写入 `chapters/第N章-XXX.md`（纯正文，无节拍标题，节拍间无视觉分隔）。覆盖式写入，与断点恢复幂等语义一致。
+**章节文件落盘时机**：Writer **每个 beat 写完立即追加**到 `chapters/第N章-XXX.md`（纯正文，无节拍标题，节拍间无视觉分隔）。所有 chunk_mode 通用，作者可随时打开该文件看实时进度。修订已写 beat 时 Orchestrator 告知该 beat 的字符范围，Writer 替换该范围（不重写整章）。用户最后说"锁定"才触发章节事务（StateManager 更新统计字段、汇总 state_delta）。
 
 **segment 模式**：
 
 ```
-✍️ 第 N 章 · beat-1 写完：
+✍️ 第 N 章 · beat-1 写完（已落盘 chapters/第N章-XXX.md）：
 
 [200-400 字正文]
 
@@ -103,21 +116,21 @@ beat-1：[钩子——承接上章章尾，展示新能力的初次使用]
 「继续」写 beat-2 / 「改这段」/ 「回 LOOP 改 beat-X」/ 「这章到此结束」
 ```
 
-> segment 模式：每 beat 不单独落盘（落盘会与逐拍检查冲突）。本节拍正文存于对话流，整章成稿时一次性写入章节文件。
+> segment 模式：每个 beat 写完立即追加到章节文件。作者在 `chapters/第N章-XXX.md` 看到的就是已完成的章节进度。
 
 **chapter/super 模式**（Writer 自动连续写）：
 
 ```
-✍️ 第 N 章全部 beat 写完（约 XXXX 字）：
+✍️ 第 N 章 beat-3 写完（已落盘 chapters/第N章-XXX.md）
 
-[整章正文]
+[整章进度，至 beat-3 为止]
 
 ---
-📂 已写入 chapters/第N章-XXX.md（纯正文，无节拍标题污染）
-看看整章？需要调整吗？
+📂 当前已写入 chapters/第N章-XXX.md（持续追加）
+继续写 beat-4…/「停一下」/「这章到此结束」
 ```
 
-> chapter/super 模式：所有 beat 写完后 Writer 自执行整章落盘（一次性覆盖写入），再进 Critic Lite。作者可随时打开该文件阅读进度、修订（修订后再触发 Writer 重写会被覆盖，请先锁定章节）。
+> chapter/super 模式：每个 beat 写完立即追加，作者可随时打开章节文件查看当前已完成的全部正文。用户说"这章到此结束"或"锁定" → 进入 Critic Lite + 章节事务。
 
 #### 用户操作映射
 
@@ -199,6 +212,21 @@ StateManager 收尾事务：
 
 [清空未写节拍的 confirmed_beats，重新进入 LOOP_PICKING]
 ```
+
+## 关于手改保留（A6 修复）
+
+> O2 修复后，每个 beat 写完立即追加到章节文件。**作者手改章节文件后**，如果继续写作或重写某个 beat，Writer 会**覆盖作者手改的部分**——这是预期行为，不是 bug。
+>
+> 若你希望保留手改，请走以下路径：
+
+| 场景 | 推荐路径 |
+|------|---------|
+| 想手动修订部分段落，保留你的改动 | 用 `/novel-studio:revise <N>`——修订场景专用，Writer 在受限范围内改且不会覆盖你的手改 |
+| 想锁定章节不再触发重写 | 用户锁定章节后（"这章到此结束 / 锁定"），Writer 不再重写该章节；后续若需修订，走 `/novel-studio:revise` |
+| 想撤回某个 beat 重写 | 用"回 LOOP 改 beat-X"——Orchestrator 告知该 beat 在章节文件中的字符范围，Writer 替换该范围（不重写整章） |
+| 章节已锁定但想大改 | `/novel-studio:revise <N>`，StateManager 触发修订事务，保留 `loop_revert_log` 审计 |
+
+**关键点**：不要在被 Writer 写的 beat 区间手动编辑后又触发 Writer 重写——你的手改会被覆盖。如需手改，先触发 `/novel-studio:revise`。
 
 ## 快速通道
 

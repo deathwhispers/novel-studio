@@ -291,7 +291,7 @@ review_report:
 > 写章节节拍 LOOP 模式下，触发时机由 `chunk_mode` 决定：
 > - `segment`：每个 beat 写完触发（CriticBrief-Lite.mode: "segment"）
 > - `chapter`：整章所有 beat 写完触发（mode: "chapter"）
-> - `super`：整个 chunk 全部章节所有 beat 写完触发（mode: "super"）
+> - `super`：**按章分段触发**——chunk 内每章完成时触发一次 Lite（mode: "chapter"），共 N 次（chunk 章数）；不是一次性扫整个 chunk。这是 O3 修复，避免 super 模式下 Critic 上下文超载（5 章 × ~2K 字 = ~10K 远超 Critic Lite ~3K 预算）
 >
 > 与全量 5 Checker 的区别：节拍模式无 Scene Contract → 不查信息泄漏、不查硬规则、不查节奏预算；只聚焦「不需要契约的通用质量」——内部因果一致性、人物连续性、文风排版、**节拍方向一致性**。阈值按 mode 分档。
 
@@ -322,13 +322,15 @@ review_report:
 
 ### Lite 判决（按 mode 分档）
 
-| 条件 | chapter/super 模式 | segment 模式 |
+| 条件 | chapter 模式（super 按章分段等同） | segment 模式 |
 |------|-------------------|-------------|
 | AI 味总数 | ≤3 通过 / 4-6 用户自决 / ≥7 就地修 | ≤1 通过 / 2 用户自决 / ≥3 就地修 |
 | 排版违规 | 硬伤——就地修 | 硬伤——就地修 |
 | 因果断裂 | 章节内部连贯 | + 与 `previous_beat_tail` 衔接 |
 | **方向偏离**（每 beat 实际写出 vs `direction_locked`） | N/A | **硬伤——必须就地修** |
 | 人物跳变 | 硬伤——就地修 | 硬伤——就地修 |
+
+**super 模式**：与 chapter 模式同档，但**按章触发 N 次**（chunk 内每章一次），每次只检查本章。每次 Lite 通过后单独推进到下一章；某章 Lite 失败就地修后单独重跑该章 Lite。**不接受 super 一次性扫多章**（O3 修复，避免上下文超载）。
 
 **最终判决映射**：
 

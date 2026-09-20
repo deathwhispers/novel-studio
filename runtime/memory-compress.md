@@ -13,6 +13,9 @@
 | `current.chapter % 5 == 0` | 第 5/10/15/20... 章完成后 |
 | 卷末 | 当前卷最后一章完成后（无论是否 5 的倍数） |
 | `state/` 总大小 > 50KB | 紧急压缩（任意章节完成后） |
+| **`author_notes` 单次增量 > 200 字** | **下次章节事务内联压缩**（不等到第 5 章）——O7 修复 |
+
+**为什么 author_notes 需要即时触发**：作者备忘是高时效信息（"第 20 章左右开始铺垫第二条主线"），积压到第 5 章才处理可能导致新加的备忘被旧内容覆盖丢失。即时压缩=把增量超过 200 字的部分立刻指针化进 `state/archive/author-notes-archive.yaml`，保留摘要 + 完整备份指针。
 
 ---
 
@@ -61,6 +64,7 @@
 - `secrets` 中 `revealed` → 指针化进 `state/archive/revealed-secrets.yaml`
 - `future_events` 已发生 → 指针化
 - `author_notes` 超 500 字 → 提取摘要，详细内容指针化进 `state/archive/author-notes-archive.yaml`
+- **`author_notes` 单次增量 > 200 字**（即时触发，下次章节事务内联压缩）→ 增量部分直接指针化进 archive，不做摘要——保留完整时序
 
 ---
 

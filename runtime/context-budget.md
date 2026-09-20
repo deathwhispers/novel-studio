@@ -208,6 +208,7 @@ Critic 不分别加载 Scene Contract + character.yaml，也不加载完整 AI �
 - 交接包含：正文路径 + `previous_chapter_end_state`（上一章结尾状态，用于连续性检查）+ AI 味清单路径
 - 不含 forbid_touch / hard_rules / pov_constraints / word_budget（逐段模式无 Scene Contract）
 - 只做 Logic/Character/Style 三项轻量检查，产出 `lite_report`（通过/就地修/用户自决）
+- **super 模式（多章节 chunk）按章分段调用**——每章一次 Lite（mode: "chapter"），不一次性扫整 chunk；详见 `agents/critic.md` Lite 模式节（O3 修复）
 
 ---
 

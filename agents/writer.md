@@ -59,9 +59,20 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 
 **节拍 LOOP 模式下，每个 beat 开始写作前必须先判断——本 beat 是否命中以下任意触发条件？命中则按对应库检索**：
 
+**前置：工具可用性探测**（O8 修复）
+
+| 探测 | 流程 |
+|------|------|
+| 是否有 shell 工具（含 `grep` / `Glob`）？ | 是 → 走方式 A（grep 定位行号 + Read 单段落），见 `references/material-index.md` 方式 A |
+| 没有 shell 工具？ | 是 → 走方式 B（直接 Read 整个素材库，标题正则匹配），见 `references/material-index.md` 方式 B |
+
+Writer 在写 beat 启动时探测一次，**该 chunk 内复用同一方式**（避免每个 beat 重复探测）。
+
+**素材库触发清单**：
+
 | 触发条件 | 必检素材库 | 检索动作 |
 |:---------|:---------|:---------|
-| 写到主角/反派/重要配角的外貌气质身材 | `lib/beauty-description-library.md` 或 `lib/male-description-library.md` | `grep -n "^### " 库名` 命中条目 → Read 单段落 |
+| 写到主角/反派/重要配角的外貌气质身材 | `lib/beauty-description-library.md` 或 `lib/male-description-library.md` | 按探测结果走 A 或 B（命中条目 → Read 单段落） |
 | 写到人物性格表现 | `lib/personality-description-library.md` | 同上 |
 | 写到穿搭 | `lib/outfit-description-library.md` 或 `lib/luxury-fashion-description-library.md` | 同上 |
 | 写到豪车/名表/房产/奢侈消费 | `lib/car-description-library.md` / `watch-description-library.md` / `property-description-library.md` / `lib/luxury-consumption-library.md` | 同上 |
@@ -72,7 +83,7 @@ description: "正文唯一执行者。在 Scene Contract 约束内写出可读�
 | 写到含蓄性暗示词汇 | `lib/double-entendre-catalog.md` | 按 tag 命中 |
 | 写到搞笑调侃/吐槽对白、名场面砸场金句、阴阳怪气、自嘲立人设、口头禅记忆点，需融入网络热梗 | `lib/internet-meme-catalog.md` | 按 tag 命中；仅用于立人设/推爽点/造记忆点——命中此类场景即查库，够不着合适热梗就不堆（密度/人设/品类约束见库内「使用原则」） |
 
-**未命中任何触发条件时，本步可跳过**——避免过度检索拖慢节奏。检索走 material-index.md 统一入口，**不加载整个素材库**。
+**未命中任何触发条件时，本步可跳过**——避免过度检索拖慢节奏。检索走 material-index.md 统一入口，**方式 A 不加载整个素材库；方式 B 一次性加载，多次引用**。
 
 ### 第二步：连续起草
 
@@ -222,19 +233,25 @@ writer_output:
     formatting_compliant: true    # 符合 web-novel-formatting.md 全部规则
 ```
 
-### 第七步：整章落盘（chapter/super 模式，Writer 自执行）
+### 第七步：beat 实时落盘（所有 chunk_mode 通用）
 
-**触发条件**：本章所有 beat 写完 + 即将进入 Critic Lite **之前**。
+**触发条件**：每个 beat 写完 + 输出 `writer_beat_output` **之后立即**。
 
 **执行**：
-1. 把所有 `writer_beat_output.text` 按顺序拼接，节拍间用一个空行分隔
-2. **覆盖式**写入 `chapter_file_path`（WriterBrief-Beat 已给出）—— 与 `workflow-specs/write-chapter.md` 的「断点恢复 = 幂等重写覆盖」语义一致
+1. 把当前 beat 的 `text` **追加**到 `chapter_file_path`（WriterBrief-Beat 已给出）
+2. 节拍间用一个空行分隔
 3. 文件内容：**纯正文**——无 `## beat-N` 二级标题，无 YAML frontmatter，无文件级 metadata
-4. **不引入作者手改保留**——覆盖是预期行为；用户手改后应锁定章节不再触发重写
+4. **追加语义**：新 beat 接在已有内容末尾，不覆盖已有 beat
+5. **修订语义**：用户在 segment 模式下说"改这段"或回 LOOP 改已写 beat 时，Writer 重写该 beat 的文本→Orchestrator 维护 beat 列表（每个 beat 起始字符位置），告知 Writer 该 beat 在文件中的字符范围→Writer 替换该范围（不重写整章）。整章所有 beat 写完后用户手动修订不再被 Writer 覆盖——这是预期行为，不是 bug
 
-**落盘完成 → 进入 Critic Lite（Orchestrator 调度）**。
+**与断点恢复的关系**：
+- Writer 崩溃后恢复 → Orchestrator 读 `chapter_file_path` 已有内容，与 `chunk_plan.confirmed_beats` 对照判断哪些 beat 已落盘
+- 已落盘的 beat 不再重写（除非用户主动"改这段"），未落盘的 beat 从 `current_beat` 开始续写
+- 这与 `workflow-specs/write-chapter.md` 的「断点恢复」语义一致——文件是 beat 进度的真值，`chunk_plan` 是元数据
 
-**segment 模式跳过本步**——每个 beat 写完即过 Critic Lite，不做整章落盘（每 beat 落盘会与 segment 模式的逐拍检查冲突）。Critic Lite 改用 `CriticBrief-Lite.inline_text`（见 `runtime/handoff-schema.md` 第五节）直接吃 `writer_beat_output.text`，不走文件。
+**segment 模式**：每个 beat 写完 → 立即追加到章节文件 → 进 Critic Lite（走 `CriticBrief-Lite.inline_text`，见 `runtime/handoff-schema.md` 第五节）。落盘不影响 Critic Lite 时机，**作者可随时打开 `chapters/第N章-XXX.md` 看实时进度**。
+**chapter/super 模式**：每个 beat 写完 → 立即追加到章节文件 → 按 chunk_mode 决定是否停下。落盘独立于停止/继续逻辑，**作者可随时打开章节文件看实时进度**。
+**章节文件 = beat 进度的真值**：用户最后说"这章到此结束"或"锁定" → Orchestrator 调度 Critic Lite（chapter/super 模式），然后用户锁定 → Writer 汇总 state_delta → StateManager 章节事务（不动章节文件）。章节文件由 Writer 在 beat 完成后写入，**不再"整章落盘"**。
 
 ### Skill 调用
 
@@ -251,7 +268,21 @@ writer_output:
 | `skills/pov-control/SKILL.md` | 处理视角选择、叙述距离切换、信息边界 |
 | `skills/scene-render/SKILL.md` | 通过感官/环境压力/空间构造让场景生动 |
 | `skills/action-scene/SKILL.md` | 写动作/打斗场面，控制节奏与空间感 |
-| `skills/description/SKILL.md` | 写人物外貌、物品道具描写 |
+| `skills/description/SKILL.md` | 写人物外貌、物品道具描写（**起草阶段用，修订阶段不调**） |
+
+**`skills/stylist/SKILL.md`**：修订场景专用——Orchestrator 在 `/novel-studio:revise` 调度 Writer 调用本 skill 做整章/局部润色。**Writer 在 beat 起草阶段不主动调**。
+
+#### Beat 类型 → 推荐 Skill（O9 补充）
+
+| Beat 功能（常见类型） | 必调 skill | 选调 skill |
+|--------------------|-----------|-----------|
+| 对话 beat（角色互动/信息交换） | `dialogue` | `voice-check`（区分声音） |
+| 情绪 beat（情绪兑现/转折） | `emotion-payoff` | `description`（行为展现） |
+| 动作 beat（打斗/追逐/激烈场面） | `action-scene` | `pacing-check`（节奏） |
+| 场景 beat（环境渲染/空间描写） | `scene-render` | `description`（细节） |
+| 外貌/物品 beat（首次出场描写） | `description` | `scene-render`（背景） |
+| 钩子 beat（章首/章尾悬念） | `hook-design` | `emotion-payoff`（动力） |
+| POV 切换 beat（视角切换） | `pov-control` | `info-leak-check`（信息边界） |
 
 调用示例（`dialogue`）：
 
