@@ -4,7 +4,7 @@
   <p>7 个 Agent 各司其职，7 条命令覆盖从立项到成稿的完整创作流程</p>
   <p>
     <img src="https://img.shields.io/badge/license-Apache%202.0-blue?style=flat-square" />
-    <img src="https://img.shields.io/badge/version-0.1.2-green?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-0.2.0-green?style=flat-square" />
     <img src="https://img.shields.io/badge/platform-Claude%20Code-orange?style=flat-square" />
   </p>
 </div>
@@ -254,6 +254,45 @@ novel-studio/
 
 ## 更新日志
 
+### 0.2.0（架构一致性修复 + 写作流程优化）
+
+**18 项系统性修复**，覆盖漏洞修复、写作流程优化、架构观察深挖三层。
+
+#### 一、关键漏洞修复（Critical / Warning）
+
+- **O1 / W3 修复**：`beats_total` 重命名为 `beats_total_current_chapter`（"当前章节"维度），由 Orchestrator 每章进入 WRITING 前重置。修复多章节 chunk 下 chunk 收尾事务永远不触发的潜在 bug
+- **O2 / C2 修复**：每个 beat 写完立即追加章节文件（纯正文，无节拍标题，所有 chunk_mode 通用）——作者可随时打开 `chapters/第N章-XXX.md` 看实时进度；用户定版才触发 StateManager 章节事务
+- **O3 / C4 修复**：super 模式改为按章分段触发 Critic Lite（chunk 内每章一次 Lite），避免一次性扫整 chunk 导致上下文超载（5 章 × 2K ≈ 10K 远超 Critic 3K 预算）
+- **O4 / W10 修复**：critic 输出格式统一以 `agents/critic.md` 的 YAML `review_report` / `lite_report` 为权威；`skills/critic-json-spec.md` 标为早期草案
+- **O6 / W5 修复**：`commands/write.md` 加跨卷拆分提示，与 `workflow-specs/write-chapter.md` 0.2 决策树对齐
+- **W4 / W7 / W8 / W9 修复**：字数控制两套口径合并、author_notes 增量触发即时压缩、素材库 grep fallback（无 shell 时直接 Read 全库）、失败模式↔skill 完整映射表
+
+#### 二、写作流程优化
+
+- **O5 修复**：新增 `references/failure-skill-map.md`，把 `failure-cases.md` 的 55 个失败模式映射到 17 个检测 skill，并标注 10 项覆盖盲区
+- **O7 修复**：`author_notes` 单次增量 >200 字即时触发下次章节事务压缩（不等到第 5 章）
+- **O8 修复**：素材库检索协议加方式 B（无 grep 工具时直接 Read 全库 + 标题正则匹配）
+- **O10 修复**：description / stylist / style-calibrate 三 skill 边界清晰化——description 起草阶段用 / stylist 修订场景专用 / style-calibrate voice 锁定统一入口
+- **O11 修复**：新增 `references/setting-index.md`，作为 setting/ 目录权威索引模板（文件清单 + 所有权 + 修改触发流）
+- **O12 修复**：init 对话 5 轮压缩到 3 轮——第一/二轮合并（创作起点 + 核心体验），第三/五轮合并（品类基调 + 篇幅模式），主角灵魂独立
+- **O13 修复**：super 模式分为"伪 super（按章分段，推荐）"与"实 super（一次性扫整 chunk，不推荐）"
+
+#### 三、架构观察深挖
+
+- **A2 修复**：新增 `progress.yaml.in_progress_chapter` 字段，区分"已完成最后一章"（`current.chapter`）与"正在写的章节"——用户在写作过程中能看清当前状态
+- **A3 修复**：加 fast chunk 模式（跳过所有 beat 选项展示，只问关键转折 beat）——适用第 2+ 个 chunk / 长篇中后段，降低 chunk 启动疲劳
+- **A4 修复**：把 5 项失败模式盲区（#18/19/23/26/38）整合进 Critic Lite 对应 Checker 子项；其余 5 项保留为 Writer 自检
+- **A5 修复**：worldbuilding workflow 加分支 G「面板迭代」——影响评估（Architect 主导）→ 文档修订 / 技术性修订 / 取消三档方案
+- **A6 修复**：`commands/write.md` 加"关于手改保留"段——明确场景→推荐路径对照表，引导用户走 `/novel-studio:revise` 而非手动编辑（避免被 Writer 重写覆盖）
+- **A7 修复**：Orchestrator 启动时 `state_size_check`——state/ >80KB 触发轻量压缩，>100KB 暂停提示用户
+
+#### 四、兼容性
+
+- **状态字段重命名**：`beats_total` → `beats_total_current_chapter`。已有项目数据迁移：把 `progress.yaml.chunk_plan.beats_total` 重命名为 `beats_total_current_chapter`
+- **新增字段**：`progress.yaml.in_progress_chapter`、`chunk_plan.chunk_mode`（伪 super / 实 super）
+- **新文件**：`references/failure-skill-map.md`、`references/setting-index.md`
+- **Writer 输出流程变更**：从"整章落盘"改为"beat 实时追加"——与断点恢复语义重新对齐
+
 ### 0.1.2（节拍 LOOP 模式发布）
 
 **核心架构升级**：从「逐段确认」模式升级为「节拍批量确认 Loop」——把"作者把控大方向"的体验前置到写作开始前一次性确认，避免每写 200-400 字就打断作者。
@@ -270,7 +309,7 @@ novel-studio/
 - **Orchestrator**：状态机扩展为 LOOP/WRITING/REVIEW/LOCKED 四态；新增 WriterBrief-Beat / CriticBrief-Lite（mode: segment/chapter/super）交接包；新增跨卷 chunk 拆分检测 + chunk 文件指针加载规则
 - **Writer**：节拍驱动写作（第一步改为节拍启动检查；第二步改为节拍内连续起草；新增第五步「节拍边界自检」5 项）；输出 `writer_beat_output` 节拍级结构化数据；`must_not_read` 增加 chunk 文件路径
 - **Critic**：Lite 模式升级为三档（segment/chapter/super），segment 模式新增 Checker2.5「方向一致性」（方向偏离 = 就地修硬伤）；判决阈值按 mode 分档
-- **StateManager**：新增 chunk 收尾事务（独立事务、state_version +1、trigger: chunk_close、归档 chunk 文件 + loop_revert_log）；章节事务中只递增 beats_written/words_written，不回收 confirmed_beats/loop_state/beats_total
+- **StateManager**：新增 chunk 收尾事务（独立事务、state_version +1、trigger: chunk_close、归档 chunk 文件 + loop_revert_log）；章节事务中只递增 beats_written/words_written，不回收 confirmed_beats/loop_state/beats_total_current_chapter
 - **Outliner**：新增第六节「chunk 设计」——chunk 骨架（第二层细化时自动产出）+ chunk 详细设计（写章节触发时按需产出）
 
 **兼容性清理**（用户明确不需要向后兼容）：
@@ -279,7 +318,7 @@ novel-studio/
 - 全部 10 个核心 markdown 文件 + 1 个 README 重构为单一节拍 LOOP 模式
 
 **额外审查修复**：
-- `beats_total` 写入权声明补全（Orchestrator 启动 chunk 时初始化，章节事务中不变）
+- `beats_total_current_chapter` 写入权声明补全（Orchestrator 每章进入 WRITING 前重置，章节事务中不变）
 - `chapter_word_target` 双源留痕处理（chunk 级 > workspace 级优先级明确）
 - 跨卷 chunk 拆分检测流程完整化
 - WriterBrief-Beat 不含完整 options → Orchestrator 回 LOOP 改 beat 时必须重读 chunk 文件
