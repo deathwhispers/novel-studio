@@ -38,6 +38,36 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 | 「大纲」「剧情设计」「故事结构」 | 大纲设计 | outline |
 | 「检查第X章」「体检」「审稿」 | 质量检查 | check |
 
+**写章节内的运行时意图**（W-NEW-LOOP-SIG 修复，Orchestrator 在写章节流程中识别）：
+
+写章节流程中除上面 6 类"流水线级"意图外，**还有 4 类"流程内"意图**——Orchestrator 在写作阶段单独识别，不切出写章节流水线：
+
+| 用户说 | 流程内意图 | 处理 |
+|--------|-----------|------|
+| 「回到 LOOP」「改 beat-X」「这个 beat 方向不对」「重新选节拍」 | **LOOP 重入**（`loop_state: LOOP`） | 按 `workflow-specs/write-chapter.md` 0.6 节处理——未写 beat `locked: false`，已写 beat 保留 + `loop_revert_log` 追加 |
+| 「继续」「写下一 beat」 | **beat 推进**（默认） | Orchestrator `beats_written +1`，调 Writer 写下一 beat（segment 模式等用户「继续」/ chapter/super 自动） |
+| 「改这段」「改 beat-X」（已落盘 beat） | **beat 修订**（不改方向） | Orchestrator 从 `beats_offset_log[]` 查字符范围 → Writer 替换该范围 |
+| 「这章到此结束」「锁定」「停一下」 | **提前结束** | 进入 Critic Lite + LOCKED 流程（即使 beat 未全写完） |
+
+**关键词正则参考**（W-NEW-LOOP-SIG 修复）：
+- LOOP 重入：`回到 LOOP|回 LOOP|改 beat-\w+|重新选节拍|方向不对|方向要换`
+- beat 推进：`继续|下一 beat|写下去|forward`
+- beat 修订：`改这段|改 beat-\w+|修一下|调整下|润色`
+- 提前结束：`这章到此结束|锁定|停一下|暂停|结束这章`
+
+**auto_mode 与三类反馈的冲突**（W-NEW-AUTO 修复）：
+
+| 用户信号 | `--auto` 模式下处理 |
+|---------|---------------------|
+| LOOP 重入 | **退出 auto_mode**（Orchestrator 把 `auto_mode: false`），按 0.6 节处理 |
+| beat 修订（仅改文本） | **退出 auto_mode**，改完后人工按修订上下文决定继续自动还是手动 |
+| beat 推进 | 不退出（自动模式默认就是自动推进） |
+| 提前结束 | 不退出，但停止推进；`auto_mode` 标记保留（用户下次 `/novel-studio:write next` 是否自动）由用户决定 |
+| 「暂停 auto」/「手动接管」 | 显式退出——`auto_mode: false`（与原 1.21 行一致） |
+| Quick-Write 调用 | **退出 auto_mode**（quick-write 是显式用户接管信号），详见 `commands/quick-write.md` |
+
+**注意**：写章节流程内意图的识别**优先级低于**流水线级意图——如果用户说「修改第X章」，先切到 revise-chapter，不要当成「改 beat-X」。
+
 ### 2. 多轮对话
 
 **原则**：不假设用户意图。信息不足以判断时，发起多轮对话澄清。

@@ -349,6 +349,34 @@ Writer 写完一个 beat 后，Orchestrator 按 chunk_mode 行为：
 | `chapter` | 自动写下一个 beat（不打断），直到本章所有 beat 写完进入章节 REVIEW |
 | `super` | 自动写下一个 beat（不打断），直到整个 chunk 所有 beat 写完进入 chunk REVIEW |
 
+#### 1.3.5 chapter/super 模式中途反馈（W-NEW-MODE-FB 修复）
+
+**问题**：原 1.4 节明确「segment 模式专属」——chapter/super 模式下 Writer 连续写，用户中途想喊停/改某 beat 没有可执行路径。
+
+**修复**：
+
+| 用户信号 | 触发时机 | 处理 |
+|---------|---------|------|
+| 「停一下」/「暂停」 | Writer 写完当前 beat 后 | 进入暂停态——等用户说「继续」或新指令；保留所有已落盘 beat |
+| 「改 beat-X」 | Writer 写完当前 beat 后（即使 beat-X 已写过） | Orchestrator 从 `beats_offset_log[]` 查 beat-X 的字符范围 → Writer 重写该范围 → 继续当前 beat |
+| 「回 LOOP」 | Writer 写完当前 beat 后 | 进入 LOOP 重入流程（同 0.6 节）——已写 beat 保留，未写 beat `locked: false` |
+| 「这章到此结束」 | Writer 写完当前 beat 后 | 即使本章 beat 未全写完，进入 Critic Lite + LOCKED（与 segment 模式一致） |
+
+**触发机制**（W-NEW-MODE-FB 修复）：
+- chapter/super 模式下 Writer 连续写——但**每个 beat 落盘后**（第七步协议），Orchestrator 主动检查用户是否有新指令
+- 检查窗口：每个 beat 落盘后 + 落盘结果回传 Orchestrator 之间，约 1-2 秒
+- 用户在窗口期内发指令 → 下一 beat 启动前拦截 → 走 1.3.5 表中对应处理
+- 用户未发指令 → 自动继续下一 beat
+
+**segment vs chapter/super 的反馈区别**：
+
+| 维度 | segment | chapter / super |
+|------|---------|---------------|
+| 反馈窗口 | 每个 beat 写完 + 用户主动确认 | 每个 beat 落盘后 1-2 秒窗口，Orchestrator 拦截用户指令 |
+| 默认行为 | 停下等用户「继续」 | 自动写下一 beat |
+| 中途改 beat | 「改这段」（仅当前 beat） / 「回 LOOP 改 beat-X」（任意 beat） | 「改 beat-X」（任意 beat，需 beat 已落盘） / 「回 LOOP」 |
+| 中途停止 | 「这章到此结束」 | 「停一下」/「暂停」（保留所有已落盘 beat）/「这章到此结束」（进入 REVIEW） |
+
 #### 1.4 节拍间用户操作（segment 模式专属）
 
 | 用户说 | 动作 |

@@ -219,6 +219,18 @@ writer_brief_beat:
     order: 3                        # 在当前章的顺序（从 1 起）
     chapter: 11
     function: "转折——系统评价'创造性使用'，主角意识到系统在测试思维方式"
+    # ★ beat_type 字段（W-NEW-BEATTYPE 修复）：让 Writer 直接识别 beat 类型调对应 skill
+    # 可选枚举（来自 agents/writer.md「Beat 类型 → 推荐 Skill」表的 7 类）：
+    # - dialogue：对话 beat（角色互动/信息交换）
+    # - emotion：情绪 beat（情绪兑现/转折）
+    # - action：动作 beat（打斗/追逐/激烈场面）
+    # - scene：场景 beat（环境渲染/空间描写）
+    # - description：外貌/物品 beat（首次出场描写）
+    # - hook：钩子 beat（章首/章尾悬念）
+    # - pov_switch：POV 切换 beat（视角切换）
+    # - exposition：说明 beat（背景交代/设定引入）—— 优先级低
+    # - transition：过渡 beat（时间跳跃/场景转场）—— 优先级低
+    beat_type: "emotion"             # 见上方枚举
     pov: "主角"
     narrative_distance: "近"        # 近（内心可见）| 中（行为可见）| 远（概括叙述）
     environment: "XX城训练场，清晨"

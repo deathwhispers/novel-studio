@@ -183,7 +183,24 @@ quick-write 完成后：
 - `confirmed_beats[beat-X].source: "user_quick_write"`（与 schema 第十二节 source 枚举一致——已扩展为第五种来源，详见 `runtime/state-schema.md`）
 - `chunk_plan.quick_write_log[]` 追加本次记录（含 `mode: beat_replace | append` + `word_count` + `written_at` + `chapter_offset`）
 - 章节文件：纯正文直接落盘（O2 修复后已自动落盘）；append 模式用 Writer 的章节文件追加协议
+- **落盘执行者**（W-NEW-CHAROFF 修复澄清）：Orchestrator 不直接写文件——quick-write 完成后走 Writer 的「第七步：beat 实时落盘」协议，Writer 收到 `quick_write_output` → 验证通过（字数/边界/`must_avoid`/`direction_locked`）→ 包装为 `writer_beat_output`（含 `chapter_offset: {start, end}`）→ 追加到章节文件 → Orchestrator 写入 `chunk_plan.beats_offset_log[]` + `quick_write_log[]` + `confirmed_beats[beat-X].source`
 - 状态文件：StateManager 章节事务照常更新（用户接管的内容也算 `beats_written += 1`）
+
+## 与节拍回滚的衔接（W-NEW-QW-LOOP 修复）
+
+**问题**：用户先 quick-write 了 beat-3（`source: user_quick_write`），之后说「回 LOOP 改 beat-3 方向」——两个流程的语义没定义：已写 beat 文本是否保留？`source` 字段是否变化？loop_revert_log 是否追加？
+
+**衔接规则**：
+
+| 场景 | 文本处理 | source 字段 | loop_revert_log | 后续行为 |
+|------|---------|------------|---------------|---------|
+| **回 LOOP 改 beat 方向**（quick-write 已写 beat） | 默认**保留**用户文本到章节文件（不覆盖手写段落）；新方向作为参考 | 不变（保留 `user_quick_write`），但加 `direction_revised_at` 字段记录 | **追加**（记一笔 `reverted_by: looper, original_source: user_quick_write`） | Writer 按新方向**追加补丁 beat**（如 beat-3-patch），不重写 beat-3 |
+| **「改这段」修订当前 beat**（quick-write 已写 beat） | Writer 修订——用户接受修订则替换文本；用户拒绝则保留原文 | 不变 | **不追加**（文本修订非方向回退） | 修订后走 Critic Lite 兜底 |
+| **LOOP_PICKING 重新选 beat-3**（用户主动重选） | 视用户选择：选「覆盖」则 Writer 重写；选「保留」则文本不动 | 重选后 source 改为新选项的 source（`option` / `custom` / `tweak`） | **追加** | 取决于用户选择 |
+
+**禁止**：
+- ❌ 静默覆盖用户手写文本（即使 Critic 报告问题也先问用户）
+- ❌ 回 LOOP 改方向后 source 仍标 `user_quick_write` 但文本已被 Writer 重写（状态与实际不一致）
 
 ## 反模式（禁止）
 

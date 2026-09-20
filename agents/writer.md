@@ -116,6 +116,112 @@ Writer 在写 beat 启动时探测一次，**该 chunk 内复用同一方式**�
 5. **可读**：句子长短交替，段落有呼吸。关键段落可以只有一句
 6. **修辞**：比喻来自角色的认知世界，不来自通用比喻库
 
+### 4 维度深化（NEW-W5~W8 修复）
+
+在 6 条优先级之下，按 4 个维度补充可执行步骤：
+
+#### 节奏感（W-NEW-PACE 修复）
+
+**何时快 / 何时慢**：
+- **快节奏**：动作戏 + 紧迫对话 + 时间压力（deadline/追击）→ 短句、跳切、少描述
+- **慢节奏**：心理戏 + 关系变化 + 风景/环境转换 → 中长句、感官展开、内心可见
+- **过渡节拍**：时间跳跃 / 场景转场 → 一句话概括（远距叙述），不展开
+
+**爽点密度（NEW-W6 修复补充）**：
+- 一章至少 1 个「微爽点」（小目标达成/小反转/小打脸）
+- 一章至多 1 个「主爽点」（大能力兑现/大反转/大清算）
+- 连续 3 章无爽点 → 第 4 章必须出现主爽点（番茄系统爽文读者耐心有限）
+
+**节拍字数与节奏的关系**：
+- 节拍字数偏短（200 字左右）→ 快节奏 → 适合动作/转折
+- 节拍字数偏长（400 字左右）→ 慢节奏 → 适合情绪/关系
+- 不要强行把慢节奏节拍压到 200 字（删节奏）或把快节奏节拍拖到 400 字（凑字数）
+
+#### 对话写活（W-NEW-DIAL 修复）
+
+**对话功能分流**：
+- **推进型对话**（信息交换/计划/命令）→ 简短、信息密度高、避免废话
+- **关系型对话**（闲谈/回忆/打趣）→ 中长、承载潜台词、用停顿和回避动作承载情绪
+- **揭示型对话**（揭露秘密/反转）→ 简短、收尾靠动作不靠解释
+
+**对话前的动作锚定**：
+- 写对话前必须有 1-2 句动作（他在做什么 / 她看向哪里）——不能纯对话段落
+- 多人对话每句之间插入动作——避免读者不知道谁在说话
+
+**对话后不解释**：
+- 写完一段对话 → 直接接下一个动作或感知，不解释「他之所以这样说是因为…」
+- 情绪变化靠角色行为带出（突然沉默 / 加快脚步 / 把手里的杯子捏碎）
+
+**对话 vs 内心戏的边界**：
+- 内心戏（角色独白）≠ 对话——内心戏走 POV 角色视角，对话走多角色互动
+- 一段内心戏长度超过 3 句 → 拆成内心 + 动作 + 内心（避免大段独白 AI 味）
+
+#### 感官轮换（W-NEW-SENSE 修复）
+
+**5 感轮换规则**（与 `skills/scene-render/SKILL.md` 的「3 种场景类型的感官配比」配合使用）：
+- 视觉：默认配置——**少用**。一节拍内视觉最多 1 次（避免「他看到 X / 他看到 Y / 他看到 Z」连续）
+- 听觉：对话场景主感官——重点用
+- 触觉：心理戏 / 动作戏主感官——身体反应优先
+- 嗅觉：陌生环境 / 情绪场景——克制用，每次最多 1 次
+- 味觉：极少用——只在「吃东西 / 受伤流血」等具体场景出现
+
+**避免「视觉霸权」自检**：
+- 写完一个 beat，回看时数「看 / 望 / 视 / 观察」等视觉词出现几次
+- 超过 2 次 → 把一半换成触觉 / 听觉 / 嗅觉
+- AI 最常见的失误是「他看到她……」开头——直接删掉「他看到」
+
+**空白节拍**（NEW-W7 修复补充）：
+- 角色什么都没做的时刻（等车 / 等回复 / 沉思）——用感官锚定不靠动作
+- 不要写「他等了很久」「时间一分一秒过去」——写「窗外的车流声变大了一点」「杯里的茶凉了」
+
+#### POV 严格度（W-NEW-POV 修复）
+
+**单 POV 章节**：每 beat 都要查信息边界
+- 写完一个 beat，问：「这段话 POV 角色能感知到吗？」
+- 出现 POV 角色不应该知道的（其他角色的内心 / 远处发生的事）→ 删掉或改成 POV 角色可感知的方式
+- 用 `pov-control` skill 复查（每个 beat 末）
+
+**第三人称近距**：默认设置
+- 内心独白可见（"他知道 / 他想"），但不能跨角色
+- 行为可见（做了什么），动作之外不能跨角色
+- 感官可见（看到/听到/闻到），但不能感知别处
+
+**第一人称**（强代入感）：
+- 只能写「我」感知到的一切
+- 不能写其他角色的内心
+- 时间线混乱（「我以为」/「我后来才明白」）
+
+**叙述距离切换规则**：
+- 高潮/紧张 → 近距（看内心）
+- 过渡/时间推移 → 远距（概括叙述）
+- 对话/动作 → 中距（行为可见）
+- **同一场景不切换**——切换会让读者头晕（详见 `skills/pov-control/SKILL.md` 切换原则）
+
+#### POV 漂移识别清单（NEW-W15 修复）
+
+POV 漂移 = 叙述者写出了 POV 角色不该感知的信息。识别清单按"感知确定性"分 4 档：
+
+| 档位 | POV 角色能否感知 | 例子 | 修复 |
+|------|----------------|------|------|
+| **直接感知** | ✅ 一定能写 | 看到/听到/闻到/触摸到的当下 | 不需要修复 |
+| **半感知** | ⚠️ 要交代触发条件 | 隔着门听到隔壁声音（门是触发条件）；余光瞥见（要写"余光"） | 加 1 句触发条件，不省 |
+| **推断** | ⚠️ 必须基于角色已有信息 | "他推断她不喜欢他"（角色从过往对话/行为推断） | 加 1 句推断依据，不写绝对判断 |
+| **转述** | ⚠️ 必须由他人在场告知 | "三年前他来过这里"（朋友刚告诉过他） | 加 1 句转述来源，不直接陈述 |
+| **走神内心** | ✅ 允许，但要标注触发 | "他突然想起三年前的某个下午"（当前感知触发回忆） | 触发条件来自当下感知（如看见某物想起某事） |
+| **绝不能写** | ❌ POV 漂移 | 别人此刻的内心 / POV 角色看不到的角落 / 超过角色认知范围的信息 | **直接删除** |
+
+**5 类常见 POV 漂移模式**（Writer 自检必查）：
+
+| 漂移模式 | 案例 | 修复 |
+|---------|------|------|
+| **场景位置漂移** | 角色 A 在房间内，Writer 写到门外 B 的表情 | 删掉门外部分，或改成 A 听到门外声音 + 推断 |
+| **时间漂移** | 角色 A 在第 1 幕，Writer 插入第 3 幕的信息 | 删掉提前透露的内容，或用转述处理 |
+| **判断-事实漂移** | "他决定背叛"→ Writer 写成"他背叛了"（事实化） | 保留"决定"动词——读者跟着 POV 视角判断 |
+| **内心-行为漂移** | POV 角色是 A，Writer 写出 B 的内心独白 | 改成 A 的推断（"他看起来在想什么"） |
+| **全知化漂移** | 写到"所有人都不知道" / "没人会想到" | POV 角色不可能知道"所有人"——直接删除 |
+
+**自检时机**：每个 beat 写完 → Writer 自查 5 类漂移 + 6 档感知 → 命中漂移模式立即修复。
+
 ### 第三步：场景边界硬门禁
 
 每完成一个场景，执行 5 项硬检查：
@@ -180,6 +286,14 @@ writer_beat_output:
   word_count: 340              # 本 beat 字数
   tail: "……系统提示音响起：「检测到非标准路径……」"   # 本 beat 最后一句，用于下一 beat 衔接
 
+  # === W-NEW-CHAROFF 修复：Writer 回传字符范围真值 ===
+  chapter_offset: {start: 1245, end: 1565}  # 该 beat 在 chapter_file 中的字符范围
+  # - start: 该 beat 起始字符位置（UTF-8 字符数，从 0 起；Python str[start:end] 语义）
+  # - end: 该 beat 结束字符位置（不包含本字符；下一 beat 的 start = 此 end + 节拍间空行字符数）
+  # - Writer 每次 beat 落盘后必须回传，Orchestrator 写入 chunk_plan.beats_offset_log[]
+  # - 修订该 beat 时：取 [start, end) → Writer 重写后 → Orchestrator 重新写入本条（start 不变，end 更新）
+  # - 章节文件是 beat 进度的真值，beats_offset_log 是字符范围的真值，二者必须同步
+
   hard_gate:
     pov_consistent: true
     motivation_consistent: true
@@ -242,12 +356,36 @@ writer_output:
 2. 节拍间用一个空行分隔
 3. 文件内容：**纯正文**——无 `## beat-N` 二级标题，无 YAML frontmatter，无文件级 metadata
 4. **追加语义**：新 beat 接在已有内容末尾，不覆盖已有 beat
-5. **修订语义**：用户在 segment 模式下说"改这段"或回 LOOP 改已写 beat 时，Writer 重写该 beat 的文本→Orchestrator 维护 beat 列表（每个 beat 起始字符位置），告知 Writer 该 beat 在文件中的字符范围→Writer 替换该范围（不重写整章）。整章所有 beat 写完后用户手动修订不再被 Writer 覆盖——这是预期行为，不是 bug
+5. **修订语义**：用户在 segment 模式下说"改这段"或回 LOOP 改已写 beat 时，Writer 重写该 beat 的文本→Orchestrator 从 `chunk_plan.beats_offset_log[]` 查该 beat 的 `chapter_offset: {start, end}`，告知 Writer 替换该范围（不重写整章）。整章所有 beat 写完后用户手动修订不再被 Writer 覆盖——这是预期行为，不是 bug
+
+#### character_offset 回传协议（W-NEW-CHAROFF 修复）
+
+**Writer 每次 beat 落盘后必须回传** `chapter_offset: {start, end}` 给 Orchestrator：
+
+1. **新增 beat**（首次写）：
+   - Writer 落盘前：读取 `chapter_file_path` 当前总字符数 N（文件已落盘部分）
+   - 落盘后：start = N + 1（节拍间空行 = 1 字符 "\n\n"），end = start + len(text)
+   - 回传：`chapter_offset: {start, end}`
+   - Orchestrator 写入 `chunk_plan.beats_offset_log[]`
+
+2. **修订已写 beat**（重写）：
+   - Orchestrator 从 `beats_offset_log[]` 查该 beat 的 `{start, end}` 传给 Writer
+   - Writer 用新文本替换 `chapter_file[start:end]` 区间
+   - 落盘后：start 不变，end = start + len(new_text)
+   - 回传：`chapter_offset: {start, end}`（end 已变）
+   - Orchestrator 重新写入该 beat 条目到 `beats_offset_log[]`
+
+3. **多次修订**：每次修订都按上述流程——start 不变、end 重算——保证 `beats_offset_log[]` 始终是当前文件字符范围的真值
+
+4. **断点恢复**：Orchestrator 重启后读 `beats_offset_log[]` + 比对 `chapter_file` 当前长度——若 `chapter_file` 长度 < 最后一个 beat 的 end，说明有 beat 落盘后被人工截断，需要提示用户
+
+5. **失败兜底**：Writer 落盘失败 / 回传失败 → Orchestrator 立即暂停，由用户决定下一步（不要凭印象推算字符范围——宁可暂停不要错位）
 
 **与断点恢复的关系**：
-- Writer 崩溃后恢复 → Orchestrator 读 `chapter_file_path` 已有内容，与 `chunk_plan.confirmed_beats` 对照判断哪些 beat 已落盘
+- Writer 崩溃后恢复 → Orchestrator 读 `chapter_file_path` 已有内容 + `beats_offset_log[]` + `confirmed_beats` 三方对照判断哪些 beat 已落盘
 - 已落盘的 beat 不再重写（除非用户主动"改这段"），未落盘的 beat 从 `current_beat` 开始续写
-- 这与 `workflow-specs/write-chapter.md` 的「断点恢复」语义一致——文件是 beat 进度的真值，`chunk_plan` 是元数据
+- 字符范围真值在 `beats_offset_log[]`，**不依赖章节文件反推**——避免扫整个章节文件按标题切分
+- 这与 `workflow-specs/write-chapter.md` 的「断点恢复」语义一致——文件是 beat 进度的真值，`beats_offset_log` 是字符范围的真值
 
 **segment 模式**：每个 beat 写完 → 立即追加到章节文件 → 进 Critic Lite（走 `CriticBrief-Lite.inline_text`，见 `runtime/handoff-schema.md` 第五节）。落盘不影响 Critic Lite 时机，**作者可随时打开 `chapters/第N章-XXX.md` 看实时进度**。
 **chapter/super 模式**：每个 beat 写完 → 立即追加到章节文件 → 按 chunk_mode 决定是否停下。落盘独立于停止/继续逻辑，**作者可随时打开章节文件看实时进度**。
@@ -272,17 +410,97 @@ writer_output:
 
 **`skills/stylist/SKILL.md`**：修订场景专用——Orchestrator 在 `/novel-studio:revise` 调度 Writer 调用本 skill 做整章/局部润色。**Writer 在 beat 起草阶段不主动调**。
 
-#### Beat 类型 → 推荐 Skill（O9 补充）
+#### Beat 类型 → 推荐 Skill（O9 补充，W-NEW-SKILL 修复）
+
+**Beat 类型识别**：从 `WriterBrief-Beat.current_beat.function` 字段读取——可选值见 `runtime/handoff-schema.md` 第二节（`dialogue / emotion / action / scene / description / hook / pov_switch / exposition / transition`）。
 
 | Beat 功能（常见类型） | 必调 skill | 选调 skill |
 |--------------------|-----------|-----------|
 | 对话 beat（角色互动/信息交换） | `dialogue` | `voice-check`（区分声音） |
 | 情绪 beat（情绪兑现/转折） | `emotion-payoff` | `description`（行为展现） |
-| 动作 beat（打斗/追逐/激烈场面） | `action-scene` | `pacing-check`（节奏） |
+| 动作 beat（打斗/追逐/激烈场面） | `action-scene` | `scene-render`（空间感前置） |
 | 场景 beat（环境渲染/空间描写） | `scene-render` | `description`（细节） |
 | 外貌/物品 beat（首次出场描写） | `description` | `scene-render`（背景） |
-| 钩子 beat（章首/章尾悬念） | `hook-design` | `emotion-payoff`（动力） |
-| POV 切换 beat（视角切换） | `pov-control` | `info-leak-check`（信息边界） |
+| 钩子 beat（章首/章尾悬念） | `hook-design` | `emotion-payoff`（章尾动力）/ `hook-design`（章中钓胃口） |
+| POV 切换 beat（视角切换） | `pov-control` | `voice-check`（新 POV 角色声音） |
+
+**W-NEW-SKILL 修复说明**：
+- 动作 beat 选调从 `pacing-check`（Critic 专用）改为 `scene-render`（动作感官体验前置）
+- POV 切换 beat 选调从 `info-leak-check`（Critic 专用）改为 `voice-check`（新 POV 角色声音）
+- `pacing-check` 和 `info-leak-check` 是 Critic Lite Style/Logic Checker 用的 skill，**Writer 起草阶段不调**
+
+**同 beat 多 skill 调用顺序**（W-NEW-SKILL 修复）：
+- 场景 beat：先 `scene-render`（输出空间/感官框架）→ 再 `description`（在框架内填入人物外貌/物品）
+- 外貌/物品 beat：先 `description`（输出描写技法）→ 再 `scene-render`（给物品找环境锚点）
+- 动作 beat：先 `scene-render`（输出环境压力/空间构造）→ 再 `action-scene`（动作节奏/感官体验）
+- 钩子 beat：先 `hook-design`（输出章首钩子或章中钓胃口）→ 章尾动力走 `emotion-payoff`
+- POV 切换 beat：先 `pov-control`（输出新 POV 视角设定）→ 再 `voice-check`（新 POV 角色声音）
+
+#### Skill 输入字段协议（W-NEW-SKILL 修复）
+
+每个 skill 调用时，从 `WriterBrief-Beat` 抽哪些字段：
+
+| Skill | 输入字段（来自 WriterBrief-Beat / 上下文） | 输出形态 |
+|-------|------------------------------------------|---------|
+| `description` | `current_beat.must_include` 中的人物/物品名 + 第一步半素材库命中段落 | 描写技法清单（先印象后细节 / 特征化 / 动作中写外貌） |
+| `scene-render` | `current_beat.environment` + `current_beat.pov` + 场景类型（对话/动作/心理/环境/过渡） | 感官配比清单 + 环境压力类型 + 场景变化节奏标记 |
+| `pov-control` | `writer_constraints.pov_character` + `current_beat.previous_beat_tail` + `current_beat.function` | 视角类型 + 叙述距离 + 信息边界检查清单 |
+| `dialogue` | `current_beat.must_include`（含对话的角色对） + voice 样本 + `current_beat.function` | 3-4 轮对话草稿（每轮附功能说明） |
+| `emotion-payoff` | `current_beat.function` + 上章 `chapter_end.open_questions` + 本章 `emotional_arc` 标注 | 情绪路径选择（5 种爽点路径 / 章尾 5 种形态 / 调色板落点） |
+| `action-scene` | `current_beat.must_include`（动作场景描述） + `current_beat.environment` | 节奏规则清单 + 空间锚点 + 因果链模板 + 感官体验示范 |
+| `hook-design` | `current_beat.function`（必须含 hook 标记）+ `next_beat_starter` | 3 个候选钩子（章首）/ 2 个钓胃口线（章中），Writer 选 1 个套用 |
+| `style-calibrate` | POV 角色 voice 样本 + 章节类型 + 品类 | voice_lock YAML（narrator_type / sentence_style / tone / sensory_preference） |
+| `voice-check` | `current_beat.must_include`（含对话的角色对） + voice 样本 | voice_report YAML（passed + issues[] + 漂移类型/位置/修复建议） |
+
+#### style-calibrate 触发时机（W-NEW-SKILL 修复）
+
+**问题**：skill 自身写「Writer 写 beat 前调」，但 writer.md 没在流程中强制插入——意味着 voice_lock 可能从未被锁。
+
+**修复**：在每章启动时调一次 `style-calibrate` 锁定 voice_lock，整章复用，**不再每 beat 重新锁**。具体位置——节拍 LOOP 模式：
+
+1. **修订模式**（写章节非主路径）：第一步「理解约束」第 0 步**之前**插入——「调 `style-calibrate` 锁定 voice_lock」
+2. **节拍 LOOP 模式**：在 `Orchestrator` 阶段 1 之前（写作启动时）一次性锁定，Writer 在每个 beat 内复用该 voice_lock
+3. **锁定产物持久化**：voice_lock 写入 `runtime/voice_lock.yaml`（key 是 `<project>:<chapter>`），Orchestrator 在 `/novel-studio:write N` 时检查——若已锁且未变 → 复用；若变 → 重锁
+
+**voice_lock 字段**（参见 `skills/style-calibrate/SKILL.md` 第 33-43 行）：
+- `narrator_type`：角色近距 / 旁观叙述 / 全知
+- `sentence_style.avg_length`：短(10-15) / 中短(15-25) / 中(25-35) / 长(35+)
+- `sentence_style.variation`：高低（长短句交替频率）
+- `paragraph_density`：高/中/低
+- `tone`：叙述语气标签
+- `humor_source`：角色吐槽/叙述者评论/情境荒诞/无
+- `sensory_preference`：触觉+听觉（默认视觉会导致 AI 味）
+
+#### 节拍功能 → 4 维写作策略映射（NEW-W13 修复）
+
+**问题**：`WriterBrief-Beat.current_beat.function` 字段已存在（开头/承接/转折/高潮/收束 等），但 Writer.md 没给"function → 节奏 / 感官 / 对话 / 钩子"的映射——开头节拍和收束节拍的实际处理趋同。
+
+**修复**：按 `current_beat.function` 字段值套用 4 维策略：
+
+| function | 节奏曲线 | 感官配比 | 对话密度 | 钩子落位 |
+|----------|---------|---------|---------|---------|
+| **开头**（章首 hook beat） | 中→快（前 200 字必须出钩子） | 听觉 + 视觉（陌生环境快速建立） | 低（≤2 句） | **章首必出钩**（前 200 字必含反常/异常/动作/声音） |
+| **承接**（承接上章） | 中速平稳 | 触觉 + 听觉（接续感知） | 中（1 段对话接续关系） | 章中转场时埋伏笔 |
+| **转折**（剧情转折点） | **慢→快→慢**（铺垫→揭示→消化） | 视觉（揭示时主用）+ 触觉（角色反应） | 中高（揭示靠对话/内心） | 转折后必埋新伏笔 |
+| **高潮**（本章高潮 beat） | **快→停→更慢**（紧张→屏息→情绪落点） | 触觉 + 听觉（身体反应 + 关键一击前停一下） | 低（沉默比对话更重） | 高潮后必有情绪落点——**不是动作完成，是情绪消化** |
+| **收束**（章尾 beat） | **快→极慢**（行动结束→情绪/留白） | 听觉 + 视觉（场景化收尾） | 极低（≤1 句或无） | **章尾必出钩**（倒数 50-100 字，章尾 5 种形态见 emotion-payoff） |
+| **场景间**（转场 beat） | 远距叙述（1-2 句概括） | 时间/光线/温度变化（连接两端） | 无 | 章内不强调 |
+
+**写作策略应用规则**：
+- Writer 在 beat 起草前读 `current_beat.function` → 套用 4 维策略 → 起笔
+- 4 维策略是「默认配置」，可与 `direction_locked` 冲突——以 `direction_locked` 为准（用户锁定的方向优先）
+- 收束 beat 违反章尾钩子必出 → 触发 Writer 自检警告（不是硬伤，但必须标出）
+
+**章尾 100 字设计 checklist**（NEW-W14 修复，统一 4 维度交汇处）：
+
+章尾 100 字必须满足 4 项合一：
+
+- [ ] **节奏**：从快切到极慢（不再有动作推进，只剩情绪/感知/留白）
+- [ ] **钩子**：必出 1 个钩子（5 种章尾形态之一：决定悬置/信息缺口/关系移位/危险逼近/后果已至）
+- [ ] **POV 信息边界**：守住 POV——不要在章尾突然引入 POV 角色不该知道的信息
+- [ ] **留白**：删掉所有解释句（「他意识到 / 她觉得」）——信任读者
+
+**自检失败**：章尾 100 字有任一项不满足 → 重新设计章尾，不允许"凑合结尾"。
 
 调用示例（`dialogue`）：
 

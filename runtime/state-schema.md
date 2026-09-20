@@ -64,6 +64,20 @@ chunk_plan:
                                 # - chapter_offset: 文本在 chapter_file 中的字符范围（Orchestrator 写入时记录；断点恢复用）
   loop_revert_log: []           # LOOP 回退日志（详见第十节 3.6 节）
 
+  # === W-NEW-CHAROFF 修复：beat 字符范围真值表 ===
+  # Writer 每个 beat 落盘后回传 chapter_offset: {start, end}；Orchestrator 写入本表
+  # 修订/回滚时直接查本表——不扫章节文件、不依赖 beat 标题切分
+  # 章节文件是 beat 进度的真值，本表是字符范围的真值，二者必须同步
+  beats_offset_log:
+    - beat_id: "beat-1"
+      chapter: 11
+      start: 0            # 该 beat 在 chapter_file 中的起始字符位置（UTF-8 字符数，不是字节数）
+      end: 320            # 该 beat 在 chapter_file 中的结束字符位置（end 不包含，Python str[start:end] 语义）
+      written_at: "<iso8601>"
+      word_count: 280
+      # 注意：end 是「截至此字符」，下一 beat 的 start 应等于此 end（节拍间用 1 个空行分隔 = 1 字符 "\n\n" 末）
+      # 修订已写 beat 时：取 [start, end) → Writer 重写 → Orchestrator 重新写入本条（start 不变，end 更新）
+
 # ===== 大纲状态块（3 段大纲按需生成追踪）=====
 # 详见第十一节「outline_state 字段定义」。Orchestrator 生成时写入，StateManager chunk 收尾时更新。
 outline_state:
