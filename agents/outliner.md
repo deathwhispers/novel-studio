@@ -376,6 +376,8 @@ foreshadows:
 3. 写入 `outline/volumes/volume-X.yaml`
 4. **对用户透明**：不弹额外对话
 
+> **NEW-2 修复澄清**：「对用户透明」**仅适用于写章节路径上的按需生成**（卷纲/chunk）——用户已经在 `/novel-studio:write` 流程中、节奏不能断。如果用户**主动**调用 `/novel-studio:outline` 或 `/novel-studio:world`，则走多轮对话流程（每阶段/每设定确认方向）。两个原则不冲突——前者是写章节路径上的隐式补全（透明），后者是用户显式发起的创作流程（多轮对话）。
+
 ### chunk 设计按需生成（段 3）
 
 **触发**：Orchestrator 在 `/novel-studio:write N` 时检测 N 是新 chunk 起始章 → 调 Outliner 产出。

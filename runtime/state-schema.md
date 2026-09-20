@@ -54,7 +54,14 @@ chunk_plan:
   beats_total_current_chapter: 0  # 当前章节的 beat 总数（每章进入 WRITING 前由 Orchestrator 重置；非 chunk 全部）
   words_written: 0              # 当前章节已写累计字数
   writing_started_at: null      # 当前章节写作开始时间
-  quick_write_log: []           # Quick-Write 记录（用户接管的 beat）：[{beat_id, word_count, written_at}]
+  quick_write_log: []           # Quick-Write 记录（用户接管的 beat；C4 + W-NEW-6 修复统一字段）
+                                # 每条结构：{beat_id, mode, chapter, word_count, written_at, chapter_offset: {start, end}}
+                                # - beat_id: 接管 beat 的 id；append 模式为 null
+                                # - mode: "beat_replace" | "append"
+                                # - chapter: 章节号
+                                # - word_count: 本次接管字数
+                                # - written_at: 接管时间
+                                # - chapter_offset: 文本在 chapter_file 中的字符范围（Orchestrator 写入时记录；断点恢复用）
   loop_revert_log: []           # LOOP 回退日志（详见第十节 3.6 节）
 
 # ===== 大纲状态块（3 段大纲按需生成追踪）=====

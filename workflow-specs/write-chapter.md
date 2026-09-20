@@ -516,9 +516,9 @@ StateManager 在章节事务中**只做**：
 - `progress.current.total_chapters_written += 1`
 - `progress.current.chapter += 1`
 - `progress.state_version +1`
-- `progress.chunk_plan.beats_written = 本章 beat 数`
 - `transaction-log` 追加一条
 - **★ A2 修复——LOCKED 状态推进**：StateManager 完成章节事务后，把 `progress.in_progress_chapter.status` 从 `writing`/`reviewing` 改为 `locked` + `chapter: null`（下一个 chapter 的 WRITING 启动时 Orchestrator 会重新填充新值）
+- **★ W-NEW-3 修复**：`chunk_plan.beats_written` 与 `words_written` 由 Orchestrator 独占维护，StateManager 不修改——这两个字段在章节事务完成后已由 Orchestrator 写为 `beats_total_current_chapter` 与本章累计字数
 
 StateManager **不做**：
 - 不修改 `chunk_plan.confirmed_beats`（已用节拍不能回收）

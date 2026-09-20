@@ -123,11 +123,15 @@
 
 ---
 
-### ScenePlanner（~3K tokens，仅修订）
+### ScenePlanner（~3K tokens，修订 / ~1K tokens，节拍健康检查）
 
-ScenePlanner 仅在修订流程（场景重设）中使用，逐段模式不参与（见 workflow-specs/pipeline.md 关键约束）。
+ScenePlanner 在两种场景使用——主调用是修订流程（场景重设）；副调用是写章节 LOOP_PICKING 完成后做节拍健康检查（W4 修复）。
 
-**输入来源**：`ScenePlannerBrief`（`runtime/handoff-schema.md` 第一节）
+**输入来源**：
+- 修订模式：`ScenePlannerBrief`（`runtime/handoff-schema.md` 第一节）
+- 节拍健康检查模式：`BeatHealthCheckBrief`（NEW-6 修复新增，详见下文）
+
+#### 修订模式（~3K tokens）
 
 ScenePlanner 收到修订目标 + 现有章节场景结构 + POV 角色摘要。不加载完整状态文件。
 
@@ -148,6 +152,21 @@ ScenePlanner 收到修订目标 + 现有章节场景结构 + POV 角色摘要。
 
 **超预算处理**：
 - 现有场景超过 5 个时 → 只保留前 5 个场景结构
+
+#### 节拍健康检查模式（~1K tokens，NEW-6 修复）
+
+仅读 chunk 文件对应章节的 beats 数组 + active_storyline + active_character_lines + volume-XX 的 pacing_map。不读完整大纲、不读章节正文、不读状态文件。预算比修订模式小一个量级（仅做检查不做重设计）。
+
+**BeatHealthCheckBrief 字段**（Orchestrator 组装）：
+- `chunk_path`: 当前 chunk 文件路径（`outline/chunks/chunk-XX.yaml`）
+- `current_chapter`: 当前要检查的章节号
+- `chunk_beats`: 仅该章节的 beats 数组（Orchestrator 预过滤，非整个 chunk）
+- `active_storyline`: 当前 chunk 主推的故事线
+- `active_character_lines`: 当前 chunk 主推的人物线
+
+**绝不加载**：同修订模式。
+
+**输出**：6 项检查结果（字数预算 / 节拍衔接 / 情绪单调 / 场景数 / 品类节奏 / chunk 整体一致性），每项「通过 / 警告」+「问题段落（beat-id）」。不修改 chunk 文件，把问题清单返回 Orchestrator，由 Orchestrator 在 LOOP_PREVIEW 告知用户。
 
 ---
 

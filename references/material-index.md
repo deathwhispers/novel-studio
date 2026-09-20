@@ -2,6 +2,37 @@
 
 > 轻量检索入口。Writer 描写人物（外貌/气质/身材/性格）、穿搭、资产（豪车/名表/房产/奢侈服饰/神豪消费符号）、环境场景、美食，或需要含蓄性暗示词汇、要融入网络热梗时，**先加载本索引**按 `tag` 定位条目标题，再用 `grep -n` 在目标素材库中动态定位该标题的行号，`Read` 读到下一个 `###` 或 `---` 之前为止，**不要加载整个素材库**。
 
+## 上游调用关系（NEW-7 修复）
+
+**本文件是 `Writer` 的强制依赖**，由 `agents/writer.md` 的「第一步半：素材库强制检索」步骤按需调用，不属于任何 Agent 的"必须加载"清单。Orchestrator 不调用它，ScenePlanner 不调用它，仅 Writer 在写章节节拍内触发条件命中时调用。
+
+| 调用方 | 时机 | 触发条件 |
+|--------|------|---------|
+| Writer（节拍内） | 每个 beat 写之前 | 写到外貌/性格/穿搭/资产/环境/美食/爽点桥段/强烈情绪/性暗示词汇/网络热梗 |
+| Writer（启动检查） | 章节开始前一次性 | 探测 shell 工具是否可用，决定走方式 A（grep）还是方式 B（Read 整库） |
+
+**被引用方（不要加载整个素材库）**：
+- `references/lib/beauty-description-library.md` — 美女描写
+- `references/lib/male-description-library.md` — 男性描写
+- `references/lib/personality-description-library.md` — 性格描写
+- `references/lib/outfit-description-library.md` — 穿搭描写
+- `references/lib/car-description-library.md` — 豪车描写
+- `references/lib/watch-description-library.md` — 名表描写
+- `references/lib/property-description-library.md` — 房产描写
+- `references/lib/luxury-fashion-description-library.md` — 奢侈服饰描写
+- `references/lib/luxury-consumption-library.md` — 神豪消费符号
+- `references/lib/food-description-library.md` — 美食描写
+- `references/lib/environment-description-library.md` — 环境描写
+- `references/lib/scene-pattern-library.md` — 爽点场景范式
+- `references/lib/emotion-state-library.md` — 情绪状态描写
+- `references/lib/double-entendre-catalog.md` — 含蓄性暗示词汇
+- `references/lib/internet-meme-catalog.md` — 网络热梗
+
+**维护规则**：
+- 索引本身**只列段落标题 + tag**，不写死行号——检索时 `grep -n` 动态定位
+- 素材库增删条目只需同步本索引表格的「段落标题」与 `tag`；行号变更无需同步
+- 条目标题重命名或章节整段删除时，必须同步更新本索引
+
 ## 使用方式
 
 ### 方式 A：标准流程（推荐，依赖 shell 工具）

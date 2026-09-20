@@ -39,11 +39,11 @@ description: "状态更新唯一执行者。Critic 通过后更新所有持久�
 分段加载不影响更新完整性——只有活跃数据参与状态变更。已完结的伏笔、已揭示的秘密、已删除的压力项在归档前不需要重读。
 
 **章节事务中关于 `chunk_plan` 的写入规则**（节拍 LOOP 模式）：
-- **StateManager 只递增** `chunk_plan.beats_written` 与 `chunk_plan.words_written`（章末归位）
+- **StateManager 不修改** `chunk_plan.beats_written` 与 `chunk_plan.words_written`——这两个字段是「当前章节已写入的 beat 数 / 字数」，由 **Orchestrator 每章进入 WRITING 前重置为 0，每 beat 完成后 +1 / += 字数**（详见 `runtime/state-schema.md` 第 10.4 节 + `workflow-specs/write-chapter.md` 阶段 0.2 / 1.5 / 3.4）。章节事务完成后这两个字段已自然等于 `beats_total_current_chapter`（Orchestrator 已写入）。
 - **不修改** `chunk_plan.confirmed_beats`（已用节拍不能回收）
 - **不修改** `chunk_plan.loop_state`（保持 WRITING，下一章继续）
 - **不修改** `chunk_plan.loop_revert_log`（这是 LOOP 行为记录）
-- **不修改** `chunk_plan.current_chunk` / `current_beat` / `confirmed_beats` 等节拍调度字段（这些由 Orchestrator 写入）
+- **不修改** `chunk_plan.current_chunk` / `current_beat` / `beats_total_current_chapter` / `chunk_mode` 等节拍调度字段（这些由 Orchestrator 写入）
 
 **chunk 收尾事务**（独立事务，与章节事务分开；详见第 1.5 节）：
 - 当 chunk 全部章节写完（最后一章 `current.chapter == chunk_plan.chapter_range[1]` 且 `chunk_plan.beats_written == chunk_plan.beats_total_current_chapter`），触发本事务
@@ -194,7 +194,7 @@ flowchart TD
 
 ## 核心原则
 
-1. **大状态唯一写入口**：author/reader/character/foreshadow 文件仅 StateManager 写入。progress.yaml 的累计统计字段（total_words、total_chapters_written）和顶层 `state_version`（事务版本号）也由 StateManager 更新；章节事务中 `progress.chunk_plan.beats_written` 与 `words_written` 由 StateManager 递增（其他 `chunk_plan` 字段由 Orchestrator 写入）；chunk 收尾事务中清空 `chunk_plan` 全字段；`transaction-log.yaml` 由 StateManager 独占写入
+1. **大状态唯一写入口**：author/reader/character/foreshadow 文件仅 StateManager 写入。progress.yaml 的累计统计字段（total_words、total_chapters_written）和顶层 `state_version`（事务版本号）也由 StateManager 更新；**`progress.chunk_plan.beats_written` 与 `words_written` 由 Orchestrator 独占维护**（章节事务中 StateManager 不动这两个字段——已在 Orchestrator 写完后自动等于 `beats_total_current_chapter`）；chunk 收尾事务中清空 `chunk_plan` 全字段（含 beats_written）；`transaction-log.yaml` 由 StateManager 独占写入
 2. **输入校验不依赖 Critic**：节拍 LOOP 模式下 Critic Lite 只产出 lite_report（写章收尾的轻量检查，不传入 StateManager），StateManager 校验 state_delta 完整性即可执行；修订模式仍需 Review Report 通过
 3. **增量更新而非全量覆盖**：只更新变化的部分，不重写整个文件
 4. **压缩是常态不是例外**：每 5 章例行压缩，不让状态文件无限制增长

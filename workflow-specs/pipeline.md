@@ -32,13 +32,13 @@ flowchart TD
     Check -->|"super/super-strict"| Auto2["连续写完本粒度内所有 beat<br/>super 模式每章 checkpoint"]
 
     BeatReview --> Write1
-    Auto1 --> ChapterSave["阶段 1.5：整章落盘"]
+    Auto1 --> BeatSave["阶段 1.5：beat 实时落盘<br/>每 beat 写完立即追加章节文件<br/>（所有 chunk_mode 通用）"]
     Auto2 --> SuperCheck{"super 模式<br/>且非最后一章?"}
     SuperCheck -->|"是"| SuperCP["阶段 1.6：super_checkpoint<br/>三选项（继续/降级/暂停）"]
-    SuperCheck -->|"否"| ChapterSave
+    SuperCheck -->|"否"| BeatSave
     SuperCP -->|"继续 super"| Auto2
     SuperCP -->|"降级 chapter"| Auto1
-    ChapterSave --> CriticLite["阶段 2：Critic Lite<br/>5 项：因果/人物/文风/方向/漂移"]
+    BeatSave --> CriticLite["阶段 2：Critic Lite<br/>5 项：因果/人物/文风/方向/漂移<br/>+ lite_report 写审计"]
     BeatReview -.->|"segment 跳过 1.5"| CriticLite
 
     CriticLite --> Lock["阶段 3：用户锁定<br/>Writer 汇总 state_delta"]
@@ -53,9 +53,9 @@ flowchart TD
 
 | 阶段 | 实现 |
 |------|------|
-| 方向确定 | LOOP 一次性展示所有 beat 选项，用户逐个确认（含自定义/跳到/回 LOOP） |
+| 方向确定 | LOOP 流程：阶段 0 LOOP_INIT 一次性展示本 chunk 所有 beat + 主推故事线/人物线；阶段 0.4 LOOP_PICKING 用户逐个 beat 确认方向（可自定义/跳到/回 LOOP 改已锁 beat） |
 | 预览前置 | 阶段 0.45 LOOP_PREVIEW：用户先看节拍预览表再选 chunk_mode（默认 chapter） |
-| 节拍健康检查 | LOOP_PICKING 完成后 ScenePlanner 做字数/衔接/情绪/场景数/品类节奏 6 项快速检查 |
+| 节拍健康检查 | 阶段 0.5：LOOP_PICKING 完成后 ScenePlanner 做字数/衔接/情绪/场景数/品类节奏 6 项快速检查（NEW-6 修复） |
 | 写作流程 | 节拍内一次写完 200-400 字；节拍间按 chunk_mode 决定停/续 |
 | 用户接管 | Quick-Write 命令：用户临时接管某个 beat，仍受字数/边界/direction_locked 约束 |
 | super 防跑偏 | super 模式每章完成后插入 super_checkpoint（继续/降级/暂停三选项） |

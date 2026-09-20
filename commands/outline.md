@@ -153,6 +153,8 @@ chunk 设计也会在写到新 chunk 起始章时自动生成。
 - 输出：完整的卷纲（含 storyline_progress + character_line_progress + phase_map + turning_points + volume_end_hook）
 - **对用户透明**：不弹额外对话，自动完成
 
+> **NEW-2 修复澄清**：「对用户透明」**仅适用于写章节路径上的按需生成**（卷纲/chunk），因为用户已经在写章节流程中、节奏不能断。如果用户主动调用 `/novel-studio:outline` 或 `/novel-studio:world`，Orchestrator 仍然走多轮对话（每设定/每阶段确认方向）。两个原则不冲突——前者是写章节流程中的隐式补全，后者是用户显式发起的创作流程。
+
 如果用户希望主动查看/调整某卷的卷纲：
 
 ```

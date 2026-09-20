@@ -310,12 +310,15 @@ review_report:
 - [ ] 时间/地点是否跨段连续？（场景切换不突兀、不跳跃）
 - [ ] 关键事件是否都有前因？（不凭空发生）
 - [ ] **segment 模式**：每个 beat 写出的内容是否与 `continuity_context.previous_beat_tail` 衔接？
+- [ ] **A4 盲区子项（38 强行反转）**：若有反转情节，反转前 5 章内是否有暗示？无 → **硬伤**，标记就地修（`causality-check` 子项，详见 `references/failure-skill-map.md` 第 145 行）
 
 ### Lite Checker 2: 人物一致性（Character Lite）
 
 - [ ] 角色伤势/情绪/关系是否与上一章结尾衔接、不无故跳变？
 - [ ] 角色行为是否前后一致？（无「突然像另一个人」的时刻）
 - [ ] 去掉对话标签后，能否分清谁在说话？
+- [ ] **A4 盲区子项（23 三角恋混乱）**：主角关系网超 4 个暧昧对象且无独立动机 → **软问题**，标注修复建议（`character-check` 子项）
+- [ ] **A4 盲区子项（26 感情线无逻辑）**：感情变化是否有事件触发？本章是否有触发事件支撑？无 → **软问题**（`emotion-payoff` 子项）
 
 ### Lite Checker 2.5: 方向一致性（Direction Consistency，segment 模式专属）
 

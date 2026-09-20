@@ -45,6 +45,27 @@ description: "Canon 唯一所有者。世界规则、人物设定、硬约束的
 
 **第二步扩展（O11 修复）**：骨架创建前/后，按 `references/setting-index.md` 的「setting/ 目录权威索引模板」生成/更新 `setting/INDEX.yaml`——作为 setting/ 目录的文件清单 + 所有权 + 修改触发流的总入口。任何 agent（Architect / Outliner / Writer 在引入新设定时）修改 setting/ 必须先在 INDEX.yaml 同步登记。
 
+> **W-NEW-2 修复补充**：按 `references/setting-index.md` 实际操作的步骤如下——
+>
+> **init 时（必须）**：
+> 1. 先建 setting/ 目录骨架（`硬规则.yaml`、`characters/主角.yaml`、`world/`、`power-system/`）
+> 2. 按 `references/setting-index.md` 第 33-41 行「文件清单与所有权」表格，逐项建对应文件（哪怕内容是「待补充」）
+> 3. 跑一遍第 81-90 行「初始化检查清单」自检——6 个必备项必须存在
+> 4. 写入 `setting/INDEX.yaml`（如果 `references/setting-index.md` 不要求产出 INDEX.yaml，则跳过本步——目前 `setting/` 内已由 `setting-index.md` 作为 reference/ 模板承载，不需要在工作区再复制一份 INDEX.yaml。Architect 在 init/world 时**只更新 reference 模板**，让 Agent 引用）
+>
+> **world 时（按需扩展）**：
+> 1. 新增角色/规则/势力时，按 `references/setting-index.md` 第 33-41 行所有权表决定写哪个文件
+> 2. 若新建了 setting/ 子文件，**同步更新** `references/setting-index.md` 第 33-41 行表格的对应行（哪行新增/修改/删除，写权限、读权限、用途）
+> 3. 若引入新设定影响硬规则，**同步修改** `硬规则.yaml` 并通知 Outliner/Writer
+>
+> **writer 中新增配角时**：
+> 1. Writer 暂停 → Orchestrator 调度 Architect
+> 2. Architect 走 world 流程补建 `setting/characters/XX.yaml` + 同步更新 `references/setting-index.md`
+> 3. Orchestrator 触发 StateManager 章节事务（character.yaml 加新角色条目）
+>
+> **面板修改（O11 补充）**：
+> - 写到第 N 章想改 `系统面板.md` 字段 → Orchestrator 暂停 → Architect 评估影响范围（已写/即将写/Critic 检测项）→ 若同意，修改 setting + 同步更新 `references/setting-index.md` 第 36 行 → 若涉及已写章节，标记「技术性修订」→ Orchestrator 调度 `/novel-studio:revise`
+
 **第三步：输出硬规则清单**
 ```yaml
 hard_rules:

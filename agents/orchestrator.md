@@ -133,7 +133,7 @@ description: "小说智能运行时入口。意图识别、多轮对话、Workfl
 调度前先检测工作区信号：
 - `core/作品核心.md` 是否存在 → 判断是否已完成初始化
 - `state/progress.yaml` 是否存在 → 判断是否有运行状态
-- `chunks_dir` 下当前 chunk 文件 → 判断进度
+- **`progress.yaml.chunk_plan.source` 指向的当前 chunk 文件** → 判断进度（NEW-1 修复——不扫描 `outline/chunks/` 目录，避免误读已归档的 chunk 文件）
 
 **唯一工作区模式**：节拍 LOOP 模式（chunk_plan 块必存在；缺失则视为未初始化，提示用户执行初始化）
 
