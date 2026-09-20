@@ -109,7 +109,11 @@ chunk_plan:
   loop_iteration: 1
   loop_entered_at: "<now>"
   beats_written: 0
-  beats_total_current_chapter: null  # 当前章的 beat 总数——**LOOP_DONE 进入 WRITING 时由 Orchestrator 算 `len([b for b in chunk.beats if b.chapter == chunk_plan.chapter_range[0]])` 写入**；每章进入 WRITING 前重置（O1 修复）
+  beats_total_current_chapter: null  # 当前章的 beat 总数——**C-NEW-2 修复：三个时机用不同公式**
+  # - 时机 A（阶段 0.45 LOOP_DONE 进入 WRITING）：`len([b for b in chunk.beats if b.chapter == chunk_plan.chapter_range[0]])`（chunk 起始章）
+  # - 时机 B（阶段 3.5 进入下一章）：`len([b for b in chunk.beats if b.chapter == current.chapter])`（已 +1 的新章）
+  # - 时机 C（任何时候重置）：从 chunk 文件直接重读 chapter 字段过滤
+  # 每章进入 WRITING 前重置（O1 修复）；不要在 LOOP_DONE 阶段以外用 chapter_range[0]（chunk 起始章只在第一章节正确）
   words_written: 0
   writing_started_at: null
   loop_revert_log: []
@@ -389,7 +393,7 @@ Writer 每个 beat 写完 + 输出 `writer_beat_output` **之后立即**把该 b
 
 ### 阶段 1.6：super 模式章节 checkpoint（仅 super，非最后一章）
 
-**触发条件**：`chunk_mode == "super"` AND `current.chapter != chapter_plan.chapter_range[1]`（非最后一章）。
+**触发条件**：`chunk_mode == "super"` AND `current.chapter != chunk_plan.chapter_range[1]`（非最后一章）。
 
 **最后一章不触发**：当 `current.chapter == chapter_range[1]` 时，super 模式直接进入阶段 2 完整 Critic Lite（覆盖整 chunk 所有章节所有 beat），走 LOCKED 流程。
 
@@ -458,6 +462,8 @@ Orchestrator 组装 `CriticBrief-Lite`（见 `runtime/handoff-schema.md` 第五�
 - `drift_check`（新增——漂移检测清单）：
   - `storyline_expected`: `{ storyline_id, direction, carrier }` 从当前 beat/chunk 的 `active_storyline` 提取
   - `character_line_expected`: `{ character_id, direction, growth_target }` 从当前 beat 的 `character_line_direction` 提取
+
+**★ C-NEW-3 修复——lite_report 审计**：Critic Lite 产出 lite_report 后，**Orchestrator 必须把 lite_report 摘要写入 transaction-log**（详见 `runtime/state-schema.md` 第八节 8.2 + 8.3 的 `critic_lite` trigger 与 `lite_report_summary` 字段）。这是 Orchestrator 直接做，不动 state_version；目的是保留漂移/AI 味/就地修决策的审计轨迹——5 章后回看 chapter 11 时可看到「本章 Critic Lite verdict: 就地修 / story_drift: 严重」。
 
 Critic 判决（详见 `agents/critic.md` Lite 模式）：
 
@@ -538,7 +544,21 @@ StateManager 在最后一章完成后检测（**双重条件**）：
 2. `progress.chunk_plan.loop_revert_log` 全部追加进 `state/archive/chunks-archive.yaml` 该 chunk 条目下（审计不丢），`progress.chunk_plan.loop_revert_log` 清空
 3. `progress.yaml` 的 `chunk_plan` 块字段全部置 null / 0；`chunk_mode` 随 chunk_plan 整体清空
 4. `progress.outline_state.chunk_designs[chunk-XX].status` 改为 `"archived"` + 写入 `archived_at`
-5. **★ 卷纲完成判定**（W5 修复）：若当前 chunk 的 `chapter_range[1]` 等于 `outline/全书总纲.yaml` 中对应 volume 的 `chapter_range[1]`（卷末章）→ 把 `progress.outline_state.volume_outlines[volume-XX].status` 从 `"generated"` 改为 `"completed"` + 写入 `completed_at`（该事务的副作用；状态机不动）
+5. **★ 卷纲完成判定**（W5 + C-NEW-1 修复）：**判定逻辑**——先从 `outline/全书总纲.yaml` 找到 `current.chapter` 所属卷 Vx，再读 `outline/volumes/volume-XX.yaml` 的 `chapter_range[1]`（卷末章），最后扫描 `outline/chunks/` 目录找到所有 chunk 文件，过滤 `chapter_range[1] <= Vx 末章` 的 chunk，**当前 chunk 是否是该卷最后一个 chunk**（即没有 chunk 的 `chapter_range[0]` 在 Vx 末章之后）。如果当前 chunk 是 Vx 最后一个 chunk → 把 `progress.outline_state.volume_outlines[volume-XX].status` 从 `"generated"` 改为 `"completed"` + 写入 `completed_at`（该事务的副作用；状态机不动）
+   - **为什么不能用 `chunk.chapter_range[1] == volume.chapter_range[1]`**（C-NEW-1 旧版 bug）：一个卷通常拆成多个 chunk（如卷 1 = ch 1-60 = chunks 1-12），仅当 chunk 与卷 1:1 对齐或 chunk 恰好对齐卷边界时才正确；若 chunk 默认 5 章但卷短（如卷 1 = ch 1-8，chunk 长度也调到 8 章），chunk-01 收尾时会错误地把整卷标 completed。
+   - **实现伪代码**：
+     ```python
+     def is_last_chunk_of_volume(current_chunk_file, volume_id, chunks_dir):
+         vol = load_yaml(f"outline/volumes/volume-{volume_id}.yaml")
+         vol_end = vol.chapter_range[1]
+         vol_chunks = [c for c in list_chunks(chunks_dir)
+                       if c.chapter_range[0] <= vol_end <= c.chapter_range[1]
+                       or c.chapter_range[1] == vol_end]
+         # 该卷内的所有 chunk，按 chapter_range[1] 排序
+         vol_chunks_sorted = sorted(vol_chunks, key=lambda c: c.chapter_range[1])
+         # 当前 chunk 是该卷最后一个 chunk
+         return vol_chunks_sorted[-1].id == current_chunk_file.chunk.id
+     ```
 6. `transaction-log.yaml` 追加 `trigger: "chunk_close"` 记录
 7. `outline/chunks/chunk-XX.yaml` 文件**不删除**（保留为大纲设计真值）——下次启动新 chunk 时 Orchestrator 按 `progress.chunk_plan.source` 指针加载，不会误读旧文件
 

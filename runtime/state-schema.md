@@ -32,7 +32,9 @@ in_progress_chapter:
   status: "normal"              # normal | writing | reviewing | locked
   chapter: null                 # 正在写/审的章节号；null = 无章节在写
   started_at: null              # 章节写作开始时间
-  beats_progress: "0/7"          # 进度字符串（已写/total）；Writer 实时更新
+  # ★ A2 修复（NEW-3 修复类型统一）—— beats_progress 是数组，每 beat 完成追加一条
+  # 当前进度直接由数组长度 len(beats_progress) 推算；不需要单独的字符串字段
+  beats_progress: []            # [{beat_id, word_count, finished_at}, ...]；每 beat 完成追加
 
 # ===== chunk 块（节拍批量确认 Loop 的运行时进度）=====
 # 详见第十节「chunk 字段定义与生命周期」。
@@ -379,12 +381,21 @@ StateManager 独占写入。与 `agent-log.yaml` 的职责边界：`agent-log` �
 transactions:
   - txn: 15                     # 事务号，与 progress.state_version 一致
     chapter: 11                 # 触发事务的章节；init/compress 事务为 null
-    trigger: "write"            # write | revise | worldbuild | init | compress | compress_lightweight | chunk_close
+    trigger: "write"            # write | revise | worldbuild | init | compress | compress_lightweight | chunk_close | critic_lite
     files_changed:              # 本次事务改动的文件
       - character.yaml
       - foreshadow.yaml
       - reader.yaml
     summary: "主角进阶，thr-001 轻碰，读者获知新线索"   # 一句话改动摘要
+    # ★ C-NEW-3 修复——critic_lite trigger 的审计字段（lite_report 摘要）
+    lite_report_summary:        # 仅 trigger="critic_lite" 时填
+      mode: "chapter"            # segment | chapter | super
+      verdict: "通过"            # 通过 | 就地修 | 用户自决
+      ai_flavor_count: 2
+      storyline_drift: "无"      # 无 | 轻微 | 严重
+      character_line_drift: "轻微"
+      direction_deviation_count: 0
+      user_overrides: ["beat-3"]  # user_quick_write 的 beat（NEW-4 修复）
 ```
 
 **约束**：
@@ -398,6 +409,8 @@ StateManager 每次写入前核对：`transaction-log` 最后一条 `txn` 是否
 
 - 不等 → 上次事务没写完（中断），报告 Orchestrator 重新执行 state_delta（幂等），不做精细回滚
 - 相等 → 事务正常开始
+
+**★ C-NEW-3 修复——critic_lite 事务不递增 state_version**：Orchestrator 调度 Critic Lite 后，无论 verdict 如何，**Orchestrator 直接追加一条 `trigger: critic_lite` 的事务记录到 transaction-log**（只追加 lite_report_summary，不写其他状态文件）。这不递增 `state_version`——因为 lite_report 不动 active 状态字段；只用 `txn` 占位以便审计检索。但后续若有 `write` / `revise` 事务递增 state_version 时，lite_lite 记录的 `txn` 与新 state_version 之间会有间隔——这是设计意图，**靠 trigger 字段区分审计条目**。
 
 **四种干扰的应对**：
 - 过时状态残留：变更日志可追溯「哪个文件/条目最后一次是哪章改的」，压缩时据此清理 stale

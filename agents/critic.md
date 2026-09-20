@@ -324,6 +324,12 @@ review_report:
 
 **失败处理**：方向偏离 = **硬伤**，必须就地修。Writer 必须在 `direction_locked` 指引下写作，不能自由发挥（除非 `direction_source: ai_improvised`）。
 
+**★ NEW-4 修复——`direction_source: user_quick_write` 特殊处理**：当实际写出的 beat 是用户通过 `/novel-studio:quick-write` 接管（`source: "user_quick_write"`）时，方向偏离视为**软偏离**而非硬伤——理由：用户接管时是有意按自己的方向写，方向锁定由用户打破属合理行为。处理流程：
+1. **不计入方向偏离总数**：该 beat 不进入硬伤阈值判定
+2. **写入 lite_report 的 `user_overrides` 列表**：`[{beat_id, locked_direction, actual_direction, override_reason: "user_quick_write"}]`
+3. **可选提示**：用户接管章节的 lite_report 末尾追加「本章 N 个 beat 由用户接管，未做方向一致性检查」——让用户知道跳过原因
+4. **仍做故事线/人物线漂移检查**：用户接管不豁免漂移检查（漂移是连贯性问题，与用户接管无关）
+
 ### Lite Checker 3: 文风与排版（Style Lite）
 
 - [ ] AI 味扫描（按 `references/ai-flavor-checklist.md` 精简清单）
