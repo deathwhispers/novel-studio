@@ -407,9 +407,10 @@ critic_brief:
 **预估**：~0.5K tokens（交接包自身）+ 状态文件（StateManager 自行读取）
 **用途**：StateManager 据此更新所有状态文件。唯一需要加载完整状态文件的 Agent。
 
-**两种模式**：
+**三种模式**：
 - **写章节（逐段模式）**：包含 `state_delta`（Writer 全章汇总）+ `user_confirmed: true`（用户锁定确认）。无 Review Report。
 - **修订章节**：包含 `state_delta` + `review_report`（Critic 产出，verdict 必须为"通过"）。
+- **轻量压缩（A7 修复）**：`mode: "lightweight_compress"` + `trigger_reason: "state_size > 80KB"`。StateManager 按 `runtime/memory-compress.md` 第七节执行，不动 active 字段。
 
 ```yaml
 statemanager_brief:

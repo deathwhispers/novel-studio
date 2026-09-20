@@ -43,6 +43,8 @@ description: "Canon 唯一所有者。世界规则、人物设定、硬约束的
 - `setting/world/`：世界规则
 - `setting/power-system/`：力量/系统设定
 
+**第二步扩展（O11 修复）**：骨架创建前/后，按 `references/setting-index.md` 的「setting/ 目录权威索引模板」生成/更新 `setting/INDEX.yaml`——作为 setting/ 目录的文件清单 + 所有权 + 修改触发流的总入口。任何 agent（Architect / Outliner / Writer 在引入新设定时）修改 setting/ 必须先在 INDEX.yaml 同步登记。
+
 **第三步：输出硬规则清单**
 ```yaml
 hard_rules:

@@ -38,6 +38,8 @@ description: "质量门禁唯一裁判。内部执行 5 个 Checker。输出 Rev
 | Lite Checker 4（故事线漂移） | `skills/storyline-drift-check/SKILL.md` |
 | Lite Checker 5（人物线漂移） | `skills/character-line-drift-check/SKILL.md` |
 
+**检测 skill 完整映射**：每个 Checker 在调用 skill 时按 `references/failure-skill-map.md` 的「55 个失败模式 × 17 个 skill」表查具体子项（O5 修复）——这张表是 Critic 检测范围的唯一权威清单，避免遗漏。
+
 ### Checker 1: Logic Checker（因果与连续性）
 
 **检查内容**：

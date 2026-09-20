@@ -73,9 +73,27 @@ quick-write 接管目标：beat-X（或 append）
 ```
 
 **Orchestrator 行为**：
-- 接收用户文本，存为 `quick_write_output`
+- 接收用户文本
 - **不调用 Writer**——本 beat 由用户完成
-- 标记当前 beat 的 `source: "user_quick_write"` + `quick_write_at: <now>`
+- 标记 `confirmed_beats[beat-X].source: "user_quick_write"` + `quick_write_at: <now>`（新增第五种 source，与 schema 第十二节保持一致）
+- **★ 在 `chunk_plan.quick_write_log[]` 追加条目**（数据模型唯一真值）：
+
+```yaml
+chunk_plan:
+  quick_write_log:
+    - beat_id: "beat-3"
+      mode: "beat_replace"          # beat_replace | append
+      chapter: 11
+      word_count: 320
+      written_at: "<now>"
+      # 完整文本存在章节文件中；log 只存指针 + 元数据，避免 progress.yaml 膨胀
+      chapter_offset: { start: 1245, end: 1565 }   # Orchestrator 写入时记录字符范围
+```
+
+**为什么用 `quick_write_log` 而非 `confirmed_beats[].quick_write_output`**：
+- 完整文本存章节文件（O2 修复后已落盘），`progress.yaml` 不应该再复制一份
+- `confirmed_beats[].source: "user_quick_write"` 已足够标识这是用户接管的 beat
+- `quick_write_log` 是元数据审计轨迹（哪个 beat 在什么时候被用户接管了）——方便后续断点恢复时识别
 
 ### 阶段 2：字数控与边界检查
 
@@ -121,6 +139,21 @@ append 模式：在章节末尾追加段落
 
 当前第 12 章：约 2300 字（原 2200 字 + append 200 字）
 
+**Orchestrator 落盘 + 状态**：
+- 章节文件追加用户文本（O2 修复后 Writer 自追加）
+- `chunk_plan.quick_write_log[]` 追加：
+
+```yaml
+chunk_plan:
+  quick_write_log:
+    - beat_id: null                  # append 模式无 beat 绑定
+      mode: "append"
+      chapter: 12
+      word_count: 200
+      written_at: "<now>"
+      chapter_offset: { start: 2245, end: 2445 }
+```
+
 下一步：
   1. 接受 → 更新 chapter_word_target 估算，进入 Critic Lite
   2. 调整 → 继续追加或编辑
@@ -147,8 +180,9 @@ append 模式：在章节末尾追加段落
 ## 落盘与状态字段
 
 quick-write 完成后：
-- 当前 beat 的 `confirmed_beats[beat-X]` 增加 `quick_write_output: "<文本>"` + `quick_write_at: <now>` 字段
-- 章节文件（chapter/super 模式）：下次 Writer 整章落盘时把 quick_write_output 纳入拼接
+- `confirmed_beats[beat-X].source: "user_quick_write"`（与 schema 第十二节 source 枚举一致——已扩展为第五种来源，详见 `runtime/state-schema.md`）
+- `chunk_plan.quick_write_log[]` 追加本次记录（含 `mode: beat_replace | append` + `word_count` + `written_at` + `chapter_offset`）
+- 章节文件：纯正文直接落盘（O2 修复后已自动落盘）；append 模式用 Writer 的章节文件追加协议
 - 状态文件：StateManager 章节事务照常更新（用户接管的内容也算 `beats_written += 1`）
 
 ## 反模式（禁止）

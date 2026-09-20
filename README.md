@@ -67,7 +67,7 @@ claude plugin uninstall novel-studio
 
 | 命令 | 用途 | 对话深度 |
 |:------|:------|:---------|
-| `/novel-studio:init` | 初始化新项目 — 创作起点、核心体验、品类基调、主角灵魂、篇幅模式 | 5 轮 |
+| `/novel-studio:init` | 初始化新项目 — 创作起点 + 核心体验、主角灵魂、品类基调 + 篇幅模式 | 3 轮 |
 | `/novel-studio:world` | 世界观构建 — 角色、力量体系、世界扩展、冲突检测、综合审查 | 每设定不限轮次 |
 | `/novel-studio:outline` | 3 段大纲 — 粗大纲（必做）/ 卷纲（按需生成）/ chunk 设计（按需生成）/ 迁移（一次性） | 段 1: 3 轮 |
 | `/novel-studio:write <N>` | 写章节 — 节拍 LOOP 批量确认方向 + 节拍内连续写 + Critic Lite 5 项 + 锁定 | 不限轮次 |

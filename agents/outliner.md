@@ -238,7 +238,6 @@ chunk:
   id: "chunk-03"
   volume: 2
   chapter_range: [61, 65]
-  beats_total: 7
   word_target: 2000
 
 # ★ 主推故事线（新增——告诉 Writer 这个 chunk 主推哪条故事线）
@@ -253,10 +252,13 @@ active_character_lines:
     current_direction: "被动接受系统 → 开始主动质疑系统"
     growth_target: "本 chunk 末主角应完成：第一次违抗系统指令"
 
-# ★ beats 列表（沿用现有字段 + 新增故事线/人物线归属）
+# ★ beats 列表（沿用现有字段 + 新增故事线/人物线归属 + chapter 字段）
+# 注意：chunk 内的 beats 是跨章节的扁平数组，每个 beat 带 `chapter` 字段标识所属章节；
+# Orchestrator 进入每章 WRITING 前用 `len([b for b in chunk.beats if b.chapter == N])` 算当前章 beat 数
 beats:
   - id: "beat-1"
-    order: 1
+    chapter: 61               # 关键字段：标识本 beat 属于哪一章（O1 修复——替代旧的 chunk 级 beats_total）
+    order: 1                  # 在所属章节内的顺序（从 1 起）
     function: "钩子——承接上一卷末"
     pov: "主角"
     environment: "..."

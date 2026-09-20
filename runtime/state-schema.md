@@ -359,7 +359,7 @@ StateManager 独占写入。与 `agent-log.yaml` 的职责边界：`agent-log` �
 transactions:
   - txn: 15                     # 事务号，与 progress.state_version 一致
     chapter: 11                 # 触发事务的章节；init/compress 事务为 null
-    trigger: "write"            # write | revise | worldbuild | init | compress
+    trigger: "write"            # write | revise | worldbuild | init | compress | compress_lightweight | chunk_close
     files_changed:              # 本次事务改动的文件
       - character.yaml
       - foreshadow.yaml
@@ -514,6 +514,7 @@ LOOP ────► WRITING ────► REVIEW ────► WRITING ─�
 - `custom`：用户自定义方向
 - `tweak:<原选项>`：用户选了某个选项但改了措辞（如 `tweak:选项B`）
 - `ai_improvised`：Writer 在用户未选的情况下自己发挥（仅当用户选 D「你来定」时）
+- `user_quick_write`：用户通过 `/novel-studio:quick-write` 接管本 beat 自写（详见 `commands/quick-write.md`）——Critic Lite 方向一致性检查：user_quick_write 与 direction_locked 的偏离视为软偏离（用户自决），非硬伤
 
 ### 10.4 写入权约束
 

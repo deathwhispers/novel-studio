@@ -53,14 +53,14 @@ Orchestrator 通过多轮对话判断修订范围。**先问用户觉得哪里�
 
 ```mermaid
 flowchart LR
-    SP["ScenePlanner<br/>重设计 Scene Contract<br/>保持本章核心功能不变"] --> W["Writer<br/>按新 Scene Contract 重写"] --> C["Critic<br/>完整 5 Checker"] --> SM["StateManager<br/>更新状态"]
+    SP["ScenePlanner<br/>重设计 Scene Contract<br/>保持本章核心功能不变"] --> W["Writer<br/>按新 Scene Contract 重写<br/>+ 调 scene-render skill"] --> C["Critic<br/>完整 5 Checker"] --> SM["StateManager<br/>更新状态"]
 ```
 
 ### 局部修复
 
 ```mermaid
 flowchart LR
-    W["Writer<br/>只修 Critic 标记项<br/>不改动未标记段落"] --> C["Critic<br/>只重查相关 Checker"] --> SM["StateManager<br/>更新状态"]
+    W["Writer<br/>只修 Critic 标记项<br/>不改动未标记段落<br/>+ 调 description skill（局部）"] --> C["Critic<br/>只重查相关 Checker"] --> SM["StateManager<br/>更新状态"]
 ```
 
 Writer 在局部修复模式的约束：
@@ -71,9 +71,16 @@ Writer 在局部修复模式的约束：
 ### 仅去味
 
 ```mermaid
-flowchart LR
-    W["Writer<br/>全文搜索 AI 味关键词<br/>逐项修复<br/>不改剧情/结构/角色"] --> C["Critic<br/>仅 Style Checker"] --> SM["StateManager<br/>更新状态"]
+flowflowchart LR
+    W["Writer<br/>全文搜索 AI 味关键词<br/>逐项修复<br/>不改剧情/结构/角色<br/>+ 调 de-flavor-techniques"] --> C["Critic<br/>仅 Style Checker"] --> SM["StateManager<br/>更新状态"]
 ```
+
+**为什么仅去味要调 de-flavor-techniques**：O10 修复后，stylist / style-calibrate / description 三 skill 边界为——
+- `skills/description/SKILL.md`：**起草阶段**用（场景/人物/物件描写优化）
+- `skills/stylist/SKILL.md`：**仅在 revise 阶段**由 Orchestrator 调起（voice 锁定后改文风）
+- `skills/style-calibrate/SKILL.md`：**voice 锁定统一入口**（init 阶段一次性产出）
+
+仅去味场景下，Writer 调 `de-flavor-techniques`（具体手法库）而不是 stylist（文风整体重排）——避免越界把场景结构也改了。Stylist 仅在 Orchestrator 判断「需要换文风」时由 Writer 通过 `Skill` 工具主动调用，而非默认附带。
 
 ## 强制规则
 

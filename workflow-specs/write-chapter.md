@@ -109,7 +109,7 @@ chunk_plan:
   loop_iteration: 1
   loop_entered_at: "<now>"
   beats_written: 0
-  beats_total_current_chapter: 7  # 当前章的 beat 总数（每章进入 WRITING 前重置）
+  beats_total_current_chapter: null  # 当前章的 beat 总数——**LOOP_DONE 进入 WRITING 时由 Orchestrator 算 `len([b for b in chunk.beats if b.chapter == chunk_plan.chapter_range[0]])` 写入**；每章进入 WRITING 前重置（O1 修复）
   words_written: 0
   writing_started_at: null
   loop_revert_log: []
@@ -259,10 +259,17 @@ chunk_plan:
   chunk_mode: "chapter"           # 用户选的粒度
   loop_state: "WRITING"
 current_beat: "beat-1"     # 即将写第一个 beat
-  beats_total_current_chapter: 7   # 当前章的 beat 总数（每章进入 WRITING 前重置）
+  beats_total_current_chapter: <动态计算>  # 从 chunk.beats 按 chapter 字段过滤后取 len()（O1 修复——非 chunk 级静态值）
   beats_written: 0
   words_written: 0
   writing_started_at: "<now>"
+
+# ★ A2 修复——进入 WRITING 时同步设置 in_progress_chapter
+in_progress_chapter:
+  status: "writing"               # writing | reviewing | locked | normal
+  chapter: <current.chapter>      # 此时 current.chapter 还未 +1（尚未 LOCKED）
+  started_at: "<now>"
+  beats_progress: []              # 每 beat 完成后追加 {beat_id, word_count, finished_at}
 ```
 
 **为什么先预览再选粒度**：用户对节奏没概念时，被迫在「还没看到全貌」时选粒度容易出错。先看到 7 个 beat 的方向分布，再选「写作中何时停下来」，决策质量更高。
@@ -343,6 +350,15 @@ chunk_plan:
   current_beat: "beat-2"          # 推进到下一个 beat
   beats_written: 1                # +1
   words_written: 340              # += 当前 beat 字数
+
+# ★ A2 修复——每 beat 完成后追加到 in_progress_chapter.beats_progress
+in_progress_chapter:
+  status: "writing"               # 保持 writing（进入 REVIEW 时才改为 reviewing）
+  chapter: <current.chapter>
+  beats_progress:                 # append {beat_id, word_count, finished_at}
+    - beat_id: "beat-1"
+      word_count: 340
+      finished_at: "<now>"
 ```
 
 ### 阶段 1.5：beat 实时落盘（Writer 自执行，所有 chunk_mode 通用）
@@ -396,6 +412,19 @@ Writer 每个 beat 写完 + 输出 `writer_beat_output` **之后立即**把该 b
 **降级机制**：如果用户在中途发现 super 太激进，可降级为 chapter（更稳但节奏更慢）；不会丢失已写内容。
 
 ### 阶段 2：LOOP 退出 / Critic Lite
+
+#### 2.0 in_progress_chapter 状态推进（A2 修复）
+
+进入阶段 2 时，Orchestrator 把 `in_progress_chapter.status` 从 `writing` 改为 `reviewing`（章节仍在 review 中，未 LOCKED）：
+
+```yaml
+in_progress_chapter:
+  status: "reviewing"             # writing → reviewing
+  chapter: <current.chapter>
+  started_at: "<之前 started_at>"  # 不变
+  beats_progress: [...]            # 本章所有已完成的 beat（完整数组）
+  reviewing_at: "<now>"
+```
 
 #### 2.1 触发时机
 
@@ -470,6 +499,7 @@ StateManager 在章节事务中**只做**：
 - `progress.state_version +1`
 - `progress.chunk_plan.beats_written = 本章 beat 数`
 - `transaction-log` 追加一条
+- **★ A2 修复——LOCKED 状态推进**：StateManager 完成章节事务后，把 `progress.in_progress_chapter.status` 从 `writing`/`reviewing` 改为 `locked` + `chapter: null`（下一个 chapter 的 WRITING 启动时 Orchestrator 会重新填充新值）
 
 StateManager **不做**：
 - 不修改 `chunk_plan.confirmed_beats`（已用节拍不能回收）
@@ -479,7 +509,7 @@ StateManager **不做**：
 #### 3.5 Orchestrator 准备进入下一章
 
 章节事务完成后（`current.chapter +1` 后），Orchestrator 检测：
-- 若 `current.chapter` 仍在 `chapter_range` 内（未到最后一章）：进入下一章 → **从 `outline/chunks/chunk-XX.yaml` 读新章的 beats 数组长度，重置 `beats_total_current_chapter` 为新值**（详见 O1 修复）→ 推进 `current_beat` 到新章的 `beat-1` → 继续 WRITING
+- 若 `current.chapter` 仍在 `chapter_range` 内（未到最后一章）：进入下一章 → **从 `outline/chunks/chunk-XX.yaml` 用 `len([b for b in chunk.beats if b.chapter == current.chapter])` 读新章 beat 数，重置 `beats_total_current_chapter` 为新值**（详见 O1 修复）→ 推进 `current_beat` 到新章的 `beat-1` → 继续 WRITING
 - 若 `current.chapter == chapter_range[1]`：触发阶段 4 chunk 收尾
 
 **关键**：`beats_total_current_chapter` 不是 chunk 级静态值，是**当前章节维度**——每章进入 WRITING 前必须重置。Orchestrator 不写此字段时，chunk 收尾的双重条件永远不满足。
@@ -495,8 +525,9 @@ StateManager 在最后一章完成后检测（**双重条件**）：
 2. `progress.chunk_plan.loop_revert_log` 全部追加进 `state/archive/chunks-archive.yaml` 该 chunk 条目下（审计不丢），`progress.chunk_plan.loop_revert_log` 清空
 3. `progress.yaml` 的 `chunk_plan` 块字段全部置 null / 0；`chunk_mode` 随 chunk_plan 整体清空
 4. `progress.outline_state.chunk_designs[chunk-XX].status` 改为 `"archived"` + 写入 `archived_at`
-5. `transaction-log.yaml` 追加 `trigger: "chunk_close"` 记录
-6. `outline/chunks/chunk-XX.yaml` 文件**不删除**（保留为大纲设计真值）——下次启动新 chunk 时 Orchestrator 按 `progress.chunk_plan.source` 指针加载，不会误读旧文件
+5. **★ 卷纲完成判定**（W5 修复）：若当前 chunk 的 `chapter_range[1]` 等于 `outline/全书总纲.yaml` 中对应 volume 的 `chapter_range[1]`（卷末章）→ 把 `progress.outline_state.volume_outlines[volume-XX].status` 从 `"generated"` 改为 `"completed"` + 写入 `completed_at`（该事务的副作用；状态机不动）
+6. `transaction-log.yaml` 追加 `trigger: "chunk_close"` 记录
+7. `outline/chunks/chunk-XX.yaml` 文件**不删除**（保留为大纲设计真值）——下次启动新 chunk 时 Orchestrator 按 `progress.chunk_plan.source` 指针加载，不会误读旧文件
 
 ## 上下文管理
 

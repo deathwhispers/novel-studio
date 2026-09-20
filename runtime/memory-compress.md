@@ -13,7 +13,8 @@
 | `current.chapter % 5 == 0` | 第 5/10/15/20... 章完成后 |
 | 卷末 | 当前卷最后一章完成后（无论是否 5 的倍数） |
 | `state/` 总大小 > 50KB | 紧急压缩（任意章节完成后） |
-| **`author_notes` 单次增量 > 200 字** | **下次章节事务内联压缩**（不等到第 5 章）——O7 修复 |
+| `state/` 总大小 > 80KB | **轻量压缩**（A7 修复——Orchestrator 启动时触发；区别于正常压缩，见第五节） |
+| `author_notes` 单次增量 > 200 字 | **下次章节事务内联压缩**（不等到第 5 章）——O7 修复 |
 
 **为什么 author_notes 需要即时触发**：作者备忘是高时效信息（"第 20 章左右开始铺垫第二条主线"），积压到第 5 章才处理可能导致新加的备忘被旧内容覆盖丢失。即时压缩=把增量超过 200 字的部分立刻指针化进 `state/archive/author-notes-archive.yaml`，保留摘要 + 完整备份指针。
 
@@ -109,6 +110,42 @@
 ## 五、事务日志瘦身
 
 `transaction-log.yaml` 是日志（不适用对象生命周期），只保留最近 30 章记录，更早的移入 `state/archive/transaction-log-archive.yaml`。
+
+---
+
+## 七、轻量压缩（A7 修复，trigger: compress_lightweight）
+
+**与正常压缩的边界**：
+
+| 维度 | 正常压缩（第五节 + 第六节） | 轻量压缩（A7 修复） |
+|------|---------------------------|---------------------|
+| 触发时机 | 第 5/10/15 章 + 卷末 + 紧急 >50KB | Orchestrator 启动时扫描 `state/` > 80KB |
+| 触发方 | StateManager 在章节事务中自动检测 | Orchestrator 启动时 `state_size_check` 主动触发 |
+| 操作范围 | 完整结算（4 个文件全部指针化 + 卷记忆生成） | 只清理 `state/archive/` 中超过 30 章的事务日志归档 |
+| 动 active 字段？ | 是（4 文件全部扫一遍） | **否**（不动 author/reader/character/foreshadow 的 active 字段） |
+| 动 chunk_plan？ | 否（章节事务后续接续 chunk 收尾） | **否**（不动 confirmed_beats / loop_revert_log） |
+| 事务 trigger | `compress` | `compress_lightweight`（state-schema 第十节） |
+
+**轻量压缩执行步骤**（StateManager 收到 Orchestrator 调度后）：
+
+1. **只清理事务日志归档**——遍历 `state/archive/transaction-log-archive.yaml`，把超过 30 章的事务条目丢弃（保留最近 30 章条目）
+2. **不动** `state/author.yaml`、`state/reader.yaml`、`state/character.yaml`、`state/foreshadow.yaml` 的 active 字段
+3. **不动** `state/progress.yaml` 的 `chunk_plan.confirmed_beats` / `loop_revert_log`（活跃 chunk 需要）
+4. **transaction-log 追加** `trigger: "compress_lightweight"` + `state_version +1`（独立事务）
+
+**为什么不完整压缩**：完整压缩（>50KB 紧急）会结算大量对象指针化，对运行中 chunk 是侵入式操作。轻量压缩的目标是「不打断运行 + 减小体积」——只清理历史归档里的旧事务条目即可达到 80KB → <50KB 目标。
+
+**触发链路**：
+
+```
+Orchestrator 启动 → state_size_check
+  ├─ state/ ≤ 50KB → 无操作
+  ├─ 50KB < state/ ≤ 80KB → 警告 + 继续
+  ├─ 80KB < state/ < 100KB → 调度 StateManager 执行轻量压缩
+  └─ state/ ≥ 100KB → 暂停 + 提示用户
+```
+
+StateManager 收到 `/lightweight-compress` 指令（详见 `agents/state-manager.md`）→ 按本节步骤执行 → 完成后 Orchestrator 重新启动。
 
 ---
 

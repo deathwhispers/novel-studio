@@ -164,7 +164,7 @@ scene_contract:
 
 **检查项**：
 
-- [ ] **字数预算**：每章 `beats_total * target_words` 是否在 `chapter_word_target ± 15%` 范围内？
+- [ ] **字数预算**：每章 `len([b for b in chunk.beats if b.chapter == N]) * target_words` 是否在 `chapter_word_target ± 15%` 范围内？
 - [ ] **节拍衔接**：相邻 beat 的 `next_beat_starter` 是否真的能从上一 beat 的 `previous_beat_tail` 衔接？（是否需要补充过渡）
 - [ ] **情绪单调**：每章的情绪曲线（钩子→承接→转折→高潮→收束）是否单调？如有连续 3 个 beat 情绪相同 → 建议重排
 - [ ] **场景数 ≤ 5**：按 beat 数反推场景数是否过多？（每 1-2 个 beat 一个场景，> 7 个 beat 可能需要合并场景）

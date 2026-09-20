@@ -103,6 +103,19 @@ current:
 - 状态文件瘦身
 - 压缩后验证
 
+### 3.1 轻量压缩（A7 修复，trigger: compress_lightweight）
+
+**触发**：Orchestrator 启动时扫描 `state/` > 80KB → Orchestrator 调用 StateManager 执行轻量压缩（独立事务）。
+
+**什么时候启动这个 API**：Orchestrator 的 `state_size_check`（详见 `agents/orchestrator.md` 启动时一节）。
+
+**执行步骤**（详见 `runtime/memory-compress.md` 第七节）：
+
+1. 只清理 `state/archive/transaction-log-archive.yaml` 中超过 30 章的事务条目
+2. **不动** 4 个核心文件的 active 字段
+3. **不动** `chunk_plan.confirmed_beats` / `loop_revert_log`
+4. transaction-log 追加 `trigger: "compress_lightweight"` + `state_version +1`
+
 ### 4. 归档管理
 
 维护 `state/archive/` 目录：

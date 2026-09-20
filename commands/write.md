@@ -119,9 +119,9 @@ beat-1：[钩子——承接上章章尾，展示新能力的初次使用]
 
 选择写作粒度（写作中何时停下来让你看）：
   1. segment：每个 beat 写完停下看（最精细）
-  2. chapter：每章所有 beat 写完停下看（推荐）
-  3. super（伪 super，O13 修复）：整 chunk 写完后，**按章分段**触发 Critic Lite（chunk 内每章过一次 Lite），不是一次性扫整 chunk
-  4. super（实 super，⚠️ 不推荐）：整 chunk 一次性写完 + 一次性 Critic Lite 扫整 chunk——风险高，5 章 × 2K 字 ≈ 10K 远超 Critic 3K 预算，会丢早期信息
+  2. chapter：每章所有 beat 写完停下看（推荐默认）
+  3. super：整 chunk 写完后，**每章完成后插入 super_checkpoint**（chunk 内每章过一次 Lite），chunk 全部完成后整体收口
+  4. super-strict：整 chunk 一次性写完 + 一次性 Critic Lite 扫整 chunk——风险高，5 章 × 2K 字 ≈ 10K 远超 Critic 3K 预算，会丢早期信息
 
 [如果估算字数偏差大 → 提示用户回 LOOP 改 beat]
 
@@ -129,9 +129,9 @@ beat-1：[钩子——承接上章章尾，展示新能力的初次使用]
 > 
 ```
 
-**super 模式选择指南**（O13 修复）：
-- **多数情况选 #3 伪 super**：chunk 内 5 章逐章推进，每章过 Critic Lite，与 chapter 模式行为一致；最后一章完成后整体收口。**这是默认推荐**
-- **少数情况选 #4 实 super**：用户对整 chunk 方向高度确定、不在乎中间检查、想一口气出稿——但要承担 Lite 质量下降的风险
+**super / super-strict 选择指南**（O13 修复，chunk_mode 枚举对齐 `runtime/state-schema.md`）：
+- **多数情况选 #3 super**：chunk 内 5 章逐章推进，每章过 Critic Lite（super_checkpoint），最后一章完成后整体收口。**这是默认推荐**
+- **少数情况选 #4 super-strict**：用户对整 chunk 方向高度确定、不在乎中间检查、想一口气出稿——但要承担 Lite 质量下降的风险
 - **不选 super**：选 segment 或 chapter（最稳健）
 
 **用户响应**：
